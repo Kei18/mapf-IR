@@ -5,6 +5,7 @@
 #include <util.hpp>
 #include <problem.hpp>
 #include <pibt.hpp>
+#include <hca.hpp>
 
 void printHelp();
 Solver* getSolver(const std::string solver_name,
@@ -85,8 +86,10 @@ Solver* getSolver(const std::string solver_name,
   Solver* solver;
   if (solver_name == "PIBT") {
     solver = new PIBT(P);
+  } else if (solver_name == "HCA") {
+    solver = new HCA(P);
   } else {
-    warn("unknown solver name, continue by PIBT");
+    warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
   }
   solver->setParams(argc, argv);
@@ -105,4 +108,5 @@ void printHelp() {
             << std::endl;
   // each solver
   PIBT::printHelp();
+  HCA::printHelp();
 }

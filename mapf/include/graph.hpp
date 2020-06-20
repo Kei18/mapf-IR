@@ -100,7 +100,6 @@ struct Node {
 using Nodes   = std::vector<Node*>;
 using Path    = std::vector<Node*>;  // < loc_i[0], loc_i[1], ... >
 using Config  = std::vector<Node*>;  // < loc_0[t], loc_1[t], ... >
-using Paths   = std::vector<Path>;
 using Configs = std::vector<Config>;
 
 class Graph {

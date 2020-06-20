@@ -51,7 +51,9 @@ void PIBT::solve()
   int timestep = 0;
   while (true) {
     if (timestep > 0 && timestep % 100 == 0) {
-      info("  planning... timestep:", timestep);
+      info(" ",
+           "elapsed:", getSolverElapsedTime(),
+           ", timestep:", timestep);
     }
 
     // planning
@@ -92,8 +94,7 @@ void PIBT::solve()
       solved = true;
       break;
     }
-    if (timestep >= max_timestep ||
-        getElapsedTime(t_start) >= max_comp_time) {
+    if (timestep >= max_timestep || overCompTime()) {
       break;
     }
   }

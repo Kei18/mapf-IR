@@ -23,7 +23,7 @@ Path Solver::getPath(Node* s, Node* g)
   auto itr = PATH_TABLE.find(key);
   if (itr != PATH_TABLE.end()) return itr->second;
 
-  Path path = AstarSearch(s, g);
+  Path path = getPathOnG(s, g);
   registerPath(path);
   return path;
 }
@@ -37,7 +37,7 @@ int Solver::pathDist(Node* s, Node* g)
   auto itr = PATH_TABLE.find(key);
   if (itr != PATH_TABLE.end()) return itr->second.size() - 1;
 
-  Path path = AstarSearch(s, g);
+  Path path = getPathOnG(s, g);
   registerPath(path);
   return path.size() - 1;
 }
@@ -55,15 +55,9 @@ void Solver::registerPath(const Path& path)
   } while (tmp.size() > 2);
 }
 
-Path Solver::AstarSearch(Node* s, Node* g)
+// A* search but using cache as much as possible
+Path Solver::getPathOnG(Node* s, Node* g)
 {
-  struct AstarNode {
-    Node* v;
-    int g;
-    int f;
-    AstarNode* p;  // parent
-  };
-
   auto compare = [&] (AstarNode* a, AstarNode* b) {
                    if (a->f != b->f) return a->f > b->f;
                    if (a->g != b->g) return a->g < b->g;
@@ -134,6 +128,71 @@ Path Solver::AstarSearch(Node* s, Node* g)
   return path;
 }
 
+// pure A* search
+Path Solver::getTimedPath(Node* s,
+                          Node* g,
+                          CompareAstarNode& compare,
+                          CheckAstarFin& checkAstarFin,
+                          CheckInvalidAstarNode& checkInvalidAstarNode)
+{
+  auto getNodeName = [] (AstarNode* n)
+                     { return std::to_string(n->v->id)
+                         + "-" + std::to_string(n->g); };
+  // OPEN and CLOSE
+  std::priority_queue<AstarNode*,
+                      std::vector<AstarNode*>,
+                      CompareAstarNode> OPEN(compare);
+  std::unordered_map<std::string, bool> CLOSE;
+
+  // initial node
+  AstarNode* n;
+  n = new AstarNode { s, 0, pathDist(s, g) + 0, nullptr };
+  OPEN.push(n);
+
+  // main loop
+  bool invalid = true;
+  while (!OPEN.empty()) {
+
+    // check time limit
+    if (overCompTime()) break;
+
+    // minimum node
+    n = OPEN.top();
+    OPEN.pop();
+    CLOSE[getNodeName(n)] = true;
+
+    // check goal condition
+    if (checkAstarFin(n)) {
+      invalid = false;
+      break;
+    }
+
+    // expand
+    Nodes C = n->v->neighbor;
+    C.push_back(n->v);
+    for (auto u : C) {
+      int g_cost = n->g+1;
+      int f_cost = g_cost + pathDist(u, g);
+      AstarNode* m = new AstarNode { u, g_cost, f_cost, n };
+      // already searched?
+      if (CLOSE.find(getNodeName(m)) != CLOSE.end()) continue;
+      // check constraints
+      if (!checkInvalidAstarNode(m)) OPEN.push(m);
+    }
+  }
+
+  Path path;
+  // failed
+  if (invalid) return path;
+  // success
+  while (n != nullptr) {
+    path.push_back(n->v);
+    n = n->p;
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
+}
+
 std::string Solver::getPathTableKey(Node* s, Node* g) {
   return std::to_string(s->id) + "-" + std::to_string(g->id);
 }
@@ -144,7 +203,7 @@ void Solver::start() {
 }
 
 void Solver::end() {
-  comp_time = getElapsedTime(t_start);
+  comp_time = getSolverElapsedTime();
   info("finish");
   std::cout << "solved=" << solved
             << ", solver=" << std::right << std::setw(8)
@@ -156,6 +215,14 @@ void Solver::end() {
             << ", makespan=" << std::right << std::setw(5)
             << solution.getMakespan()
             << std::endl;
+}
+
+double Solver::getSolverElapsedTime() const {
+  return getElapsedTime(t_start);
+}
+
+bool Solver::overCompTime() const {
+  return getSolverElapsedTime() >= max_comp_time;
 }
 
 void Solver::makeLog(const std::string& logfile) {

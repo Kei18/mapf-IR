@@ -6,6 +6,8 @@
 #include <queue>
 #include <getopt.h>
 #include <chrono>
+#include<functional>
+
 
 struct Plan {
   std::vector<Config> configs;
@@ -43,6 +45,87 @@ struct Plan {
   }
 };
 
+struct Paths {
+  std::vector<Path> paths;
+
+  void initialize(int num_agents) {
+    paths.clear();
+    std::vector<Path> tmp(num_agents);
+    paths = tmp;
+  }
+
+  Path get(int i) const {
+    if (!(0 <= i && i < paths.size())) {
+      halt("invalid index.");
+    }
+    return paths[i];
+  }
+
+  void insert(int i, const Path& path) {
+    if (!(0 <= i && i < paths.size())) {
+      halt("invalid index.");
+    }
+    paths[i] = path;
+  }
+
+  int getMakespan() {
+    int max_val = 0;
+    for (auto p : paths) {
+      max_val = (p.size() - 1 > max_val) ? p.size() - 1 : max_val;
+    }
+    return max_val;
+  }
+
+  int getSOC() {
+    int soc = 0;
+    for (auto p : paths) {
+      int c = p.size();
+      auto itr = p.end() - 1;
+      Node* g = *itr;
+      while (*itr == g) {
+        --c;
+        if (c <= 0) break;
+        --itr;
+      }
+      soc += c;
+    }
+    return soc;
+  }
+
+  void format() {
+    int makespan = getMakespan();
+    for (int i = 0; i < paths.size(); ++i) {
+      while (paths[i].size()-1 != makespan) {
+        paths[i].push_back(*(paths[i].end()-1));
+      }
+    }
+  }
+
+  Plan toPlan() {
+    format();
+    Plan plan;
+    int makespan = getMakespan();
+    for (int t = 0; t <= makespan; ++t) {
+      Config c;
+      for (int i = 0; i < paths.size(); ++i) {
+        c.push_back(paths[i][t]);
+      }
+      plan.add(c);
+    }
+    return plan;
+  }
+};
+
+struct AstarNode {
+  Node* v;
+  int g;  // in getTimedPath, g represents t
+  int f;
+  AstarNode* p;  // parent
+};
+
+using CompareAstarNode = std::function<bool(AstarNode*, AstarNode*)>;
+using CheckAstarFin = std::function<bool(AstarNode*)>;
+using CheckInvalidAstarNode = std::function<bool(AstarNode*)>;
 
 class Solver {
 private:
@@ -50,7 +133,7 @@ private:
   std::unordered_map<std::string, Path> PATH_TABLE;
   static std::string getPathTableKey(Node* s, Node* g);
   void registerPath(const Path& path);
-  Path AstarSearch(Node* s, Node* g);
+  Path getPathOnG(Node* s, Node* g);
 
 protected:
   std::string solver_name;
@@ -71,8 +154,15 @@ protected:
 
   Path getPath(Node* s, Node* g);
   int pathDist(Node* s, Node* g);
+  Path getTimedPath(Node* s,
+                    Node* g,
+                    CompareAstarNode& compare,
+                    CheckAstarFin& checkAstarFin,
+                    CheckInvalidAstarNode& checkInvalidAstarNode);
   void start();
   void end();
+  double getSolverElapsedTime() const;
+  bool overCompTime() const;
 
 public:
   Solver(Problem* _P);
