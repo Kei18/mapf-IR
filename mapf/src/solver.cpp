@@ -12,6 +12,7 @@ Solver::Solver(Problem* _P)
     max_comp_time(P->getMaxCompTime())
 {
   VERVOSE = verbose;  // def in util.hpp
+  solved = false;
 }
 
 Path Solver::getPath(Node* s, Node* g)

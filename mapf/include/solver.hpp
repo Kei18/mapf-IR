@@ -50,7 +50,7 @@ struct Paths {
 
   void initialize(int num_agents) {
     paths.clear();
-    std::vector<Path> tmp(num_agents);
+    std::vector<Path> tmp(num_agents, Path(0));
     paths = tmp;
   }
 
@@ -66,11 +66,32 @@ struct Paths {
       halt("invalid index.");
     }
     paths[i] = path;
+    format();
+  }
+
+  void operator+=(const Paths& other) {
+    if (paths.size() != other.paths.size()) halt("invalid operation.");
+    if (getMakespan() == 0) {  // empty
+      paths = other.paths;
+    } else {
+      for (int i = 0; i < paths.size(); ++i) {
+        if (paths[i].empty()) {
+          if (!other.paths[i].empty()) halt("invalid operation");
+          continue;
+        }
+        if (*(paths[i].end()-1) != other.paths[i][0])
+          halt("invalid operation");
+        for (int t = 1; t < other.paths[i].size(); ++t) {
+          paths[i].push_back(other.paths[i][t]);
+        }
+      }
+    }
   }
 
   int getMakespan() {
     int max_val = 0;
     for (auto p : paths) {
+      if (p.empty()) continue;
       max_val = (p.size() - 1 > max_val) ? p.size() - 1 : max_val;
     }
     return max_val;
@@ -95,6 +116,7 @@ struct Paths {
   void format() {
     int makespan = getMakespan();
     for (int i = 0; i < paths.size(); ++i) {
+      if (paths[i].empty()) continue;
       while (paths[i].size()-1 != makespan) {
         paths[i].push_back(*(paths[i].end()-1));
       }
@@ -102,7 +124,6 @@ struct Paths {
   }
 
   Plan toPlan() {
-    format();
     Plan plan;
     int makespan = getMakespan();
     for (int t = 0; t <= makespan; ++t) {

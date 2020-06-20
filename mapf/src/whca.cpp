@@ -1,22 +1,27 @@
-#include "../include/hca.hpp"
+#include "../include/whca.hpp"
 
-const std::string HCA::SOLVER_NAME = "HCA";
+const std::string WHCA::SOLVER_NAME = "WHCA";
+const int WHCA::DEFAULT_WINDOW = 10;
 
-
-HCA::HCA(Problem* _P) : Solver(_P)
+WHCA::WHCA(Problem* _P) : Solver(_P)
 {
-  solver_name = HCA::SOLVER_NAME;
+  window = DEFAULT_WINDOW;
+  solver_name = SOLVER_NAME + "-" + std::to_string(window);
   VERVOSE = verbose;
 }
 
-void HCA::solve()
+void WHCA::solve()
 {
   start();
 
+  // initialize
   Paths paths;
   paths.initialize(P->getNum());
+  for (int i = 0; i < P->getNum(); ++i) {
+    paths.insert(i, { P->getStart(i) });
+  }
 
-  // prioritization
+  // initial prioritization
   // far agent is prioritized
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
@@ -28,53 +33,56 @@ void HCA::solve()
   }
 
   // start planning
-  bool invalid = false;
-  for (int j = 0; j < ids.size(); ++j) {
-    int i = ids[j];
+  int iteration = 0;
+  while (true) {
     info(" ",
          "elapsed:", getSolverElapsedTime(),
-         ", agent-" + std::to_string(i),
-         "starts planning,", j+1, "/", P->getNum());
-    Nodes path = getPrioritizedPath(i, paths);
-    if (path.empty()) {
-      invalid = true;
+         ", timestep:", iteration * window);
+    ++iteration;
+
+    bool check_goal_cond = true;
+    Paths partial_paths;
+    partial_paths.initialize(P->getNum());
+    bool invalid = false;
+    for (int j = 0; j < ids.size(); ++j) {
+      int i = ids[j];
+      Node* s = *(paths.get(i).end() - 1);
+      Node* g = P->getGoal(i);
+      Path path = getPrioritizedPartialPath(i, s, g, partial_paths);
+      if (path.empty()) {
+        invalid = true;
+        break;
+      }
+      if (path[0] != s) {
+        std::cout << path[0] << "," << s->id << std::endl;
+      }
+
+      partial_paths.insert(i, path);
+      check_goal_cond &= (*(path.end()-1) == g);
+    }
+    if (invalid) break;
+    paths += partial_paths;
+
+    // check goal condition
+    if (check_goal_cond) {
+      solved = true;
       break;
     }
-    paths.insert(i, path);
 
     // check limitation
     if (overCompTime() || paths.getMakespan() > max_timestep) {
-      invalid = true;
       break;
     }
   }
 
-  if (invalid) {  // failed
-    Config config_s;
-    for (int i = 0; i < P->getNum(); ++i) {
-      config_s.push_back(P->getStart(i));
-    }
-    solution.add(config_s);
-    solved = false;
-  } else {  // success
-    solution = paths.toPlan();
-    solved = true;
-  }
+  solution = paths.toPlan();
   end();
 }
 
-Path HCA::getPrioritizedPath(int id, const Paths& paths)
-{
-  Node* s = P->getStart(id);
-  Node* g = P->getGoal(id);
-  return getPrioritizedPath(id, s, g, paths);
-}
-
-// get single agent path
-Path HCA::getPrioritizedPath(int id,
-                             Node* s,
-                             Node* g,
-                             const Paths& paths)
+Path WHCA::getPrioritizedPartialPath(int id,
+                                     Node* s,
+                                     Node* g,
+                                     const Paths& paths)
 {
   // pre processing
   Nodes config_g;
@@ -100,9 +108,11 @@ Path HCA::getPrioritizedPath(int id,
       return false;
     };
 
+  // different from HCA*
   CheckAstarFin checkAstarFin =
     [&] (AstarNode* n) {
-      return n->v == g && n->g > max_constraint_time;
+      return n->g > max_constraint_time &&
+        (n->v == g || n->g >= window);
     };
 
   CheckInvalidAstarNode checkInvalidAstarNode =
@@ -123,22 +133,31 @@ Path HCA::getPrioritizedPath(int id,
       return false;
     };
 
-  return getTimedPath(s, g,
-                      compare,
-                      checkAstarFin,
-                      checkInvalidAstarNode);
+  Path path = getTimedPath(s, g,
+                           compare,
+                           checkAstarFin,
+                           checkInvalidAstarNode);
+  // format
+  if (!path.empty() && path.size() - 1 > window) path.resize(window+1);
+  return path;
 }
 
-void HCA::setParams(int argc, char *argv[]) {
+void WHCA::setParams(int argc, char *argv[]) {
   struct option longopts[] = {
+    { "window", required_argument, 0, 'w' },
     { "disable-dist-init", no_argument, 0, 'd' },
     { 0, 0, 0, 0 },
   };
   optind = 1;  // reset
   int opt, longindex;
-  while ((opt = getopt_long(argc, argv, "d",
+  while ((opt = getopt_long(argc, argv, "w:d",
                             longopts, &longindex)) != -1) {
     switch (opt) {
+    case 'w':
+      window = std::atoi(optarg);
+      if (window <= 0) halt("invalid window size.");
+      solver_name = SOLVER_NAME + "-" + std::to_string(window);
+      break;
     case 'd':
       disable_dist_init = true;
       break;
@@ -148,10 +167,11 @@ void HCA::setParams(int argc, char *argv[]) {
   }
 }
 
-void HCA::printHelp() {
-  std::cout << HCA::SOLVER_NAME << "\n"
-            << "  -d --disable-dist-init"
-            << "        "
+void WHCA::printHelp() {
+  std::cout << WHCA::SOLVER_NAME << "\n"
+            << "  -w --window [WINDOW]          "
+            << "window size\n"
+            << "  -d --disable-dist-init        "
             << "disable initialization of priorities "
             << "using distance from starts to goals"
             << std::endl;

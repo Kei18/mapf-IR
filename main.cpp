@@ -6,6 +6,7 @@
 #include <problem.hpp>
 #include <pibt.hpp>
 #include <hca.hpp>
+#include <whca.hpp>
 
 void printHelp();
 Solver* getSolver(const std::string solver_name,
@@ -88,6 +89,8 @@ Solver* getSolver(const std::string solver_name,
     solver = new PIBT(P);
   } else if (solver_name == "HCA") {
     solver = new HCA(P);
+  } else if (solver_name == "WHCA") {
+    solver = new WHCA(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -97,7 +100,7 @@ Solver* getSolver(const std::string solver_name,
 }
 
 void printHelp() {
-  std::cout << "\nUsage: ./app [OPTIONS]\n"
+  std::cout << "\nUsage: ./app [OPTIONS] [SOLVER-OPTIONS]\n"
             << "\n**instance file is necessary to run MAPF simulator**\n\n"
             << "  -i --instance [INSTANCE-FILE] instance file path\n"
             << "  -s --solver [SOLVER_NAME]     solver\n"
@@ -109,4 +112,5 @@ void printHelp() {
   // each solver
   PIBT::printHelp();
   HCA::printHelp();
+  WHCA::printHelp();
 }

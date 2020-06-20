@@ -26,6 +26,7 @@ private:
   // option
   bool disable_dist_init = false;
 
+  Path getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths);
   Path getPrioritizedPath(int id, const Paths& paths);
 
 public:
