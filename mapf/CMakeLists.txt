@@ -6,7 +6,8 @@ add_library(lib-mapf STATIC
   ./src/solver.cpp
   ./src/pibt.cpp
   ./src/hca.cpp
-  ./src/whca.cpp)
+  ./src/whca.cpp
+  ./src/cbs.cpp)
 target_compile_options(lib-mapf PUBLIC -O3 -Wall -mtune=native -march=native)
 target_compile_features(lib-mapf PUBLIC cxx_std_17)
 target_include_directories(lib-mapf INTERFACE ./include)

@@ -47,6 +47,7 @@ struct Plan {
 
 struct Paths {
   std::vector<Path> paths;
+  int makespan;
 
   void initialize(int num_agents) {
     paths.clear();
@@ -61,17 +62,26 @@ struct Paths {
     return paths[i];
   }
 
-  void insert(int i, const Path& path) {
-    if (!(0 <= i && i < paths.size())) {
+  Node* get(int i, int t) const {
+    if (!(0 <= i && i < paths.size()) ||
+        !(0 <= t && t <= makespan)) {
       halt("invalid index.");
     }
+    return paths[i][t];
+  }
+
+  void insert(int i, const Path& path) {
+    if (!(0 <= i && i < paths.size())) halt("invalid index.");
+    int old_len = paths[i].size();
     paths[i] = path;
     format();
+    if (paths[i].size() < old_len) shrink();
+    makespan = getMaxLengthPaths();  // update makespan
   }
 
   void operator+=(const Paths& other) {
     if (paths.size() != other.paths.size()) halt("invalid operation.");
-    if (getMakespan() == 0) {  // empty
+    if (makespan == 0) {  // empty
       paths = other.paths;
     } else {
       for (int i = 0; i < paths.size(); ++i) {
@@ -88,7 +98,7 @@ struct Paths {
     }
   }
 
-  int getMakespan() {
+  int getMaxLengthPaths() const {
     int max_val = 0;
     for (auto p : paths) {
       if (p.empty()) continue;
@@ -97,7 +107,11 @@ struct Paths {
     return max_val;
   }
 
-  int getSOC() {
+  int getMakespan() const {
+    return makespan;
+  }
+
+  int getSOC() const {
     int soc = 0;
     for (auto p : paths) {
       int c = p.size();
@@ -114,16 +128,32 @@ struct Paths {
   }
 
   void format() {
-    int makespan = getMakespan();
+    int len = getMaxLengthPaths();
     for (int i = 0; i < paths.size(); ++i) {
       if (paths[i].empty()) continue;
-      while (paths[i].size()-1 != makespan) {
+      while (paths[i].size()-1 != len) {
         paths[i].push_back(*(paths[i].end()-1));
       }
     }
   }
 
-  Plan toPlan() {
+  void shrink() {
+    while (true) {
+      bool shrinkable = true;
+      for (auto p: paths) {
+        if (p.size() <= 1 || *(p.end()-1) != *(p.end()-2)) {
+          shrinkable = false;
+          break;
+        }
+      }
+      if (!shrinkable) break;
+      for (int i = 0; i < paths.size(); ++i) {
+        paths[i].resize(paths[i].size()-1);
+      }
+    }
+  }
+
+  Plan toPlan() const {
     Plan plan;
     int makespan = getMakespan();
     for (int t = 0; t <= makespan; ++t) {
@@ -137,16 +167,6 @@ struct Paths {
   }
 };
 
-struct AstarNode {
-  Node* v;
-  int g;  // in getTimedPath, g represents t
-  int f;
-  AstarNode* p;  // parent
-};
-
-using CompareAstarNode = std::function<bool(AstarNode*, AstarNode*)>;
-using CheckAstarFin = std::function<bool(AstarNode*)>;
-using CheckInvalidAstarNode = std::function<bool(AstarNode*)>;
 
 class Solver {
 private:
@@ -167,6 +187,16 @@ protected:
   const int max_comp_time;
 
   static bool verbose;
+
+  struct AstarNode {
+    Node* v;
+    int g;  // in getTimedPath, g represents t
+    int f;
+    AstarNode* p;  // parent
+  };
+  using CompareAstarNode = std::function<bool(AstarNode*, AstarNode*)>;
+  using CheckAstarFin = std::function<bool(AstarNode*)>;
+  using CheckInvalidAstarNode = std::function<bool(AstarNode*)>;
 
   Plan solution;
   bool solved;

@@ -77,9 +77,17 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
       int y_s = std::stoi(results[2].str());
       int x_g = std::stoi(results[3].str());
       int y_g = std::stoi(results[4].str());
-      if (!G->nodeExist(x_s, y_s) || !G->nodeExist(x_s, y_s)) {
-        halt("invalid scenario file.");
+      if (!G->nodeExist(x_s, y_s)) {
+        halt("start node ("
+             + std::to_string(x_s) + ", " + std::to_string(y_s)
+             + ") does not exist, invalid scenario file.");
       }
+      if (!G->nodeExist(x_g, y_g)) {
+        halt("goal node ("
+             + std::to_string(x_g) + ", " + std::to_string(y_g)
+             + ") does not exist, invalid scenario file.");
+      }
+
       Node* s = G->getNode(x_s, y_s);
       Node* g = G->getNode(x_g, y_g);
       config_s.push_back(s);

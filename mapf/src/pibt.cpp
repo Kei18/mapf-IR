@@ -13,28 +13,28 @@ void PIBT::solve()
   start();
 
   Plan plan;
-  auto compare = [] (PIBTAgent* a, const PIBTAgent* b) {
+  auto compare = [] (Agent* a, const Agent* b) {
                    if (a->elapsed != b->elapsed)
                      return a->elapsed < b->elapsed;
                    if (a->init_d != b->init_d)
                      return a->init_d < b->init_d;
                    return a->tie_breaker < b->tie_breaker;
                  };
-  std::priority_queue<PIBTAgent*,
-                      std::vector<PIBTAgent*>,
+  std::priority_queue<Agent*,
+                      std::vector<Agent*>,
                       decltype(compare)> undecided(compare);
-  std::vector<PIBTAgent*> decided;
+  std::vector<Agent*> decided;
 
   // initialize
-  std::unordered_map<int, PIBTAgent*> occupied_now;
-  std::unordered_map<int, PIBTAgent*> occupied_next;
+  std::unordered_map<int, Agent*> occupied_now;
+  std::unordered_map<int, Agent*> occupied_next;
 
   Config config_s;
   for (int i = 0; i < P->getNum(); ++i) {
     Node* s = P->getStart(i);
     Node* g = P->getGoal(i);
     int d = disable_dist_init ? 0 : pathDist(s, g);
-    PIBTAgent* a = new PIBTAgent { i,        // id
+    Agent* a = new Agent { i,        // id
                                    s,        // current location
                                    nullptr,  // next location
                                    g,        // goal
@@ -58,7 +58,7 @@ void PIBT::solve()
 
     // planning
     while (!undecided.empty()) {
-      PIBTAgent* a = undecided.top();
+      Agent* a = undecided.top();
       undecided.pop();
       if (a->v_next == nullptr) {
         funcPIBT(a, occupied_now, occupied_next);
@@ -103,15 +103,15 @@ void PIBT::solve()
   end();
 }
 
-bool PIBT::funcPIBT(PIBTAgent* ai,
-                    std::unordered_map<int, PIBTAgent*>& occupied_now,
-                    std::unordered_map<int, PIBTAgent*>& occupied_next)
+bool PIBT::funcPIBT(Agent* ai,
+                    std::unordered_map<int, Agent*>& occupied_now,
+                    std::unordered_map<int, Agent*>& occupied_next)
 {
   Node* v = planOneStep(ai, occupied_now, occupied_next);
   while (v != nullptr) {
     auto itr = occupied_now.find(v->id);
     if (itr != occupied_now.end()) {
-      PIBTAgent* aj = itr->second;
+      Agent* aj = itr->second;
       if (aj != ai && aj->v_next == nullptr) {
         if (!funcPIBT(aj, occupied_now, occupied_next)) {
           v = planOneStep(ai, occupied_now, occupied_next);
@@ -127,9 +127,9 @@ bool PIBT::funcPIBT(PIBTAgent* ai,
   return false;
 }
 
-Node* PIBT::planOneStep(PIBTAgent* a,
-                        std::unordered_map<int, PIBTAgent*>& occupied_now,
-                        std::unordered_map<int, PIBTAgent*>& occupied_next)
+Node* PIBT::planOneStep(Agent* a,
+                        std::unordered_map<int, Agent*>& occupied_now,
+                        std::unordered_map<int, Agent*>& occupied_next)
 {
   Node* v = chooseNode(a, occupied_now, occupied_next);
   if (v != nullptr) {
@@ -139,9 +139,9 @@ Node* PIBT::planOneStep(PIBTAgent* a,
   return v;
 }
 
-Node* PIBT::chooseNode(PIBTAgent* a,
-                       std::unordered_map<int, PIBTAgent*>& occupied_now,
-                       std::unordered_map<int, PIBTAgent*>& occupied_next)
+Node* PIBT::chooseNode(Agent* a,
+                       std::unordered_map<int, Agent*>& occupied_now,
+                       std::unordered_map<int, Agent*>& occupied_next)
 {
   Nodes C;
   Nodes C_pre = a->v_now->neighbor;
