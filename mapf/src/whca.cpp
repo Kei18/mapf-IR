@@ -98,6 +98,9 @@ Path WHCA::getPrioritizedPartialPath(int id,
     }
   }
 
+  AstarHeuristics fValue =
+    [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
       if (a->f != b->f) return a->f > b->f;
@@ -134,6 +137,7 @@ Path WHCA::getPrioritizedPartialPath(int id,
     };
 
   Path path = getTimedPath(s, g,
+                           fValue,
                            compare,
                            checkAstarFin,
                            checkInvalidAstarNode);

@@ -21,8 +21,8 @@ void CBS::solve()
                       std::vector<HighLevelNode*>,
                       decltype(compare)> HighLevelTree(compare);
 
-  HighLevelNode* n;
-  n = createInitialHighLevelNode();
+  HighLevelNode* n = new HighLevelNode;
+  setInitialHighLevelNode(n);
   HighLevelTree.push(n);
 
   int h_node_num = 1;
@@ -32,18 +32,18 @@ void CBS::solve()
     // check limitation
     if (overCompTime()) break;
 
-    if (iteration == 10) {
-      info(" ",
-           "elapsed:", getSolverElapsedTime(),
-           ", explored_node_num:", iteration,
-           ", nodes_num:", h_node_num);
-    }
+    info(" ",
+         "elapsed:", getSolverElapsedTime(),
+         ", explored_node_num:", iteration,
+         ", nodes_num:", h_node_num,
+         ", conflicts:", n->f,
+         ", constraints:", n->constraints.size());
 
     n = HighLevelTree.top();
     HighLevelTree.pop();
 
     // check conflict
-    Constraints constraints = getFirstConflict(n);
+    Constraints constraints = getFirstConflict(n->paths);
     if (constraints.empty()) {
       solved = true;
       break;
@@ -104,49 +104,80 @@ CBS::CompareHighLevelNodes CBS::returnObjectiveFunc()
   return compare;
 }
 
-CBS::HighLevelNode* CBS::createInitialHighLevelNode()
+void CBS::setInitialHighLevelNode(HighLevelNode* n)
 {
   Paths paths;
   paths.initialize(P->getNum());
   for (int i = 0; i < P->getNum(); ++i) {
-    paths.insert(i, getPath(P->getStart(i), P->getGoal(i)));
+    paths.insert(i, getInitialPath(i));
   }
-
-  HighLevelNode* s = new HighLevelNode
-    { paths,
-      {},  // constraints
-      paths.getMakespan(),
-      paths.getSOC(),
-      countConflict(paths),
-      true };
-  return s;
+  n->paths = paths;
+  n->constraints = {};  // constraints
+  n->makespan = paths.getMakespan();
+  n->soc = paths.getSOC();
+  n->f = countConflict(paths);
+  n->valid = true;  // valid
 }
 
-CBS::Constraints CBS::getFirstConflict(const HighLevelNode* n)
+Path CBS::getInitialPath(int id)
+{
+  Node* s = P->getStart(id);
+  Node* g = P->getGoal(id);
+  Nodes config_g;
+  for (int i = 0; i < P->getNum(); ++i) {
+    config_g.push_back(P->getGoal(i));
+  }
+
+  AstarHeuristics fValue =
+    [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+
+  CompareAstarNode compare =
+    [&] (AstarNode* a, AstarNode* b) {
+      if (a->f != b->f) return a->f > b->f;
+      // [IMPORTANT!] avoid goal locations of others
+      if (a->v != g && inArray(a->v, config_g)) return true;
+      if (b->v != g && inArray(b->v, config_g)) return false;
+      if (a->g != b->g) return a->g < b->g;
+      return false;
+    };
+
+  CheckAstarFin checkAstarFin = [&] (AstarNode* n) { return n->v == g; };
+
+  CheckInvalidAstarNode checkInvalidAstarNode =
+    [&] (AstarNode* m) {  return false; };
+
+  return getTimedPath(s, g,
+                      fValue,
+                      compare,
+                      checkAstarFin,
+                      checkInvalidAstarNode);
+}
+
+CBS::Constraints CBS::getFirstConflict(const Paths& paths)
 {
   Constraints constraints = {};
-  for (int t = 1; t <= n->makespan; ++t) {
+  for (int t = 1; t <= paths.getMakespan(); ++t) {
     for (int i = 0; i < P->getNum(); ++i) {
       for (int j = i + 1; j < P->getNum(); ++j) {
         // vertex conflict
-        if (n->paths.get(i, t) == n->paths.get(j, t)) {
+        if (paths.get(i, t) == paths.get(j, t)) {
           constraints.push_back(new Constraint
-                                { i, t, n->paths.get(i, t), nullptr });
+                                { i, t, paths.get(i, t), nullptr });
           constraints.push_back(new Constraint
-                                { j, t, n->paths.get(j, t), nullptr });
+                                { j, t, paths.get(j, t), nullptr });
           return constraints;
         }
         // swap conflict
-        if (n->paths.get(i, t) == n->paths.get(j, t-1) &&
-            n->paths.get(j, t) == n->paths.get(i, t-1)) {
+        if (paths.get(i, t) == paths.get(j, t-1) &&
+            paths.get(j, t) == paths.get(i, t-1)) {
           constraints.push_back(new Constraint
                                 { i, t,
-                                   n->paths.get(i, t),
-                                   n->paths.get(i, t-1) });
+                                   paths.get(i, t),
+                                   paths.get(i, t-1) });
           constraints.push_back(new Constraint
                                 { j, t,
-                                   n->paths.get(j, t),
-                                   n->paths.get(j, t-1) });
+                                   paths.get(j, t),
+                                   paths.get(j, t-1) });
           return constraints;
         }
       }
@@ -187,6 +218,32 @@ int CBS::countConflict(const Paths& paths)
   return cnt;
 }
 
+int CBS::countConflict(int id, const Path& path, const Paths& paths)
+{
+  if (path.empty()) return 0;
+
+  int cnt = 0;
+  int makespan = paths.getMakespan();
+  for (int i = 0; i < P->getNum(); ++i) {
+    if (i == id) continue;
+    for (int t = 1; t < path.size(); ++t) {
+      if (t > makespan) {
+        if (path[t] == paths.get(i, makespan)) {
+          ++cnt;
+          break;
+        }
+        continue;
+      }
+      // vertex conflict
+      if (paths.get(i, t) == path[t]) ++cnt;
+      // swap conflict
+      if (paths.get(i, t) == path[t-1] &&
+          paths.get(i, t-1) == path[t]) ++cnt;
+    }
+  }
+  return cnt;
+}
+
 Path CBS::getConstrainedPath(HighLevelNode* h_node, int id)
 {
   Node* s = P->getStart(id);
@@ -202,6 +259,17 @@ Path CBS::getConstrainedPath(HighLevelNode* h_node, int id)
       }
     }
   }
+
+  AstarHeuristics fValue;
+  if (h_node->paths.costOfPath(id) > max_constraint_time) {
+    fValue = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+  } else {
+    fValue =
+      [&] (AstarNode* n) {
+        return std::max(n->g, max_constraint_time) + pathDist(n->v, g);
+      };
+  }
+
 
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
@@ -235,6 +303,7 @@ Path CBS::getConstrainedPath(HighLevelNode* h_node, int id)
     };
 
   return getTimedPath(s, g,
+                      fValue,
                       compare,
                       checkAstarFin,
                       checkInvalidAstarNode);
@@ -263,6 +332,21 @@ void CBS::setParams(int argc, char *argv[]) {
       break;
     }
   }
+
+  switch (objective_type) {
+  case OBJECTIVE::SOC:
+    solver_name += " (SOC)";
+    break;
+  case OBJECTIVE::MAKESPAN:
+    solver_name += " (makespan)";
+    break;
+  case OBJECTIVE::MAKESPAN_SOC:
+    solver_name += " (makespan -> SOC)";
+    break;
+  default:
+    break;
+  }
+
 }
 
 void CBS::printHelp() {

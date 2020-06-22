@@ -15,7 +15,7 @@ Solver::Solver(Problem* _P)
   solved = false;
 }
 
-Path Solver::getPath(Node* s, Node* g)
+Path Solver::getPath(Node* const s, Node* const g)
 {
   if (s == g) return {};
 
@@ -29,7 +29,7 @@ Path Solver::getPath(Node* s, Node* g)
   return path;
 }
 
-int Solver::pathDist(Node* s, Node* g)
+int Solver::pathDist(Node* const s, Node* const g)
 {
   if (s == g) return 0;
 
@@ -57,7 +57,7 @@ void Solver::registerPath(const Path& path)
 }
 
 // A* search but using cache as much as possible
-Path Solver::getPathOnG(Node* s, Node* g)
+Path Solver::getPathOnG(Node* const s, Node* const g)
 {
   auto compare = [&] (AstarNode* a, AstarNode* b) {
                    if (a->f != b->f) return a->f > b->f;
@@ -130,8 +130,9 @@ Path Solver::getPathOnG(Node* s, Node* g)
 }
 
 // pure A* search
-Path Solver::getTimedPath(Node* s,
-                          Node* g,
+Path Solver::getTimedPath(Node* const s,
+                          Node* const g,
+                          AstarHeuristics& fValue,
                           CompareAstarNode& compare,
                           CheckAstarFin& checkAstarFin,
                           CheckInvalidAstarNode& checkInvalidAstarNode)
@@ -147,7 +148,8 @@ Path Solver::getTimedPath(Node* s,
 
   // initial node
   AstarNode* n;
-  n = new AstarNode { s, 0, pathDist(s, g) + 0, nullptr };
+  n = new AstarNode { s, 0, 0, nullptr };
+  n->f = fValue(n);
   OPEN.push(n);
 
   // main loop
@@ -173,12 +175,13 @@ Path Solver::getTimedPath(Node* s,
     C.push_back(n->v);
     for (auto u : C) {
       int g_cost = n->g+1;
-      int f_cost = g_cost + pathDist(u, g);
-      AstarNode* m = new AstarNode { u, g_cost, f_cost, n };
+      AstarNode* m = new AstarNode { u, g_cost, 0, n };
+      m->f = fValue(m);
       // already searched?
       if (CLOSE.find(getNodeName(m)) != CLOSE.end()) continue;
       // check constraints
-      if (!checkInvalidAstarNode(m)) OPEN.push(m);
+      if (checkInvalidAstarNode(m)) continue;
+      OPEN.push(m);
     }
   }
 
@@ -194,7 +197,7 @@ Path Solver::getTimedPath(Node* s,
   return path;
 }
 
-std::string Solver::getPathTableKey(Node* s, Node* g) {
+std::string Solver::getPathTableKey(Node* const s, Node* const g) {
   return std::to_string(s->id) + "-" + std::to_string(g->id);
 }
 

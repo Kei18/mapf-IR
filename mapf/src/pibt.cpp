@@ -35,12 +35,12 @@ void PIBT::solve()
     Node* g = P->getGoal(i);
     int d = disable_dist_init ? 0 : pathDist(s, g);
     Agent* a = new Agent { i,        // id
-                                   s,        // current location
-                                   nullptr,  // next location
-                                   g,        // goal
-                                   0,        // elapsed
-                                   d,        // dist from s -> g
-                                   getRandomFloat(0, 1, MT) };  // tiebreaker
+                           s,        // current location
+                           nullptr,  // next location
+                           g,        // goal
+                           0,        // elapsed
+                           d,        // dist from s -> g
+                           getRandomFloat(0, 1, MT) };  // tiebreaker
     undecided.push(a);
     occupied_now[s->id] = a;
     config_s.push_back(s);
@@ -50,11 +50,9 @@ void PIBT::solve()
   // main loop
   int timestep = 0;
   while (true) {
-    if (timestep > 0 && timestep % 100 == 0) {
-      info(" ",
-           "elapsed:", getSolverElapsedTime(),
-           ", timestep:", timestep);
-    }
+    info(" ",
+         "elapsed:", getSolverElapsedTime(),
+         ", timestep:", timestep);
 
     // planning
     while (!undecided.empty()) {

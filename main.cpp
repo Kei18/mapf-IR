@@ -8,6 +8,8 @@
 #include <hca.hpp>
 #include <whca.hpp>
 #include <cbs.hpp>
+#include <ecbs.hpp>
+
 
 void printHelp();
 Solver* getSolver(const std::string solver_name,
@@ -94,6 +96,8 @@ Solver* getSolver(const std::string solver_name,
     solver = new WHCA(P);
   } else if (solver_name == "CBS") {
     solver = new CBS(P);
+  } else if (solver_name == "ECBS") {
+    solver = new ECBS(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -117,4 +121,5 @@ void printHelp() {
   HCA::printHelp();
   WHCA::printHelp();
   CBS::printHelp();
+  ECBS::printHelp();
 }

@@ -14,6 +14,7 @@ class CBS : public Solver {
 public:
   static const std::string SOLVER_NAME;
 
+protected:
   enum struct OBJECTIVE
     { SOC, MAKESPAN, MAKESPAN_SOC, NUM_ITEMS };
 
@@ -36,13 +37,14 @@ public:
   using CompareHighLevelNodes = std::function<bool(HighLevelNode*,
                                                    HighLevelNode*)>;
 
-private:
   OBJECTIVE objective_type;
 
-  HighLevelNode* createInitialHighLevelNode();
-  Constraints getFirstConflict(const HighLevelNode* n);
+  void setInitialHighLevelNode(HighLevelNode* n);
+  Path getInitialPath(int id);
+  Constraints getFirstConflict(const Paths& paths);
   void invoke(HighLevelNode* h_node, int id);
   int countConflict(const Paths& paths);
+  int countConflict(int id, const Path& path, const Paths& _paths);
   Path getConstrainedPath(HighLevelNode* h_node, int id);
   CompareHighLevelNodes returnObjectiveFunc();
 

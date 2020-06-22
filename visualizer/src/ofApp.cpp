@@ -137,10 +137,14 @@ void ofApp::draw() {
   // info
   ofSetColor(Color::font_info);
   int x = 220;
-  int y = 15;
+  int y = 5;
   font_info.drawString("solved by "
                        + P->solver
                        + (P->solved ? ", success" : ", failed"),
+                       x, y+=15);
+  font_info.drawString("agents: "
+                       + std::to_string(P->num_agents)
+                       + ", map: " + P->G->getMapFileName(),
                        x, y+=15);
   font_info.drawString("comp_time: "
                        + std::to_string(P->comp_time) + " ms",

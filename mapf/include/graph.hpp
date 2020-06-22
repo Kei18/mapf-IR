@@ -20,11 +20,11 @@ struct Pos {
     std::cout << std::endl;
   }
 
-  int manhattanDist(const Pos& pos) {
+  int manhattanDist(const Pos& pos) const {
     return std::abs(x - pos.x) + std::abs(y - pos.y);
   }
 
-  float euclideanDist(const Pos& pos) {
+  float euclideanDist(const Pos& pos) const {
     float dx = x - pos.x;
     float dy = y - pos.y;
     return std::sqrt(dx*dx + dy*dy);
@@ -60,17 +60,17 @@ struct Node {
 
   int getDegree() { return neighbor.size(); }
 
-  float manhattanDist(const Node& node) {
+  float manhattanDist(const Node& node) const {
     return pos.manhattanDist(node.pos);
   }
-  float manhattanDist(const Node* node) {
+  float manhattanDist(Node* const node) const {
     return pos.manhattanDist(node->pos);
   }
 
-  float euclideanDist(const Node& node) {
+  float euclideanDist(const Node& node) const {
     return pos.euclideanDist(node.pos);
   }
-  float euclideanDist(const Node* node) {
+  float euclideanDist(Node* const node) const {
     return pos.euclideanDist(node->pos);
   }
 
@@ -93,8 +93,8 @@ struct Node {
 
   bool operator==(const Node& v) { return v.id  == id; };
   bool operator!=(const Node& v) { return v.id  != id; };
-  bool operator==(const Node* v) { return v->id == id; };
-  bool operator!=(const Node* v) { return v->id != id; };
+  bool operator==(Node* const v) { return v->id == id; };
+  bool operator!=(Node* const v) { return v->id != id; };
 };
 
 using Nodes   = std::vector<Node*>;
@@ -117,7 +117,7 @@ public:
   virtual bool nodeExist(int x, int y) const { return false; };
   virtual Node* getNode(int x, int y) const { return nullptr; };
   virtual Node* getNode(int id) const { return nullptr; };
-  virtual int dist(Node* v, Node* u) { return 0; }
+  virtual int dist(Node* const v, Node* const u) { return 0; }
 
   std::string getMapFileName() { return map_file; };
   int getWidth() { return width; }
@@ -134,5 +134,5 @@ public:
   bool nodeExist(int x, int y) const;
   Node* getNode(int x, int y) const;
   Node* getNode(int id) const;
-  int dist(Node* v, Node* u) { return v->manhattanDist(u); }
+  int dist(Node* const v, Node* const u) { return v->manhattanDist(u); }
 };

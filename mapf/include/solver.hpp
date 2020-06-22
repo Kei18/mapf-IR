@@ -56,9 +56,7 @@ struct Paths {
   }
 
   Path get(int i) const {
-    if (!(0 <= i && i < paths.size())) {
-      halt("invalid index.");
-    }
+    if (!(0 <= i && i < paths.size())) halt("invalid index.");
     return paths[i];
   }
 
@@ -111,19 +109,22 @@ struct Paths {
     return makespan;
   }
 
+  int costOfPath(int i) const {
+    if (!(0 <= i && i < paths.size())) halt("invalid index.");
+    int c = paths[i].size();
+    auto itr = paths[i].end() - 1;
+    Node* g = *itr;
+    while (*itr == g) {
+      --c;
+      if (c <= 0) break;
+      --itr;
+    }
+    return c;
+  }
+
   int getSOC() const {
     int soc = 0;
-    for (auto p : paths) {
-      int c = p.size();
-      auto itr = p.end() - 1;
-      Node* g = *itr;
-      while (*itr == g) {
-        --c;
-        if (c <= 0) break;
-        --itr;
-      }
-      soc += c;
-    }
+    for (int i = 0; i < paths.size(); ++i) soc += costOfPath(i);
     return soc;
   }
 
@@ -172,9 +173,9 @@ class Solver {
 private:
   // cache
   std::unordered_map<std::string, Path> PATH_TABLE;
-  static std::string getPathTableKey(Node* s, Node* g);
+  static std::string getPathTableKey(Node* const s, Node* const g);
   void registerPath(const Path& path);
-  Path getPathOnG(Node* s, Node* g);
+  Path getPathOnG(Node* const s, Node* const g);
 
 protected:
   std::string solver_name;
@@ -197,16 +198,18 @@ protected:
   using CompareAstarNode = std::function<bool(AstarNode*, AstarNode*)>;
   using CheckAstarFin = std::function<bool(AstarNode*)>;
   using CheckInvalidAstarNode = std::function<bool(AstarNode*)>;
+  using AstarHeuristics = std::function<int(AstarNode*)>;
 
   Plan solution;
   bool solved;
   std::chrono::system_clock::time_point t_start;
   double comp_time;
 
-  Path getPath(Node* s, Node* g);
-  int pathDist(Node* s, Node* g);
-  Path getTimedPath(Node* s,
-                    Node* g,
+  Path getPath(Node* const s, Node* const g);
+  int pathDist(Node* const s, Node* const g);
+  Path getTimedPath(Node* const s,
+                    Node* const g,
+                    AstarHeuristics& fValue,
                     CompareAstarNode& compare,
                     CheckAstarFin& checkAstarFin,
                     CheckInvalidAstarNode& checkInvalidAstarNode);
