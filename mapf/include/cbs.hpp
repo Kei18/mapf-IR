@@ -15,9 +15,6 @@ public:
   static const std::string SOLVER_NAME;
 
 protected:
-  enum struct OBJECTIVE
-    { SOC, MAKESPAN, MAKESPAN_SOC, NUM_ITEMS };
-
   struct Constraint {
     int id;   // agent id
     int t;
@@ -37,23 +34,19 @@ protected:
   using CompareHighLevelNodes = std::function<bool(HighLevelNode*,
                                                    HighLevelNode*)>;
 
-  OBJECTIVE objective_type;
-
   void setInitialHighLevelNode(HighLevelNode* n);
   Path getInitialPath(int id);
   Constraints getFirstConflict(const Paths& paths);
   void invoke(HighLevelNode* h_node, int id);
   int countConflict(const Paths& paths);
   int countConflict(int id, const Path& path, const Paths& _paths);
-  Path getConstrainedPath(HighLevelNode* h_node, int id);
-  CompareHighLevelNodes returnObjectiveFunc();
+  virtual Path getConstrainedPath(HighLevelNode* h_node, int id);
+  virtual CompareHighLevelNodes getObjective();
 
 public:
   CBS(Problem* _P);
   ~CBS() {};
 
   void solve();
-
-  void setParams(int argc, char *argv[]);
   static void printHelp();
 };

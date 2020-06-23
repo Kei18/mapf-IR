@@ -5,7 +5,6 @@ const std::string CBS::SOLVER_NAME = "CBS";
 CBS::CBS(Problem* _P) : Solver(_P)
 {
   solver_name = CBS::SOLVER_NAME;
-  VERVOSE = verbose;
 }
 
 void CBS::solve()
@@ -14,7 +13,7 @@ void CBS::solve()
   // high-level search
 
   // set objective function
-  CompareHighLevelNodes compare = returnObjectiveFunc();
+  CompareHighLevelNodes compare = getObjective();
 
   // OPEN
   std::priority_queue<HighLevelNode*,
@@ -62,45 +61,19 @@ void CBS::solve()
     }
   }
 
-  if (solved) {  // success
-    solution = n->paths.toPlan();
-  } else {  // failed
-    Config config_s;
-    for (int i = 0; i < P->getNum(); ++i) {
-      config_s.push_back(P->getStart(i));
-    }
-    solution.add(config_s);
-  }
+  if (solved) solution = n->paths.toPlan();
   end();
 }
 
-CBS::CompareHighLevelNodes CBS::returnObjectiveFunc()
+CBS::CompareHighLevelNodes CBS::getObjective()
 {
-  CompareHighLevelNodes compare;
-  switch (objective_type) {
-  case OBJECTIVE::MAKESPAN:
-    compare = [] (HighLevelNode* a, HighLevelNode* b)
-              { if (a->makespan != b->makespan)
-                  return a->makespan > b->makespan;
-                if (a->f != b->f) return a->f > b->f;
-                return false; };
-    break;
-  case OBJECTIVE::MAKESPAN_SOC:
-    compare = [] (HighLevelNode* a, HighLevelNode* b)
-              { if (a->makespan != b->makespan)
-                  return a->makespan > b->makespan;
-                if (a->soc != b->soc) return a->soc > b->soc;
-                if (a->f != b->f) return a->f > b->f;
-                return false; };
-    break;
-  case OBJECTIVE::SOC:
-  default:
-    compare = [] (HighLevelNode* a, HighLevelNode* b)
-              { if (a->soc != b->soc) return a->soc > b->soc;
-                if (a->f != b->f) return a->f > b->f;  // tie-breaker
-                return false; };
-    break;
-  }
+  CompareHighLevelNodes compare =
+    [] (HighLevelNode* a, HighLevelNode* b)
+    {
+     if (a->soc != b->soc) return a->soc > b->soc;
+     if (a->f != b->f) return a->f > b->f;  // tie-breaker
+     return false;
+    };
   return compare;
 }
 
@@ -307,46 +280,6 @@ Path CBS::getConstrainedPath(HighLevelNode* h_node, int id)
                       compare,
                       checkAstarFin,
                       checkInvalidAstarNode);
-}
-
-void CBS::setParams(int argc, char *argv[]) {
-  struct option longopts[] = {
-    { "objective-func", required_argument, 0, 'x' },
-    { 0, 0, 0, 0 },
-  };
-  optind = 1;  // reset
-  int opt, longindex, tmp;
-  int num_items = static_cast<int>(OBJECTIVE::NUM_ITEMS) - 1;
-  while ((opt = getopt_long(argc, argv, "x:",
-                            longopts, &longindex)) != -1) {
-    switch (opt) {
-    case 'x':
-      tmp = std::atoi(optarg);
-      if (tmp < 0 || num_items < tmp) {
-        halt("type of objective func is within 0-"
-             + std::to_string(num_items));
-      }
-      objective_type = static_cast<OBJECTIVE>(tmp);
-      break;
-    default:
-      break;
-    }
-  }
-
-  switch (objective_type) {
-  case OBJECTIVE::SOC:
-    solver_name += " (SOC)";
-    break;
-  case OBJECTIVE::MAKESPAN:
-    solver_name += " (makespan)";
-    break;
-  case OBJECTIVE::MAKESPAN_SOC:
-    solver_name += " (makespan -> SOC)";
-    break;
-  default:
-    break;
-  }
-
 }
 
 void CBS::printHelp() {

@@ -4,6 +4,131 @@
 #include <regex>
 #include "../include/util.hpp"
 
+Path Graph::getPath(Node* const s, Node* const g)
+{
+  if (s == g) return {};
+
+  // check cache
+  std::string key = getPathTableKey(s, g);
+  auto itr = PATH_TABLE.find(key);
+  if (itr != PATH_TABLE.end()) return itr->second;
+
+  Path path = AstarSearchWithCache(s, g);
+  registerPath(path);
+  return path;
+}
+
+int Graph::pathDist(Node* const s, Node* const g)
+{
+  if (s == g) return 0;
+
+  // check cache
+  std::string key = getPathTableKey(s, g);
+  auto itr = PATH_TABLE.find(key);
+  if (itr != PATH_TABLE.end()) return itr->second.size() - 1;
+
+  Path path = AstarSearchWithCache(s, g);
+  registerPath(path);
+  return path.size() - 1;
+}
+
+void Graph::registerPath(const Path& path)
+{
+  if (path.empty()) return;
+  Nodes tmp = path;
+  Node* v;
+  Node* g = *(path.end() - 1);
+  do {
+    v = tmp[0];
+    PATH_TABLE[getPathTableKey(v, g)] = tmp;
+    tmp.erase(tmp.begin());
+  } while (tmp.size() > 2);
+}
+
+// A* search but using cache as much as possible
+Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
+{
+  struct AstarNode {
+    Node* v;
+    int g;
+    int f;
+    AstarNode* p;  // parent
+  };
+
+  auto compare = [&] (AstarNode* a, AstarNode* b) {
+                   if (a->f != b->f) return a->f > b->f;
+                   if (a->g != b->g) return a->g < b->g;
+                   return false; };
+
+  // OPEN and CLOSE
+  std::priority_queue<AstarNode*,
+                      std::vector<AstarNode*>,
+                      decltype(compare)> OPEN(compare);
+  std::unordered_map<int, bool> CLOSE;
+
+  // initial node
+  AstarNode* n;
+  n = new AstarNode { s, 0, dist(s, g), nullptr };
+  OPEN.push(n);
+
+  bool invalid = true;
+  while (!OPEN.empty()) {
+    n = OPEN.top();
+    OPEN.pop();
+
+    // check CLOSE list
+    if (CLOSE.find(n->v->id) != CLOSE.end()) continue;
+    CLOSE[n->v->id] = true;
+
+    // check goal condition
+    if (n->v == g) {
+      invalid = false;
+      break;
+    }
+
+    // use cache
+    auto itr = PATH_TABLE.find(getPathTableKey(n->v, g));
+    if (itr != PATH_TABLE.end()) {
+      Path path = itr->second;
+      for (int t = 1; t < path.size(); ++t)
+        n = new AstarNode { path[t], 0, 0, n };
+      invalid = false;
+      break;
+    }
+
+    // expand
+    Nodes C = n->v->neighbor;
+    C.push_back(n->v);
+    for (auto u : C) {
+      // already searched?
+      if (CLOSE.find(u->id) != CLOSE.end()) continue;
+      int g_value = n->g + 1;
+      int h_value = g_value + dist(u, g);
+      // use real cost whenever available
+      auto itr = PATH_TABLE.find(getPathTableKey(u, g));
+      if (itr != PATH_TABLE.end()) {
+        h_value = g_value + itr->second.size() - 1;
+      }
+      AstarNode* m = new AstarNode { u, g_value, h_value, n };
+      OPEN.push(m);
+    }
+  }
+
+  if (invalid) halt("graph contains unreachable nodes.");
+
+  Path path;
+  while (n != nullptr) {
+    path.push_back(n->v);
+    n = n->p;
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
+}
+
+std::string Graph::getPathTableKey(Node* const s, Node* const g) {
+  return std::to_string(s->id) + "-" + std::to_string(g->id);
+}
+
 Grid::Grid(const std::string& _map_file): Graph(_map_file)
 {
   std::ifstream file(map_file);

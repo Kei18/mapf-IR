@@ -5,7 +5,6 @@ const std::string PIBT::SOLVER_NAME = "PIBT";
 PIBT::PIBT(Problem* _P) : Solver(_P)
 {
   solver_name = PIBT::SOLVER_NAME;
-  VERVOSE = verbose;
 }
 
 void PIBT::solve()
@@ -29,7 +28,6 @@ void PIBT::solve()
   std::unordered_map<int, Agent*> occupied_now;
   std::unordered_map<int, Agent*> occupied_next;
 
-  Config config_s;
   for (int i = 0; i < P->getNum(); ++i) {
     Node* s = P->getStart(i);
     Node* g = P->getGoal(i);
@@ -43,9 +41,8 @@ void PIBT::solve()
                            getRandomFloat(0, 1, MT) };  // tiebreaker
     undecided.push(a);
     occupied_now[s->id] = a;
-    config_s.push_back(s);
   }
-  plan.add(config_s);
+  plan.add(P->getConfigStart());
 
   // main loop
   int timestep = 0;

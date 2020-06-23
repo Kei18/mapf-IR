@@ -7,7 +7,6 @@ WHCA::WHCA(Problem* _P) : Solver(_P)
 {
   window = DEFAULT_WINDOW;
   solver_name = SOLVER_NAME + "-" + std::to_string(window);
-  VERVOSE = verbose;
 }
 
 void WHCA::solve()
@@ -53,10 +52,6 @@ void WHCA::solve()
         invalid = true;
         break;
       }
-      if (path[0] != s) {
-        std::cout << path[0] << "," << s->id << std::endl;
-      }
-
       partial_paths.insert(i, path);
       check_goal_cond &= (*(path.end()-1) == g);
     }

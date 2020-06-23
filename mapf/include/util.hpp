@@ -3,9 +3,6 @@
 #include <chrono>
 
 
-static bool VERVOSE = false;
-
-
 static void halt(const std::string& msg,
                  const char* caller=__builtin_FUNCTION())
 {
@@ -21,19 +18,6 @@ static void warn(const std::string& msg,
   std::cout << msg << std::endl;
 }
 
-static void info() {
-  if (!VERVOSE) return;
-  std::cout << std::endl;
-}
-
-template <class Head, class... Tail>
-static void info(Head&& head, Tail&&... tail)
-{
-  if (!VERVOSE) return;
-  std::cout << head << " ";
-  info(std::forward<Tail>(tail)...);
-}
-
 template <typename T>
 static bool inArray(const T a, const std::vector<T> &arr) {
   auto itr = std::find(arr.begin(), arr.end(), a);
@@ -45,6 +29,14 @@ template <typename T>
 static T randomChoose(std::vector<T> &arr, std::mt19937* MT) {
   std::uniform_int_distribution<int> chooser(0, arr.size() - 1);
   return arr[chooser(*MT)];
+}
+
+template <typename T>
+static std::tuple<int, T>
+randomChooseWithIndex(std::vector<T> &arr, std::mt19937* MT) {
+  std::uniform_int_distribution<int> chooser(0, arr.size() - 1);
+  int i = chooser(*MT);
+  return std::make_tuple(i, arr[i]);
 }
 
 static bool getRandomBoolean(std::mt19937* MT) {

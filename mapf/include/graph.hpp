@@ -3,6 +3,9 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <unordered_map>
+#include <queue>
+
 
 struct Pos {
   int x;
@@ -102,7 +105,23 @@ using Path    = std::vector<Node*>;  // < loc_i[0], loc_i[1], ... >
 using Config  = std::vector<Node*>;  // < loc_0[t], loc_1[t], ... >
 using Configs = std::vector<Config>;
 
+static bool sameConfig(const Config& config_i, const Config& config_j)
+{
+  if (config_i.size() != config_j.size()) return false;
+  for (int k = 0; k < config_i.size(); ++k) {
+    if (config_i[k] != config_j[k]) return false;
+  }
+  return true;
+}
+
 class Graph {
+private:
+  // cache
+  std::unordered_map<std::string, Path> PATH_TABLE;
+  void registerPath(const Path& path);
+  Path AstarSearchWithCache(Node* const s, Node* const g);
+  static std::string getPathTableKey(Node* const s, Node* const g);
+
 protected:
   Nodes V;
   std::string map_file;
@@ -122,6 +141,9 @@ public:
   std::string getMapFileName() { return map_file; };
   int getWidth() { return width; }
   int getHeight() { return height; }
+
+  Path getPath(Node* const s, Node* const g);
+  int pathDist(Node* const s, Node* const g);
 };
 
 

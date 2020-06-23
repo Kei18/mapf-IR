@@ -2,7 +2,6 @@
 #include "../include/util.hpp"
 #include <fstream>
 
-bool Solver::verbose = false;
 
 Solver::Solver(Problem* _P)
   : P(_P),
@@ -11,122 +10,8 @@ Solver::Solver(Problem* _P)
     max_timestep(P->getMaxTimestep()),
     max_comp_time(P->getMaxCompTime())
 {
-  VERVOSE = verbose;  // def in util.hpp
   solved = false;
-}
-
-Path Solver::getPath(Node* const s, Node* const g)
-{
-  if (s == g) return {};
-
-  // check cache
-  std::string key = getPathTableKey(s, g);
-  auto itr = PATH_TABLE.find(key);
-  if (itr != PATH_TABLE.end()) return itr->second;
-
-  Path path = getPathOnG(s, g);
-  registerPath(path);
-  return path;
-}
-
-int Solver::pathDist(Node* const s, Node* const g)
-{
-  if (s == g) return 0;
-
-  // check cache
-  std::string key = getPathTableKey(s, g);
-  auto itr = PATH_TABLE.find(key);
-  if (itr != PATH_TABLE.end()) return itr->second.size() - 1;
-
-  Path path = getPathOnG(s, g);
-  registerPath(path);
-  return path.size() - 1;
-}
-
-void Solver::registerPath(const Path& path)
-{
-  if (path.empty()) return;
-  Nodes tmp = path;
-  Node* v;
-  Node* g = *(path.end() - 1);
-  do {
-    v = tmp[0];
-    PATH_TABLE[getPathTableKey(v, g)] = tmp;
-    tmp.erase(tmp.begin());
-  } while (tmp.size() > 2);
-}
-
-// A* search but using cache as much as possible
-Path Solver::getPathOnG(Node* const s, Node* const g)
-{
-  auto compare = [&] (AstarNode* a, AstarNode* b) {
-                   if (a->f != b->f) return a->f > b->f;
-                   if (a->g != b->g) return a->g < b->g;
-                   return getRandomBoolean(MT); };
-
-  // OPEN and CLOSE
-  std::priority_queue<AstarNode*,
-                      std::vector<AstarNode*>,
-                      decltype(compare)> OPEN(compare);
-  std::unordered_map<int, bool> CLOSE;
-
-  // initial node
-  AstarNode* n;
-  n = new AstarNode { s, 0, G->dist(s, g), nullptr };
-  OPEN.push(n);
-
-  bool invalid = true;
-  while (!OPEN.empty()) {
-    n = OPEN.top();
-    OPEN.pop();
-
-    // check CLOSE list
-    if (CLOSE.find(n->v->id) != CLOSE.end()) continue;
-    CLOSE[n->v->id] = true;
-
-    // check goal condition
-    if (n->v == g) {
-      invalid = false;
-      break;
-    }
-
-    // use cache
-    auto itr = PATH_TABLE.find(getPathTableKey(n->v, g));
-    if (itr != PATH_TABLE.end()) {
-      Path path = itr->second;
-      for (int t = 1; t < path.size(); ++t)
-        n = new AstarNode { path[t], 0, 0, n };
-      invalid = false;
-      break;
-    }
-
-    // expand
-    Nodes C = n->v->neighbor;
-    C.push_back(n->v);
-    for (auto u : C) {
-      // already searched?
-      if (CLOSE.find(u->id) != CLOSE.end()) continue;
-      int g_value = n->g + 1;
-      int h_value = g_value + G->dist(u, g);
-      // use real cost whenever available
-      auto itr = PATH_TABLE.find(getPathTableKey(u, g));
-      if (itr != PATH_TABLE.end()) {
-        h_value = g_value + itr->second.size() - 1;
-      }
-      AstarNode* m = new AstarNode { u, g_value, h_value, n };
-      OPEN.push(m);
-    }
-  }
-
-  if (invalid) halt("graph contains unreachable nodes.");
-
-  Path path;
-  while (n != nullptr) {
-    path.push_back(n->v);
-    n = n->p;
-  }
-  std::reverse(path.begin(), path.end());
-  return path;
+  verbose = false;
 }
 
 // pure A* search
@@ -197,18 +82,27 @@ Path Solver::getTimedPath(Node* const s,
   return path;
 }
 
-std::string Solver::getPathTableKey(Node* const s, Node* const g) {
-  return std::to_string(s->id) + "-" + std::to_string(g->id);
-}
-
 void Solver::start() {
-  info("start solving MAPF by", solver_name);
+  info("  start solving MAPF by", solver_name);
   t_start = std::chrono::system_clock::now();
 }
 
 void Solver::end() {
   comp_time = getSolverElapsedTime();
-  info("finish");
+  // format
+  if (!solved && solution.empty()) solution.add(P->getConfigStart());
+}
+
+double Solver::getSolverElapsedTime() const {
+  return getElapsedTime(t_start);
+}
+
+bool Solver::overCompTime() const {
+  return getSolverElapsedTime() >= max_comp_time;
+}
+
+void Solver::printResult() {
+  info("  finish");
   std::cout << "solved=" << solved
             << ", solver=" << std::right << std::setw(8)
             << solver_name
@@ -219,14 +113,6 @@ void Solver::end() {
             << ", makespan=" << std::right << std::setw(5)
             << solution.getMakespan()
             << std::endl;
-}
-
-double Solver::getSolverElapsedTime() const {
-  return getElapsedTime(t_start);
-}
-
-bool Solver::overCompTime() const {
-  return getSolverElapsedTime() >= max_comp_time;
 }
 
 void Solver::makeLog(const std::string& logfile) {

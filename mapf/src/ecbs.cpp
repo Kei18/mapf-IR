@@ -7,7 +7,6 @@ ECBS::ECBS(Problem* _P) : CBS(_P)
 {
   sub_optimality = DEFAULT_SUB_OPTIMALITY;
   solver_name = ECBS::SOLVER_NAME + std::to_string(sub_optimality);
-  VERVOSE = verbose;
 }
 
 void ECBS::solve()

@@ -6,7 +6,6 @@ const std::string HCA::SOLVER_NAME = "HCA";
 HCA::HCA(Problem* _P) : Solver(_P)
 {
   solver_name = HCA::SOLVER_NAME;
-  VERVOSE = verbose;
 }
 
 void HCA::solve()
@@ -49,14 +48,7 @@ void HCA::solve()
     }
   }
 
-  if (invalid) {  // failed
-    Config config_s;
-    for (int i = 0; i < P->getNum(); ++i) {
-      config_s.push_back(P->getStart(i));
-    }
-    solution.add(config_s);
-    solved = false;
-  } else {  // success
+  if (!invalid) {  // success
     solution = paths.toPlan();
     solved = true;
   }

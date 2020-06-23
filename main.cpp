@@ -3,29 +3,23 @@
 #include <vector>
 #include <random>
 #include <util.hpp>
+#include <default_params.hpp>
 #include <problem.hpp>
 #include <pibt.hpp>
 #include <hca.hpp>
 #include <whca.hpp>
 #include <cbs.hpp>
 #include <ecbs.hpp>
+#include <ir.hpp>
 
 
 void printHelp();
 Solver* getSolver(const std::string solver_name,
                   Problem* P,
+                  bool verbose,
                   int argc,
                   char *argv[]);
 
-struct option longopts[] = {
-  { "instance", required_argument, 0, 'i' },
-  { "output", required_argument, 0, 'o' },
-  { "solver", required_argument, 0, 's' },
-  { "verbose", no_argument, 0, 'v' },
-  { "help", no_argument, 0, 'h' },
-  { 0, 0, 0, 0 },
-};
-const std::string DEFAULT_OUTPUT_FILE = "./result.txt";
 const std::string DEFAULT_SOLVER_NAME = "PIBT";
 
 
@@ -33,6 +27,19 @@ int main(int argc, char *argv[]) {
   std::string instance_file = "";
   std::string output_file = DEFAULT_OUTPUT_FILE;
   std::string solver_name = DEFAULT_SOLVER_NAME;
+  bool verbose = false;
+  char *argv_copy[argc+1];
+
+  for (int i = 0; i < argc; ++i) argv_copy[i] = argv[i];
+
+  struct option longopts[] = {
+    { "instance", required_argument, 0, 'i' },
+    { "output", required_argument, 0, 'o' },
+    { "solver", required_argument, 0, 's' },
+    { "verbose", no_argument, 0, 'v' },
+    { "help", no_argument, 0, 'h' },
+    { 0, 0, 0, 0 },
+  };
 
   // command line args
   int opt, longindex;
@@ -50,8 +57,7 @@ int main(int argc, char *argv[]) {
       solver_name = std::string(optarg);
       break;
     case 'v':
-      VERVOSE = true;
-      Solver::setVerbose(true);
+      verbose = true;
       break;
     case 'h':
       printHelp();
@@ -72,18 +78,22 @@ int main(int argc, char *argv[]) {
   Problem* P = new Problem(instance_file);
 
   // solve
-  Solver* solver = getSolver(solver_name, P, argc, argv);
+  Solver* solver = getSolver(solver_name, P, verbose, argc, argv_copy);
   solver->solve();
+  solver->printResult();
 
   // output result
   solver->makeLog(output_file);
-  info("save result as ", output_file);
+  if (verbose) {
+    std::cout << "save result as " << output_file << std::endl;
+  }
 
   return 0;
 }
 
 Solver* getSolver(const std::string solver_name,
                   Problem* P,
+                  bool verbose,
                   int argc,
                   char *argv[])
 {
@@ -98,11 +108,14 @@ Solver* getSolver(const std::string solver_name,
     solver = new CBS(P);
   } else if (solver_name == "ECBS") {
     solver = new ECBS(P);
+  } else if (solver_name == "IR") {
+    solver = new IR(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
   }
   solver->setParams(argc, argv);
+  solver->setVerbose(verbose);
   return solver;
 }
 
@@ -122,4 +135,5 @@ void printHelp() {
   WHCA::printHelp();
   CBS::printHelp();
   ECBS::printHelp();
+  IR::printHelp();
 }

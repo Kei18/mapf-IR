@@ -3,10 +3,6 @@
 #include <regex>
 #include "../include/util.hpp"
 
-static const int DEFAULT_SEED = 0;
-static const int DEFAULT_MAX_TIMESTEP = 5000;
-static const int DEFAULT_MAX_COMP_TIME = 60000;
-
 
 Problem::Problem(const std::string& _instance) : instance(_instance)
 {
@@ -108,6 +104,21 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
   if (num_agents > config_s.size()) {
     setRandomStartsGoals();
   }
+}
+
+Problem::Problem(Problem* P,
+                 Config _config_s,
+                 Config _config_g,
+                 int _max_comp_time,
+                 int _max_timestep)
+  : G(P->getG()),
+    MT(P->getMT()),
+    num_agents(P->getNum()),
+    config_s(_config_s),
+    config_g(_config_g),
+    max_comp_time(_max_comp_time),
+    max_timestep(_max_timestep)
+{
 }
 
 Node* Problem::getStart(int i) const {
