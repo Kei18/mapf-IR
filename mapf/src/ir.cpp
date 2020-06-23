@@ -3,8 +3,8 @@
 #include "../include/pibt.hpp"
 #include "../include/hca.hpp"
 #include "../include/whca.hpp"
-#include "../include/cbs.hpp"
 #include "../include/cbs_refine.hpp"
+#include "../include/ecbs_refine.hpp"
 
 
 const std::string IR::SOLVER_NAME = "IR";
@@ -216,15 +216,20 @@ Plan IR::MAPFSolver(const Config& config_s,
                             comp_time_limit,
                             max_timestep);
   Solver* solver;
+  int current_makespan = current_plan.getMakespan();
+  int current_soc =  current_plan.getSOC();
+
   switch (refine_solver) {
-  case REFINE_SOLVER_TYPE::CBS_NORMAL:
-    solver = new CBS(_P);
+  case REFINE_SOLVER_TYPE::ECBS:
+    solver = new ECBS_REFINE(_P,
+                             current_makespan,
+                             current_soc);
     break;
   case REFINE_SOLVER_TYPE::CBS:
   default:
     solver = new CBS_REFINE(_P,
-                            current_plan.getMakespan(),
-                            current_plan.getSOC());
+                            current_makespan,
+                            current_soc);
     break;
   }
   // set params
@@ -236,6 +241,7 @@ Plan IR::MAPFSolver(const Config& config_s,
   }
 
   // solve
+  // solver->setVerbose(true);
   solver->solve();
   if (solver->succeed()) return solver->getSolution();
   return current_plan;
@@ -324,8 +330,8 @@ void IR::setParams(int argc, char *argv[])
       s = std::string(optarg);
       if (s == "CBS") {
         refine_solver = REFINE_SOLVER_TYPE::CBS;
-      } else if (s == "CBS_NORMAL") {
-        refine_solver = REFINE_SOLVER_TYPE::CBS_NORMAL;
+      } else if (s == "ECBS") {
+        refine_solver = REFINE_SOLVER_TYPE::ECBS;
       } else {
         warn("solver does not exists, use CBS");
       }

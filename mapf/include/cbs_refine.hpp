@@ -17,6 +17,4 @@ private:
 public:
   CBS_REFINE(Problem* _P, int _ub_makespan, int _ub_soc);
   ~CBS_REFINE() {};
-
-  // void solve();
 };

@@ -36,10 +36,6 @@ Path CBS_REFINE::getConstrainedPath(HighLevelNode* h_node, int id)
     }
   }
 
-  int prev_cost = h_node->paths.costOfPath(id);
-  int cost_limit = ub_soc - h_node->paths.getSOC() + prev_cost;
-  cost_limit = std::min(ub_makespan, cost_limit);
-
   AstarHeuristics fValue =
     [&] (AstarNode* n) {
       return n->g + pathDist(n->v, g);
@@ -66,6 +62,10 @@ Path CBS_REFINE::getConstrainedPath(HighLevelNode* h_node, int id)
     };
 
   // different from CBS
+  int prev_cost = h_node->paths.costOfPath(id);
+  int cost_limit = ub_soc - h_node->paths.getSOC() + prev_cost;
+  cost_limit = std::min(ub_makespan, cost_limit);
+
   CheckInvalidAstarNode checkInvalidAstarNode =
     [&] (AstarNode* m) {
       if (m->f > cost_limit) return true;

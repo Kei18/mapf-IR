@@ -37,9 +37,9 @@ protected:
   void setInitialHighLevelNode(HighLevelNode* n);
   Path getInitialPath(int id);
   Constraints getFirstConflict(const Paths& paths);
-  void invoke(HighLevelNode* h_node, int id);
   int countConflict(const Paths& paths);
   int countConflict(int id, const Path& path, const Paths& _paths);
+  void invoke(HighLevelNode* h_node, int id);
   virtual Path getConstrainedPath(HighLevelNode* h_node, int id);
   virtual CompareHighLevelNodes getObjective();
 

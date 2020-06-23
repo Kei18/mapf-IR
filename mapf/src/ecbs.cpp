@@ -14,18 +14,8 @@ void ECBS::solve()
   start();
   // high-level search
 
-  auto compareOPEN =
-    [&] (HighLevelNodeECBS* a, HighLevelNodeECBS* b) {
-      if (a->soc != b->soc) return a->soc > b->soc;
-      return false;
-    };
-
-  auto compareFOCAL =
-    [&] (HighLevelNodeECBS* a, HighLevelNodeECBS* b) {
-      if (a->f != b->f) return a->f > b->f;
-      if (a->soc != b->soc) return a->soc > b->soc;
-      return false;
-    };
+  CompareHighLevelNodeECBS compareOPEN = getMainObjective();
+  CompareHighLevelNodeECBS compareFOCAL = getFocalObjective();
 
   // OPEN, FOCAL
   std::priority_queue<HighLevelNodeECBS*,
@@ -45,6 +35,7 @@ void ECBS::solve()
 
     // build focal
     while (!OPEN.empty() && !OPEN.top()->valid) OPEN.pop();
+    if (OPEN.empty()) break;  // failed
     float LB_bound = OPEN.top()->LB * sub_optimality;
     std::vector<HighLevelNodeECBS*> tmp;
     std::priority_queue<HighLevelNodeECBS*,
@@ -112,6 +103,25 @@ void ECBS::solve()
   end();
 }
 
+ECBS::CompareHighLevelNodeECBS ECBS::getMainObjective() {
+  CompareHighLevelNodeECBS compare =
+    [&] (HighLevelNodeECBS* a, HighLevelNodeECBS* b) {
+      if (a->soc != b->soc) return a->soc > b->soc;
+      return false;
+    };
+  return compare;
+}
+
+ECBS::CompareHighLevelNodeECBS ECBS::getFocalObjective() {
+  CompareHighLevelNodeECBS compare =
+    [&] (HighLevelNodeECBS* a, HighLevelNodeECBS* b) {
+      if (a->f != b->f) return a->f > b->f;
+      if (a->soc != b->soc) return a->soc > b->soc;
+      return false;
+    };
+  return compare;
+}
+
 void ECBS::setInitialHighLevelNode(HighLevelNodeECBS* n)
 {
   Paths paths;
@@ -166,11 +176,6 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNodeECBS* h_node, int id)
         max_constraint_time = std::max(max_constraint_time, c->t);
       }
     }
-  }
-
-  Nodes config_g;
-  for (int i = 0; i < P->getNum(); ++i) {
-    config_g.push_back(P->getGoal(i));
   }
 
   FocalHeuristics f1Value;
@@ -316,13 +321,13 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
     for (auto u : C) {
       int g_cost = n->g+1;
       FocalNode* m = new FocalNode { u, g_cost, 0, 0, n };
+      // set heuristics
+      m->f1 = f1Value(m);
+      m->f2 = f2Value(m);
       // already searched?
       if (CLOSE.find(getNodeName(m)) != CLOSE.end()) continue;
       // check constraints
       if (checkInvalidFocalNode(m)) continue;
-      // set heuristics
-      m->f1 = f1Value(m);
-      m->f2 = f2Value(m);
       // update open list
       OPEN.push(m);
       if (m->f1 <= f1_min * w) FOCAL.push(m);

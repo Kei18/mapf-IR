@@ -16,7 +16,7 @@ class ECBS : public CBS {
 public:
   static const std::string SOLVER_NAME;
 
-private:
+protected:
   struct HighLevelNodeECBS {
     Paths paths;
     Constraints constraints;
@@ -35,6 +35,8 @@ private:
     int f2;
     FocalNode* p;  // parent
   };
+  using CompareHighLevelNodeECBS = std::function<bool(HighLevelNodeECBS*,
+                                                      HighLevelNodeECBS*)>;
   using CompareFocalNode = std::function<bool(FocalNode*, FocalNode*)>;
   using CheckFocalFin = std::function<bool(FocalNode*)>;
   using CheckInvalidFocalNode = std::function<bool(FocalNode*)>;
@@ -42,11 +44,13 @@ private:
 
   float sub_optimality;
   static const float DEFAULT_SUB_OPTIMALITY;
-
-  void invoke(HighLevelNodeECBS* h_node, int id);
   void setInitialHighLevelNode(HighLevelNodeECBS* n);
 
-  std::tuple<Path, int> getFocalPath(HighLevelNodeECBS* h_node, int id);
+  virtual CompareHighLevelNodeECBS getMainObjective();
+  virtual CompareHighLevelNodeECBS getFocalObjective();
+  virtual void invoke(HighLevelNodeECBS* h_node, int id);
+  virtual std::tuple<Path, int> getFocalPath(HighLevelNodeECBS* h_node,
+                                             int id);
   std::tuple<Path, int> getTimedPathByFocalSearch
   (Node* const s, Node* const g, float w,  // sub-optimality
    FocalHeuristics& f1Value,
