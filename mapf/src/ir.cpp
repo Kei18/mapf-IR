@@ -4,6 +4,7 @@
 #include "../include/hca.hpp"
 #include "../include/whca.hpp"
 #include "../include/cbs_refine.hpp"
+#include "../include/ecbs.hpp"
 #include "../include/ecbs_refine.hpp"
 
 
@@ -30,6 +31,9 @@ IR::IR(Problem* _P) : Solver(_P)
   threshold_makespan = DEFAULT_THRESHOLD_MAKESPAN;
   threshold_nondiff_refine = DEFAULT_THRESHOLD_NONDIFF_REFINE;
   threshold_soc_diff = DEFAULT_THRESHOLD_SOC_DIFF;
+
+  cache_on = true;
+  sampling_rate = 0;
 }
 
 void IR::solve()
@@ -72,6 +76,7 @@ Plan IR::getInitialPlan()
                             P->getConfigGoal(),
                             max_comp_time,
                             max_timestep);
+
   Solver* solver;
   switch (init_solver) {
   case INIT_SOLVER_TYPE::HCA:
@@ -80,23 +85,28 @@ Plan IR::getInitialPlan()
   case INIT_SOLVER_TYPE::WHCA:
     solver = new WHCA(_P);
     break;
+  case INIT_SOLVER_TYPE::ECBS:
+    solver = new ECBS(_P);
+    break;
   case INIT_SOLVER_TYPE::PIBT:
   default:
     solver = new PIBT(_P);
     break;
   }
+
   // set params
-  int argc = option_init_solver.size();
-  char *argv[argc+1];
-  for (int i = 0; i < argc; ++i) {
-    char *tmp = const_cast<char*>(option_init_solver[i].c_str());
-    argv[i+1] = tmp;
+  if (!option_init_solver.empty()) {
+    int argc = option_init_solver.size() + 1;
+    char *argv[argc+1];
+    for (int i = 0; i < argc; ++i) {
+      char *tmp = const_cast<char*>(option_init_solver[i].c_str());
+      argv[i+1] = tmp;
+    }
+    solver->setParams(argc, argv);
   }
-  solver->setParams(argc, argv);
 
   // solve
   solver->solve();
-  solver->printResult();
 
   // success
   if (solver->succeed()) return solver->getSolution();
@@ -154,6 +164,7 @@ Plan IR::simpleRefine(const Config& config_s,
                                                  old_plan.getMakespan());
   Plan plan_former = refinePlan(config_s, config_mid, old_plan_former);
   Plan plan_latter = refinePlan(config_mid, config_g, old_plan_latter);
+
   Plan new_plan = plan_former + plan_latter;
   return new_plan;
 }
@@ -192,13 +203,19 @@ Plan IR::quadraticRefine(const Config& config_s,
 
 std::tuple<int, Config> IR::subgoalConfig(Plan plan)
 {
-  return randomChooseWithIndex(plan.configs, MT);
+  int i = getRandomInt(0, plan.getMakespan(), MT);
+  return std::make_tuple(i, plan.get(i));
 }
 
 bool IR::solvableDirectly(const Config& config_s,
                           const Config& config_g,
                           const Plan& current_plan)
 {
+  if (cache_on) {
+    std::string key = getPlanTableKey(config_s, config_g);
+    if (PLAN_TABLE.find(key) != PLAN_TABLE.end()) return true;
+  }
+
   return current_plan.getMakespan() <= threshold_makespan;
 }
 
@@ -210,6 +227,15 @@ Plan IR::MAPFSolver(const Config& config_s,
   int comp_time_limit = max_comp_time - getSolverElapsedTime();
   if (comp_time_limit <= 0) return current_plan;
 
+  // caching
+  if (cache_on) {
+    std::string key = getPlanTableKey(config_s, config_g);
+    auto itr = PLAN_TABLE.find(key);
+    if (PLAN_TABLE.find(key) != PLAN_TABLE.end()) {
+      return itr->second;
+    }
+  }
+
   Problem* _P = new Problem(P,
                             config_s,
                             config_g,
@@ -218,6 +244,16 @@ Plan IR::MAPFSolver(const Config& config_s,
   Solver* solver;
   int current_makespan = current_plan.getMakespan();
   int current_soc =  current_plan.getSOC();
+
+  std::vector<int> sample;
+  // create sample
+  if (sampling_rate > 0) {
+    int sample_num = sampling_rate * P->getNum();
+    std::vector<int> ids (P->getNum());
+    std::iota(ids.begin(), ids.end(), 0);
+    std::shuffle(ids.begin(), ids.end(), *MT);
+    for (int i = 0; i < sample_num; ++i) sample.push_back(ids[i]);
+  }
 
   switch (refine_solver) {
   case REFINE_SOLVER_TYPE::ECBS:
@@ -228,23 +264,125 @@ Plan IR::MAPFSolver(const Config& config_s,
   case REFINE_SOLVER_TYPE::CBS:
   default:
     solver = new CBS_REFINE(_P,
-                            current_makespan,
-                            current_soc);
+                            current_plan,
+                            sample);
     break;
   }
   // set params
-  int argc = option_refine_solver.size();
+  int argc = option_refine_solver.size() + 1;
   char *argv[argc+1];
   for (int i = 0; i < argc; ++i) {
     char *tmp = const_cast<char*>(option_refine_solver[i].c_str());
     argv[i+1] = tmp;
   }
+  // solver->setVerbose(true);
 
   // solve
-  // solver->setVerbose(true);
   solver->solve();
-  if (solver->succeed()) return solver->getSolution();
+
+  if (solver->succeed()) {
+    Plan plan = solver->getSolution();
+    if (!cache_on) return plan;
+    if (plan.getSOC() < current_soc) {
+      registerTable(plan);
+      return plan;
+    }
+  }
+  registerTable(current_plan);
   return current_plan;
+}
+
+void IR::registerTable(const Plan& plan)
+{
+  if (!cache_on) return;
+  std::string key = getPlanTableKey(plan.get(0), plan.last());
+  if (PLAN_TABLE.find(key) != PLAN_TABLE.end()) return;
+  for (int i = 0; i < plan.size(); ++i) {
+    Config c_i = plan.get(i);
+    std::string c_i_name = getConfigName(c_i);
+    Plan partial_plan;
+    partial_plan.add(c_i);
+    for (int j = i + 1; j < plan.size(); ++j) {
+      Config c_j = plan.get(j);
+      partial_plan.add(c_j);
+      key = getPlanTableKey(c_i_name, c_j);
+      PLAN_TABLE[key] = partial_plan;
+    }
+  }
+}
+
+Plan IR::shrink(const Plan& plan)
+{
+  // try to shrink
+  int makespan = plan.getMakespan();
+  Paths paths = planToPaths(plan);
+  int num_agents = paths.size();
+  for (int i = 0; i < num_agents; ++i) {
+    Nodes tmp1_path = paths.get(i);
+    for (int t = 1; t <= makespan; ++t) {
+      if (tmp1_path[t] == paths.get(i, makespan)) continue;  // goal
+      if (tmp1_path[t] != tmp1_path[t-1]) continue;  // cannot shrink
+      // create new path
+      Nodes tmp2_path;
+      for (int _t = 0; _t < t; ++_t) {
+        tmp2_path.push_back(tmp1_path[_t]);
+      }
+      for (int _t = t + 1; _t <= makespan; ++_t) {
+        tmp2_path.push_back(tmp1_path[_t]);
+      }
+      tmp2_path.push_back(*(tmp1_path.end()-1));
+      // check collisions
+      bool conflicted = false;
+      for (int j = 0; j < num_agents; ++j) {
+        if (j == i) continue;
+        for (int _t = t; _t <= makespan; ++_t) {
+          // vertex conflict
+          if (tmp2_path[_t] == paths.get(j, _t)) {
+            conflicted = true;
+            break;
+          }
+          // swap conflict
+          if (tmp2_path[_t] == paths.get(j, _t-1) &&
+              tmp2_path[_t-1] == paths.get(j, _t)) {
+            conflicted = true;
+            break;
+          }
+        }
+        if (conflicted) break;
+      }
+      if (!conflicted) {
+        tmp1_path = tmp2_path;
+        --t;
+      }
+    }
+    paths.insert(i, tmp1_path);
+  }
+  return pathsToPlan(paths);
+}
+
+std::string IR::getPlanTableKey(const std::string& config_s_key,
+                                const Config& config_g)
+{
+  return getPlanTableKey(config_s_key, getConfigName(config_g));
+}
+
+std::string IR::getPlanTableKey(const Config& config_s,
+                                const std::string& config_g_key)
+{
+  return getPlanTableKey(getConfigName(config_s), config_g_key);
+}
+
+std::string IR::getPlanTableKey(const Config& config_s,
+                                const Config& config_g)
+{
+  return getPlanTableKey(getConfigName(config_s),
+                         getConfigName(config_g));
+}
+
+std::string IR::getPlanTableKey(const std::string& config_s_key,
+                                const std::string& config_g_key)
+{
+  return config_s_key + "_" + config_g_key;
 }
 
 void IR::setParams(int argc, char *argv[])
@@ -254,6 +392,7 @@ void IR::setParams(int argc, char *argv[])
     { "threshold-makespan", required_argument, 0, 'm' },
     { "threshold-soc-diff", required_argument, 0, 'd' },
     { "threshold-nondiff", required_argument, 0, 'n' },
+    { "sampling-rate", required_argument, 0, 'S' },
     { "init-solver", required_argument, 0, 'x' },
     { "refine-solver", required_argument, 0, 'y' },
     { "option-init-solver", required_argument, 0, 'X' },
@@ -264,7 +403,7 @@ void IR::setParams(int argc, char *argv[])
   int opt, longindex;
   std::string s, s_tmp;
 
-  while ((opt = getopt_long(argc, argv, "o:r:m:d:n:x:y:X:Y:",
+  while ((opt = getopt_long(argc, argv, "o:r:m:d:n:R:x:y:X:Y:",
                             longopts, &longindex)) != -1) {
     switch (opt) {
     case 'o':
@@ -302,6 +441,14 @@ void IR::setParams(int argc, char *argv[])
         threshold_nondiff_refine = DEFAULT_THRESHOLD_NONDIFF_REFINE;
       }
       break;
+    case 'R':
+      sampling_rate = std::atof(optarg);
+      if (sampling_rate < 0 && 1 < sampling_rate) {
+        warn("sampling rate is within 0-1.");
+        sampling_rate = 0;
+      }
+      if (sampling_rate > 0) cache_on = false;
+      break;
     case 'x':
       s = std::string(optarg);
       if (s == "PIBT") {
@@ -310,6 +457,8 @@ void IR::setParams(int argc, char *argv[])
         init_solver = INIT_SOLVER_TYPE::HCA;
       } else if (s == "WHCA") {
         init_solver = INIT_SOLVER_TYPE::WHCA;
+      } else if (s == "ECBS") {
+        init_solver = INIT_SOLVER_TYPE::ECBS;
       } else {
         warn("solver does not exists, use PIBT");
       }

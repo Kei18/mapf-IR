@@ -140,7 +140,7 @@ void Solver::makeLog(const std::string& logfile) {
   log << "solution=\n";
   for (int t = 0; t <= solution.getMakespan(); ++t) {
     log << t << ":";
-    auto c = solution.at(t);
+    auto c = solution.get(t);
     for (auto v : c) {
       log << "(" << v->pos.x << "," << v->pos.y << "),";
     }

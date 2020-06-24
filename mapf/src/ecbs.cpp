@@ -91,7 +91,7 @@ void ECBS::solve()
   }
 
   if (solved) {  // success
-    solution = n->paths.toPlan();
+    solution = pathsToPlan(n->paths);
   } else {  // failed
     Config config_s;
     for (int i = 0; i < P->getNum(); ++i) {
@@ -124,8 +124,7 @@ ECBS::CompareHighLevelNodeECBS ECBS::getFocalObjective() {
 
 void ECBS::setInitialHighLevelNode(HighLevelNodeECBS* n)
 {
-  Paths paths;
-  paths.initialize(P->getNum());
+  Paths paths(P->getNum());
   std::vector<int> f_mins;
   for (int i = 0; i < P->getNum(); ++i) {
     Path path = getInitialPath(i);

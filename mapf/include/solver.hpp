@@ -9,15 +9,29 @@
 #include <chrono>
 #include<functional>
 
+struct Paths;
 
 struct Plan {
+private:
   std::vector<Config> configs;
 
-  Config at(int t) const {
+public:
+  Config get(int t) const {
     if (!(0 <= t && t < configs.size())) {
       halt("invalid timestep.");
     }
     return configs[t];
+  }
+
+  Node* get(int t, int i) const {
+    if (empty()) halt("invalid operation");
+    if (!(0 <= t && t < configs.size())) {
+      halt("invalid timestep.");
+    }
+    if (!(0 <= i && i < configs[0].size())) {
+      halt("invalid agent id.");
+    }
+    return configs[t][i];
   }
 
   Config last() const {
@@ -63,7 +77,7 @@ struct Plan {
   Plan operator+(const Plan& other) const {
     // check validity
     Config c1 = last();
-    Config c2 = other.at(0);
+    Config c2 = other.get(0);
     if (c1.size() != c2.size()) halt("invalid operation");
     for (int i = 0; i < c1.size(); ++i) {
       if (c1[i] != c2[i]) halt("invalid operation.");
@@ -71,7 +85,7 @@ struct Plan {
     // merge
     Plan new_plan;
     new_plan.configs = configs;
-    for (int t = 1; t < other.size(); ++t) new_plan.add(other.at(t));
+    for (int t = 1; t < other.size(); ++t) new_plan.add(other.get(t));
     return new_plan;
   }
 
@@ -81,23 +95,23 @@ struct Plan {
       return;
     }
     // check validity
-    if (!sameConfig(last(), other.at(0))) halt("invalid operation");
+    if (!sameConfig(last(), other.get(0))) halt("invalid operation");
     // merge
-    for (int t = 1; t < other.size(); ++t) add(other.at(t));
+    for (int t = 1; t < other.size(); ++t) add(other.get(t));
   }
 
   Plan getPartialPlan(const Config& config_i, const Config& config_j) const
   {
     int t_s = 0;
-    while (!sameConfig(at(t_s), config_i)) {
+    while (!sameConfig(get(t_s), config_i)) {
       ++t_s;
       if (t_s > getMakespan()) halt("invalid operation");
     }
 
     Plan partial_plan;
     for (int t = t_s; t <= getMakespan(); ++t) {
-      partial_plan.add(at(t));
-      if (sameConfig(at(t), config_j)) break;
+      partial_plan.add(get(t));
+      if (sameConfig(get(t), config_j)) break;
       if (t == getMakespan()) halt("invalid operation");
     }
     return partial_plan;
@@ -107,7 +121,7 @@ struct Plan {
   {
     if (!(0 <= i && i <= j && j <= getMakespan())) halt("invalid index.");
     Plan new_plan;
-    for (int t = i; t <= j; ++t) new_plan.add(at(t));
+    for (int t = i; t <= j; ++t) new_plan.add(get(t));
     return new_plan;
   }
 };
@@ -115,11 +129,13 @@ struct Plan {
 using Plans = std::vector<Plan>;
 
 struct Paths {
+private:
   std::vector<Path> paths;
   int makespan;
 
-  void initialize(int num_agents) {
-    paths.clear();
+public:
+  Paths() {}
+  Paths(int num_agents) {
     std::vector<Path> tmp(num_agents, Path(0));
     paths = tmp;
   }
@@ -132,9 +148,14 @@ struct Paths {
   Node* get(int i, int t) const {
     if (!(0 <= i && i < paths.size()) ||
         !(0 <= t && t <= makespan)) {
-      halt("invalid index.");
+      halt("invalid index, i=" + std::to_string(i)
+           + ", t=" + std::to_string(t));
     }
     return paths[i][t];
+  }
+
+  bool empty() const {
+    return paths.empty();
   }
 
   void insert(int i, const Path& path) {
@@ -144,6 +165,10 @@ struct Paths {
     format();
     if (paths[i].size() < old_len) shrink();
     makespan = getMaxLengthPaths();  // update makespan
+  }
+
+  int size() const {
+    return paths.size();
   }
 
   void operator+=(const Paths& other) {
@@ -226,21 +251,37 @@ struct Paths {
       }
     }
   }
-
-  Plan toPlan() const {
-    Plan plan;
-    int makespan = getMakespan();
-    for (int t = 0; t <= makespan; ++t) {
-      Config c;
-      for (int i = 0; i < paths.size(); ++i) {
-        c.push_back(paths[i][t]);
-      }
-      plan.add(c);
-    }
-    return plan;
-  }
 };
 
+static Paths planToPaths(const Plan& plan) {
+  if (plan.empty()) halt("invalid operation.");
+  int num_agents = plan.get(0).size();
+  Paths paths(num_agents);
+  int makespan = plan.getMakespan();
+  for (int i = 0; i < num_agents; ++i) {
+    Path path;
+    for (int t = 0; t <= makespan; ++t) {
+      path.push_back(plan.get(t, i));
+    }
+    paths.insert(i, path);
+  }
+  return paths;
+}
+
+static Plan pathsToPlan(const Paths& paths) {
+  Plan plan;
+  if (paths.empty()) return plan;
+  int makespan = paths.getMakespan();
+  int num_agents = paths.size();
+  for (int t = 0; t <= makespan; ++t) {
+    Config c;
+    for (int i = 0; i < num_agents; ++i) {
+      c.push_back(paths.get(i, t));
+    }
+    plan.add(c);
+  }
+  return plan;
+}
 
 class Solver {
 protected:

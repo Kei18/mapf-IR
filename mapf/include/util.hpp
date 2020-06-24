@@ -24,23 +24,14 @@ static bool inArray(const T a, const std::vector<T> &arr) {
   return itr != arr.end();
 }
 
-
-template <typename T>
-static T randomChoose(std::vector<T> &arr, std::mt19937* MT) {
-  std::uniform_int_distribution<int> chooser(0, arr.size() - 1);
-  return arr[chooser(*MT)];
-}
-
-template <typename T>
-static std::tuple<int, T>
-randomChooseWithIndex(std::vector<T> &arr, std::mt19937* MT) {
-  std::uniform_int_distribution<int> chooser(0, arr.size() - 1);
-  int i = chooser(*MT);
-  return std::make_tuple(i, arr[i]);
-}
-
 static bool getRandomBoolean(std::mt19937* MT) {
   std::uniform_int_distribution<int> r(0, 1);
+  return r(*MT);
+}
+
+static int getRandomInt(int from, int to, std::mt19937* MT) {
+  // [from, to]
+  std::uniform_int_distribution<int> r(from, to);
   return r(*MT);
 }
 
@@ -48,6 +39,11 @@ static float getRandomFloat(float from, float to, std::mt19937* MT) {
   // [from, to)
   std::uniform_real_distribution<float> r(from, to);
   return r(*MT);
+}
+
+template <typename T>
+static T randomChoose(std::vector<T> &arr, std::mt19937* MT) {
+  return arr[getRandomInt(0, arr.size()-1, MT)];
 }
 
 static double getElapsedTime(const std::chrono::system_clock::time_point&

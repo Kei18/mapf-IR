@@ -24,7 +24,7 @@ private:
   REFINEMENT_TYPE refinement_type;
 
   enum struct INIT_SOLVER_TYPE
-    { PIBT, HCA, WHCA, NUM_ITMES };
+    { PIBT, HCA, WHCA, ECBS, NUM_ITMES };
   INIT_SOLVER_TYPE init_solver;
   std::vector<std::string> option_init_solver;
 
@@ -40,6 +40,13 @@ private:
   static const REFINEMENT_TYPE DEFAULT_REFINEMENT_TYPE;
   static const INIT_SOLVER_TYPE DEFAULT_INIT_SOLVER;
   static const REFINE_SOLVER_TYPE DEFAULT_REFINE_SOLVER;
+
+  // sampling rate
+  float sampling_rate;
+
+  // cache
+  bool cache_on;
+  std::unordered_map<std::string, Plan> PLAN_TABLE;
 
   void iterativeRefinement();
   Plan getInitialPlan();
@@ -60,6 +67,16 @@ private:
   Plan quadraticRefine(const Config& config_s,
                        const Config& config_g,
                        const Plan& old_plan);
+  void registerTable(const Plan& plan);
+  Plan shrink(const Plan& plan);
+  static std::string getPlanTableKey(const Config& config_s,
+                                     const Config& config_g);
+  static std::string getPlanTableKey(const std::string& config_s_key,
+                                     const Config& config_g);
+  static std::string getPlanTableKey(const Config& config_s,
+                                     const std::string& config_g_key);
+  static std::string getPlanTableKey(const std::string& config_s_key,
+                                     const std::string& config_g_key);
 
 public:
   IR(Problem* _P);

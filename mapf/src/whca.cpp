@@ -14,8 +14,7 @@ void WHCA::solve()
   start();
 
   // initialize
-  Paths paths;
-  paths.initialize(P->getNum());
+  Paths paths(P->getNum());
   for (int i = 0; i < P->getNum(); ++i) {
     paths.insert(i, { P->getStart(i) });
   }
@@ -40,8 +39,7 @@ void WHCA::solve()
     ++iteration;
 
     bool check_goal_cond = true;
-    Paths partial_paths;
-    partial_paths.initialize(P->getNum());
+    Paths partial_paths(P->getNum());
     bool invalid = false;
     for (int j = 0; j < ids.size(); ++j) {
       int i = ids[j];
@@ -70,7 +68,7 @@ void WHCA::solve()
     }
   }
 
-  solution = paths.toPlan();
+  solution = pathsToPlan(paths);
   end();
 }
 

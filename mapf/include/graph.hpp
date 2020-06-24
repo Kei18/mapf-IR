@@ -114,6 +114,15 @@ static bool sameConfig(const Config& config_i, const Config& config_j)
   return true;
 }
 
+static std::string getConfigName(const Config& c) {
+  std::string key;
+  for (int i = 0; i < c.size(); ++i) {
+    if (i != 0) key += "-";
+    key += std::to_string(c[i]->id);
+  }
+  return key;
+}
+
 class Graph {
 private:
   // cache

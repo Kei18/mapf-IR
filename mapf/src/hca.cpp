@@ -12,8 +12,7 @@ void HCA::solve()
 {
   start();
 
-  Paths paths;
-  paths.initialize(P->getNum());
+  Paths paths(P->getNum());
 
   // prioritization
   // far agent is prioritized
@@ -49,7 +48,7 @@ void HCA::solve()
   }
 
   if (!invalid) {  // success
-    solution = paths.toPlan();
+    solution = pathsToPlan(paths);
     solved = true;
   }
   end();
@@ -69,10 +68,10 @@ Path HCA::getPrioritizedPath(int id,
                              const Paths& paths)
 {
   // pre processing
-  Nodes config_g;
+  Nodes config_s = P->getConfigStart();
+  Nodes config_g = P->getConfigGoal();
   int max_constraint_time = 0;
   for (int i = 0; i < P->getNum(); ++i) {
-    config_g.push_back(P->getGoal(i));
     Path p = paths.get(i);
     if (p.empty()) continue;
     for (int t = 0; t < p.size(); ++t) {
@@ -91,6 +90,9 @@ Path HCA::getPrioritizedPath(int id,
       // avoid goal locations of others
       if (a->v != g && inArray(a->v, config_g)) return true;
       if (b->v != g && inArray(b->v, config_g)) return false;
+      // avoid start locations
+      if (a->v != s && inArray(a->v, config_s)) return true;
+      if (b->v != s && inArray(b->v, config_s)) return false;
       if (a->g != b->g) return a->g < b->g;
       return false;
     };

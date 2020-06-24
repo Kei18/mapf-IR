@@ -61,7 +61,7 @@ void CBS::solve()
     }
   }
 
-  if (solved) solution = n->paths.toPlan();
+  if (solved) solution = pathsToPlan(n->paths);
   end();
 }
 
@@ -79,8 +79,7 @@ CBS::CompareHighLevelNodes CBS::getObjective()
 
 void CBS::setInitialHighLevelNode(HighLevelNode* n)
 {
-  Paths paths;
-  paths.initialize(P->getNum());
+  Paths paths(P->getNum());
   for (int i = 0; i < P->getNum(); ++i) {
     paths.insert(i, getInitialPath(i));
   }
@@ -96,10 +95,7 @@ Path CBS::getInitialPath(int id)
 {
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
-  Nodes config_g;
-  for (int i = 0; i < P->getNum(); ++i) {
-    config_g.push_back(P->getGoal(i));
-  }
+  Nodes config_g = P->getConfigGoal();
 
   AstarHeuristics fValue =
     [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
@@ -242,7 +238,6 @@ Path CBS::getConstrainedPath(HighLevelNode* h_node, int id)
         return std::max(n->g, max_constraint_time) + pathDist(n->v, g);
       };
   }
-
 
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
