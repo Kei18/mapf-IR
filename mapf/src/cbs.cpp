@@ -20,6 +20,9 @@ void CBS::solve()
                       std::vector<HighLevelNode*>,
                       decltype(compare)> HighLevelTree(compare);
 
+  // for memory management
+  Constraints generated_constraints;
+
   HighLevelNode* n = new HighLevelNode;
   setInitialHighLevelNode(n);
   HighLevelTree.push(n);
@@ -31,15 +34,15 @@ void CBS::solve()
     // check limitation
     if (overCompTime()) break;
 
+    n = HighLevelTree.top();
+    HighLevelTree.pop();
+
     info(" ",
          "elapsed:", getSolverElapsedTime(),
          ", explored_node_num:", iteration,
          ", nodes_num:", h_node_num,
          ", conflicts:", n->f,
          ", constraints:", n->constraints.size());
-
-    n = HighLevelTree.top();
-    HighLevelTree.pop();
 
     // check conflict
     Constraints constraints = getFirstConflict(n->paths);
@@ -50,18 +53,36 @@ void CBS::solve()
 
     // create new nodes
     for (auto c : constraints) {
+      generated_constraints.push_back(c);  // for memory management
       Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
       HighLevelNode* m = new HighLevelNode
-        { n->paths, new_constraints, n->makespan, n->soc, n->f, true };
+        { h_node_num,
+          n->paths,
+          new_constraints,
+          n->makespan,
+          n->soc,
+          n->f,
+          true };
       invoke(m, c->id);
       if (!m->valid) continue;
       HighLevelTree.push(m);
       ++h_node_num;
     }
+
+    delete n;  // free
   }
 
   if (solved) solution = pathsToPlan(n->paths);
+
+  // free
+  if (!solved) delete n;
+  while (!HighLevelTree.empty()) {
+    delete HighLevelTree.top();
+    HighLevelTree.pop();
+  }
+  for (auto c : generated_constraints) delete c;
+
   end();
 }
 
@@ -83,6 +104,7 @@ void CBS::setInitialHighLevelNode(HighLevelNode* n)
   for (int i = 0; i < P->getNum(); ++i) {
     paths.insert(i, getInitialPath(i));
   }
+  n->id = 0;
   n->paths = paths;
   n->constraints = {};  // constraints
   n->makespan = paths.getMakespan();
@@ -170,7 +192,7 @@ void CBS::invoke(HighLevelNode* h_node, int id)
   h_node->f = countConflict(h_node->paths);
 }
 
-int CBS::countConflict(const Paths& paths)
+int CBS::countConflict(const Paths& paths) const
 {
   int cnt = 0;
     for (int i = 0; i < P->getNum(); ++i) {
@@ -187,7 +209,7 @@ int CBS::countConflict(const Paths& paths)
   return cnt;
 }
 
-int CBS::countConflict(int id, const Path& path, const Paths& paths)
+int CBS::countConflict(int id, const Path& path, const Paths& paths) const
 {
   if (path.empty()) return 0;
 

@@ -24,7 +24,7 @@ public:
           Config _config_g,
           int _max_comp_time,
           int _max_timestep);
-  ~Problem() {};
+  ~Problem();
 
   Graph* getG() { return G; }
   int getNum() { return num_agents; }

@@ -69,6 +69,7 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
     }
     // read initial/goal nodes
     if (std::regex_match(line, results, r_sg) && read_scen) {
+      if (config_s.size() >= num_agents) continue;
       int x_s = std::stoi(results[1].str());
       int y_s = std::stoi(results[2].str());
       int x_g = std::stoi(results[3].str());
@@ -119,6 +120,11 @@ Problem::Problem(Problem* P,
     max_comp_time(_max_comp_time),
     max_timestep(_max_timestep)
 {
+}
+
+Problem::~Problem() {
+  config_s.clear();
+  config_g.clear();
 }
 
 Node* Problem::getStart(int i) const {

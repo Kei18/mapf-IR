@@ -7,6 +7,10 @@ PIBT::PIBT(Problem* _P) : Solver(_P)
   solver_name = PIBT::SOLVER_NAME;
 }
 
+PIBT::~PIBT() {
+}
+
+
 void PIBT::solve()
 {
   start();
@@ -92,6 +96,12 @@ void PIBT::solve()
     if (timestep >= max_timestep || overCompTime()) {
       break;
     }
+  }
+
+  // memory clear
+  while (!undecided.empty()) {
+    delete undecided.top();
+    undecided.pop();
   }
 
   solution = plan;

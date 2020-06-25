@@ -12,6 +12,7 @@ add_library(lib-mapf STATIC
   ./src/ir.cpp
   ./src/cbs_refine.cpp
   ./src/ecbs_refine.cpp
+  ./src/icbs.cpp
   )
 target_compile_options(lib-mapf PUBLIC -O3 -Wall -mtune=native -march=native)
 target_compile_features(lib-mapf PUBLIC cxx_std_17)

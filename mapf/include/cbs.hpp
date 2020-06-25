@@ -14,7 +14,7 @@ class CBS : public Solver {
 public:
   static const std::string SOLVER_NAME;
 
-protected:
+public:
   struct Constraint {
     int id;   // agent id
     int t;
@@ -23,7 +23,9 @@ protected:
   };
   using Constraints = std::vector<Constraint*>;
 
+protected:
   struct HighLevelNode {
+    int id;  // high level node id
     Paths paths;
     Constraints constraints;
     int makespan;
@@ -36,8 +38,8 @@ protected:
 
   Path getInitialPath(int id);
   Constraints getFirstConflict(const Paths& paths);
-  int countConflict(const Paths& paths);
-  int countConflict(int id, const Path& path, const Paths& _paths);
+  int countConflict(const Paths& paths) const;
+  int countConflict(int id, const Path& path, const Paths& _paths) const;
   virtual void setInitialHighLevelNode(HighLevelNode* n);
   virtual void invoke(HighLevelNode* h_node, int id);
   virtual Path getConstrainedPath(HighLevelNode* h_node, int id);
@@ -45,7 +47,7 @@ protected:
 
 public:
   CBS(Problem* _P);
-  ~CBS() {};
+  virtual ~CBS() {};
 
   void solve();
   static void printHelp();

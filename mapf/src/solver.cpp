@@ -29,7 +29,7 @@ Path Solver::getTimedPath(Node* const s,
   std::priority_queue<AstarNode*,
                       std::vector<AstarNode*>,
                       CompareAstarNode> OPEN(compare);
-  std::unordered_map<std::string, bool> CLOSE;
+  std::unordered_map<std::string, AstarNode*> CLOSE;
 
   // initial node
   AstarNode* n;
@@ -47,7 +47,7 @@ Path Solver::getTimedPath(Node* const s,
     // minimum node
     n = OPEN.top();
     OPEN.pop();
-    CLOSE[getNodeName(n)] = true;
+    CLOSE[getNodeName(n)] = n;
 
     // check goal condition
     if (checkAstarFin(n)) {
@@ -71,14 +71,23 @@ Path Solver::getTimedPath(Node* const s,
   }
 
   Path path;
-  // failed
-  if (invalid) return path;
-  // success
-  while (n != nullptr) {
-    path.push_back(n->v);
-    n = n->p;
+  if (!invalid) {  // success
+    while (n != nullptr) {
+      path.push_back(n->v);
+      n = n->p;
+    }
+    std::reverse(path.begin(), path.end());
   }
-  std::reverse(path.begin(), path.end());
+
+  // free
+  while (!OPEN.empty()) {
+    delete OPEN.top();
+    OPEN.pop();
+  }
+  for (auto itr = CLOSE.begin(); itr != CLOSE.end(); ++itr) {
+    delete itr->second;
+  }
+
   return path;
 }
 
@@ -90,6 +99,10 @@ void Solver::start() {
 void Solver::end() {
   comp_time = getSolverElapsedTime();
   // format
+  if (solved && !solution.validate(P)) {
+    warn("failed to solve.");
+    solved = false;
+  }
   if (!solved && solution.empty()) solution.add(P->getConfigStart());
 }
 

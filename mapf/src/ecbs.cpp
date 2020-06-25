@@ -22,6 +22,9 @@ void ECBS::solve()
                       std::vector<HighLevelNodeECBS*>,
                       decltype(compareOPEN)> OPEN(compareOPEN);
 
+  // for memory management
+  Constraints generated_constraints;
+
   HighLevelNodeECBS* n = new HighLevelNodeECBS;
   setInitialHighLevelNode(n);
   OPEN.push(n);
@@ -34,7 +37,10 @@ void ECBS::solve()
     if (overCompTime()) break;
 
     // build focal
-    while (!OPEN.empty() && !OPEN.top()->valid) OPEN.pop();
+    while (!OPEN.empty() && !OPEN.top()->valid) {
+      delete OPEN.top();
+      OPEN.pop();
+    }
     if (OPEN.empty()) break;  // failed
     float LB_bound = OPEN.top()->LB * sub_optimality;
     std::vector<HighLevelNodeECBS*> tmp;
@@ -44,7 +50,10 @@ void ECBS::solve()
     while (!OPEN.empty()) {
       HighLevelNodeECBS* top = OPEN.top();
       OPEN.pop();
-      if (!top->valid) continue;
+      if (!top->valid) {
+        delete top;
+        continue;
+      }
       tmp.push_back(top);  // escape
       if ((float)top->LB > LB_bound) break;
       FOCAL.push(top);
@@ -72,6 +81,7 @@ void ECBS::solve()
 
     // create new nodes
     for (auto c : constraints) {
+      generated_constraints.push_back(c);  // for memory management
       Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
       HighLevelNodeECBS* m = new HighLevelNodeECBS
@@ -99,6 +109,14 @@ void ECBS::solve()
     }
     solution.add(config_s);
   }
+
+  // free
+  if (!solved) delete n;
+  while (!OPEN.empty()) {
+    delete OPEN.top();
+    OPEN.pop();
+  }
+  for (auto c : generated_constraints) delete c;
 
   end();
 }
@@ -257,6 +275,9 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
                                         CompareFocalNode>;
   FocalList FOCAL(compareFOCAL);
 
+  // for memory management
+  std::vector<FocalNode*> generated_nodes;
+
   // initial node
   FocalNode* n;
   n = new FocalNode { s, 0, 0, 0, nullptr };
@@ -264,6 +285,7 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
   n->f2 = f2Value(n);
   OPEN.push(n);
   FOCAL.push(n);
+  generated_nodes.push_back(n);
   int f1_min = n->f1;
 
   // main loop
@@ -320,6 +342,7 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
     for (auto u : C) {
       int g_cost = n->g+1;
       FocalNode* m = new FocalNode { u, g_cost, 0, 0, n };
+      generated_nodes.push_back(m);
       // set heuristics
       m->f1 = f1Value(m);
       m->f2 = f2Value(m);
@@ -337,6 +360,10 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
   // success
   if (!invalid) path = getPathFromFocalNode(n);
   std::tuple<Path, int> ret = std::make_tuple(path, f1_min);
+
+  // free
+  for (auto node : generated_nodes) delete node;
+
   return ret;
 }
 

@@ -27,7 +27,7 @@ private:
 
 public:
   WHCA(Problem* _P);
-  ~WHCA();
+  ~WHCA() {};
 
   void solve();
 

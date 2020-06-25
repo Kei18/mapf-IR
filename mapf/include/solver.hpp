@@ -124,6 +124,32 @@ public:
     for (int t = i; t <= j; ++t) new_plan.add(get(t));
     return new_plan;
   }
+
+  bool validate(Problem* P) const
+  {
+    if (configs.empty()) return false;
+    // start and goal
+    if (!sameConfig(P->getConfigStart(), get(0))) return false;
+    if (!sameConfig(P->getConfigGoal(), get(getMakespan()))) return false;
+    int num_agents = get(0).size();
+    for (int t = 1; t < getMakespan(); ++t) {
+      if (get(t).size() != num_agents) return false;
+      for (int i = 0; i < num_agents; ++i) {
+        Node* v_i_t = get(t, i);
+        Node* v_i_t_1 = get(t-1, i);
+        Nodes cands = v_i_t_1->neighbor;
+        cands.push_back(v_i_t_1);
+        if (!inArray(v_i_t, cands)) return false;
+        for (int j = i+1; j < num_agents; ++j) {
+          Node* v_j_t = get(t, j);
+          Node* v_j_t_1 = get(t-1, j);
+          if (v_i_t == v_j_t) return false;
+          if (v_i_t == v_j_t_1 && v_i_t_1 == v_j_t) return false;
+        }
+      }
+    }
+    return true;
+  }
 };
 
 using Plans = std::vector<Plan>;
@@ -336,7 +362,7 @@ protected:
 
 public:
   Solver(Problem* _P);
-  ~Solver() {};
+  virtual ~Solver() {};
 
   virtual void solve() {};
   virtual void setParams(int argc, char *argv[]) {};

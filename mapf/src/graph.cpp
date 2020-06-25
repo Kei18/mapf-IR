@@ -64,7 +64,7 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
   std::priority_queue<AstarNode*,
                       std::vector<AstarNode*>,
                       decltype(compare)> OPEN(compare);
-  std::unordered_map<int, bool> CLOSE;
+  std::unordered_map<int, AstarNode*> CLOSE;
 
   // initial node
   AstarNode* n;
@@ -78,7 +78,7 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
 
     // check CLOSE list
     if (CLOSE.find(n->v->id) != CLOSE.end()) continue;
-    CLOSE[n->v->id] = true;
+    CLOSE[n->v->id] = n;
 
     // check goal condition
     if (n->v == g) {
@@ -90,8 +90,10 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
     auto itr = PATH_TABLE.find(getPathTableKey(n->v, g));
     if (itr != PATH_TABLE.end()) {
       Path path = itr->second;
-      for (int t = 1; t < path.size(); ++t)
+      for (int t = 1; t < path.size(); ++t) {
         n = new AstarNode { path[t], 0, 0, n };
+        CLOSE[n->v->id] = n;
+      }
       invalid = false;
       break;
     }
@@ -122,6 +124,16 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
     n = n->p;
   }
   std::reverse(path.begin(), path.end());
+
+  // free
+  while (!OPEN.empty()) {
+    delete OPEN.top();
+    OPEN.pop();
+  }
+  for (auto itr = CLOSE.begin(); itr != CLOSE.end(); ++itr) {
+    delete itr->second;
+  }
+
   return path;
 }
 

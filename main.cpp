@@ -11,6 +11,7 @@
 #include <cbs.hpp>
 #include <ecbs.hpp>
 #include <ir.hpp>
+#include <icbs.hpp>
 
 
 void printHelp();
@@ -88,6 +89,8 @@ int main(int argc, char *argv[]) {
     std::cout << "save result as " << output_file << std::endl;
   }
 
+  delete solver;
+
   return 0;
 }
 
@@ -110,6 +113,8 @@ Solver* getSolver(const std::string solver_name,
     solver = new ECBS(P);
   } else if (solver_name == "IR") {
     solver = new IR(P);
+  } else if (solver_name == "ICBS") {
+    solver = new ICBS(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -136,4 +141,5 @@ void printHelp() {
   CBS::printHelp();
   ECBS::printHelp();
   IR::printHelp();
+  ICBS::printHelp();
 }

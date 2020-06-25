@@ -40,7 +40,7 @@ private:
 
 public:
   PIBT(Problem* _P);
-  ~PIBT() {};
+  ~PIBT();
 
   void solve();
 

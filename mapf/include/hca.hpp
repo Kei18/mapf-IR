@@ -31,7 +31,7 @@ private:
 
 public:
   HCA(Problem* _P);
-  ~HCA();
+  ~HCA() {};
 
   void solve();
 

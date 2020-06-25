@@ -61,7 +61,7 @@ struct Node {
   std::vector<Node*> neighbor;
   Pos pos;
 
-  int getDegree() { return neighbor.size(); }
+  int getDegree() const { return neighbor.size(); }
 
   float manhattanDist(const Node& node) const {
     return pos.manhattanDist(node.pos);
@@ -114,7 +114,8 @@ static bool sameConfig(const Config& config_i, const Config& config_j)
   return true;
 }
 
-static std::string getConfigName(const Config& c) {
+static std::string getConfigName(const Config& c)
+{
   std::string key;
   for (int i = 0; i < c.size(); ++i) {
     if (i != 0) key += "-";
