@@ -202,11 +202,9 @@ public:
     if (makespan == 0) {// empty
       for (int i = 0; i < paths.size(); ++i) insert(i, other.get(i));
     } else {
+      std::vector<Path> new_paths(paths.size());
       for (int i = 0; i < paths.size(); ++i) {
-        if (paths[i].empty()) {
-          if (!other.paths[i].empty()) halt("invalid operation");
-          continue;
-        }
+        if (paths[i].empty()) halt("invalid operation");
         if (*(paths[i].end()-1) != other.paths[i][0])
           halt("invalid operation");
         Path tmp;
@@ -215,8 +213,9 @@ public:
         for (int t = 1; t <= other.getMakespan(); ++t) {
           tmp.push_back(other.get(i, t));
         }
-        insert(i, tmp);
+        new_paths[i] = tmp;
       }
+      for (int i = 0; i < paths.size(); ++i) insert(i, new_paths[i]);
     }
   }
 

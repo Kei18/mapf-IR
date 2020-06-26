@@ -69,7 +69,6 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
     }
     // read initial/goal nodes
     if (std::regex_match(line, results, r_sg) && read_scen) {
-      if (config_s.size() >= num_agents) continue;
       int x_s = std::stoi(results[1].str());
       int y_s = std::stoi(results[2].str());
       int x_g = std::stoi(results[3].str());
@@ -105,6 +104,9 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
   if (num_agents > config_s.size()) {
     setRandomStartsGoals();
   }
+
+  config_s.resize(num_agents);
+  config_g.resize(num_agents);
 }
 
 Problem::Problem(Problem* P,

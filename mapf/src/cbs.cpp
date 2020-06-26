@@ -42,7 +42,8 @@ void CBS::solve()
          ", explored_node_num:", iteration,
          ", nodes_num:", h_node_num,
          ", conflicts:", n->f,
-         ", constraints:", n->constraints.size());
+         ", constraints:", n->constraints.size(),
+         ", soc:", n->soc);
 
     // check conflict
     Constraints constraints = getFirstConflict(n->paths);
@@ -186,18 +187,20 @@ void CBS::invoke(HighLevelNode* h_node, int id)
   }
   Paths paths = h_node->paths;
   paths.insert(id, path);
+  h_node->f = h_node->f
+    - countConflict(id, h_node->paths.get(id), h_node->paths)
+    + countConflict(id, paths.get(id), h_node->paths);
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();
-  h_node->f = countConflict(h_node->paths);
 }
 
 int CBS::countConflict(const Paths& paths) const
 {
   int cnt = 0;
-    for (int i = 0; i < P->getNum(); ++i) {
-      for (int j = i + 1; j < P->getNum(); ++j) {
-        for (int t = 1; t < paths.getMakespan(); ++t) {
+  for (int i = 0; i < P->getNum(); ++i) {
+    for (int j = i + 1; j < P->getNum(); ++j) {
+      for (int t = 1; t < paths.getMakespan(); ++t) {
         // vertex conflict
         if (paths.get(i, t) == paths.get(j, t)) ++cnt;
         // swap conflict

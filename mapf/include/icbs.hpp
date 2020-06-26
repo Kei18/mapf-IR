@@ -42,6 +42,10 @@ struct MDD {
   bool valid;
   std::vector<MDDNode*> generated_nodes;  // for memory management
 
+  static std::unordered_map<std::string,
+                            std::shared_ptr<MDD>> PURE_MDD_TABLE;
+
+
   MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid) {
     c = _c;
     i = _i;
@@ -71,6 +75,10 @@ struct MDD {
     : c(other.c),i(other.i), G(other.G),
       s(other.s), g(other.g), valid(other.valid)
   {
+    copy(other);
+  }
+
+  void copy(const MDD& other) {
     if (!valid) return;
     // generate body
     MDDNode* new_node = new MDDNode(0, s);
@@ -99,9 +107,25 @@ struct MDD {
     }
   }
 
+  std::string getPureMDDName() {
+    return std::to_string(G->getID()) + "-"
+      + std::to_string(s->id) + "-"
+      + std::to_string(g->id) + "-"
+      + std::to_string(c) + "-"
+      + std::to_string(i) + "-";
+  }
+
   void build() {
     // impossible
     if (!valid) return;
+    // check registered
+    auto itr = PURE_MDD_TABLE.find(getPureMDDName());
+    if (itr != PURE_MDD_TABLE.end()) {
+      valid = itr->second->valid;
+      copy(*(itr->second));
+      return;
+    }
+
     // add start node
     body.push_back({ new MDDNode(0, s) });
     // build
@@ -139,6 +163,10 @@ struct MDD {
         generated_nodes.push_back(node);
       }
     }
+
+    // new ently, register
+    MDD mdd = *this;
+    PURE_MDD_TABLE[getPureMDDName()] = std::make_shared<MDD>(mdd);
   }
 
   void update(const CBS::Constraints& _constraints) {
@@ -229,54 +257,34 @@ struct MDD {
   }
 
   Path getPathByDFS() const {
-    auto getNodeName =
-      [] (MDDNode* node) {
-        return std::to_string(node->t) + "-" + std::to_string(node->v->id);
-      };
-    MDDNode* start_node = body[0][0];
+    MDDNode* node = body[0][0];
     MDDNode* goal_node = body[c][0];
-
-    // depth first search
-    std::unordered_map<std::string, bool> CLOSE;
-    std::unordered_map<std::string, MDDNode*> PREV;
-    std::stack<MDDNode*> OPEN;
-    OPEN.push(start_node);
-    bool invalid = true;
-    while (!OPEN.empty()) {
-      MDDNode* node = OPEN.top();
-      OPEN.pop();
-      CLOSE[getNodeName(node)] = true;
-      if (node == goal_node) {
-        invalid = false;
-        break;
-      }
-      for (auto next_node : node->next) {
-        OPEN.push(next_node);
-        PREV[getNodeName(next_node)] = node;
-      }
-    }
     Path path;
-    if (!invalid) {
-      MDDNode* node = goal_node;
-      while (node != start_node) {
-        path.push_back(node->v);
-        node = PREV[getNodeName(node)];
-      }
-      path.push_back(s);
-      std::reverse(path.begin(), path.end());
+    while (node != goal_node) {
+      path.push_back(node->v);
+      if (node->next.empty()) halt("invalid MDD");
+      node = node->next[0];
     }
+    path.push_back(goal_node->v);
     return path;
   }
 
-  Path getPath(CBS::Constraint* constraint=nullptr) const {
+  Path getPath() const {
+    if (!valid) return {};
+    return getPathByDFS();
+  }
+
+  Path getPath(CBS::Constraint* constraint) const {
+    if (!valid) return {};
     if (constraint == nullptr) return getPathByDFS();
     MDD mdd = *this;
     mdd.update({ constraint });
-    return mdd.getPathByDFS();
+    return mdd.getPath();
   }
 
   void println() const {
-    std::cout << "MDD_" << i << "^" << c << std::endl;
+    std::cout << "MDD_" << i << "^" << c << ", valid="
+              << valid << std::endl;
     for (int t = 0; t <= c; ++t) {
       std::cout << "t=" << t << std::endl;
       for (auto node : body[t]) {
@@ -303,6 +311,7 @@ struct MDD {
 };
 using MDD_p = std::shared_ptr<MDD>;
 using MDDs = std::vector<MDD_p>;
+
 
 class ICBS : public CBS {
 public:

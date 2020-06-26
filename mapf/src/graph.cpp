@@ -4,6 +4,8 @@
 #include <regex>
 #include "../include/util.hpp"
 
+int Graph::UUID = 0;
+
 Path Graph::getPath(Node* const s, Node* const g)
 {
   if (s == g) return {};

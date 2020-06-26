@@ -1,6 +1,7 @@
 #include "../include/icbs.hpp"
 
 const std::string ICBS::SOLVER_NAME = "ICBS";
+std::unordered_map<std::string, MDD_p> MDD::PURE_MDD_TABLE;
 
 
 ICBS::ICBS(Problem* _P) : CBS(_P)
@@ -41,7 +42,8 @@ void ICBS::solve()
          ", explored_node_num:", iteration,
          ", nodes_num:", h_node_num,
          ", conflicts:", n->f,
-         ", constraints:", n->constraints.size());
+         ", constraints:", n->constraints.size(),
+         ", soc:", n->soc);
 
     // check conflict
     Constraints constraints = getPrioritizedConflict(n);
@@ -55,6 +57,7 @@ void ICBS::solve()
       --iteration;
       continue;
     }
+
     // failed
     HighLevelTree.pop();
 
@@ -115,22 +118,28 @@ void ICBS::invoke(HighLevelNode* h_node, int id)
     if (path.empty()) halt("failed to Cal MDD");
     MDDTable[h_node->id][id] = std::make_shared<MDD>(mdd);  // update table
   } else {
-    path = getConstrainedPath(h_node, id);
-    if (path.empty()) {
-      h_node->valid = false;
-      return;
+    int c = mdd.c;
+    while (true) {
+      ++c;
+      MDD tmp_mdd = MDD(c, id, P, h_node->constraints);
+      if (tmp_mdd.valid) {
+        path = tmp_mdd.getPath();
+        MDD_p new_mdd = std::make_shared<MDD>(tmp_mdd);
+        MDDTable[h_node->id][id] = new_mdd;
+        break;
+      }
     }
-    assert(path.size()-1 > mdd.c);
-    MDD tmp = MDD(path.size() - 1, id, P, h_node->constraints);
-    MDD_p new_mdd = std::make_shared<MDD>(tmp);
-    MDDTable[h_node->id][id] = new_mdd;
   }
+
   Paths paths = h_node->paths;
   paths.insert(id, path);
+  // update conflicts counts
+  h_node->f = h_node->f
+    - countConflict(id, h_node->paths.get(id), h_node->paths)
+    + countConflict(id, paths.get(id), h_node->paths);
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();
-  h_node->f = countConflict(h_node->paths);
 }
 
 bool ICBS::findBypass(HighLevelNode* h_node,

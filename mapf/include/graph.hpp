@@ -126,6 +126,10 @@ static std::string getConfigName(const Config& c)
 
 class Graph {
 private:
+  // name
+  static int UUID;
+  const int id;
+
   // cache
   std::unordered_map<std::string, Path> PATH_TABLE;
   void registerPath(const Path& path);
@@ -139,8 +143,8 @@ protected:
   int height;
 
 public:
-  Graph() {};
-  Graph(const std::string& _map_file) : map_file(_map_file) {};
+  Graph() : id(UUID++) {};
+  Graph(const std::string& _map_file) : map_file(_map_file), id(UUID++) {};
   ~Graph() {};
 
   virtual bool nodeExist(int x, int y) const { return false; };
@@ -151,6 +155,7 @@ public:
   std::string getMapFileName() { return map_file; };
   int getWidth() { return width; }
   int getHeight() { return height; }
+  int getID() { return id; }
 
   Path getPath(Node* const s, Node* const g);
   int pathDist(Node* const s, Node* const g);
