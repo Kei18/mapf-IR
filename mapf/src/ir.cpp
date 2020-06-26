@@ -5,7 +5,7 @@
 #include "../include/whca.hpp"
 #include "../include/cbs_refine.hpp"
 #include "../include/ecbs.hpp"
-#include "../include/ecbs_refine.hpp"
+#include "../include/icbs.hpp"
 
 
 const std::string IR::SOLVER_NAME = "IR";
@@ -118,7 +118,7 @@ Plan IR::getInitialPlan()
 
 bool IR::stopRefinement(const Plan& new_plan, const Plans& hist)
 {
-  if (hist.size() < threshold_nondiff_refine) return false;
+  if (hist.size() <= threshold_nondiff_refine) return false;
   auto itr = hist.end() - 2;
   if (new_plan.getSOC() < (*itr).getSOC()) return false;
   int cnt = 0;
@@ -127,12 +127,12 @@ bool IR::stopRefinement(const Plan& new_plan, const Plans& hist)
         <= threshold_soc_diff) {
       ++cnt;
       --itr;
-      if (threshold_nondiff_refine <= cnt) break;
+      if (threshold_nondiff_refine <= cnt) return true;
     } else {
       return false;
     }
   }
-  return true;
+  return false;
 }
 
 Plan IR::refinePlan(const Config& config_s,
@@ -241,12 +241,9 @@ Plan IR::MAPFSolver(const Config& config_s,
                             config_g,
                             comp_time_limit,
                             max_timestep);
-  Solver* solver;
-  int current_makespan = current_plan.getMakespan();
-  int current_soc =  current_plan.getSOC();
 
-  std::vector<int> sample;
   // create sample
+  std::vector<int> sample;
   if (sampling_rate > 0) {
     int sample_num = sampling_rate * P->getNum();
     std::vector<int> ids (P->getNum());
@@ -255,11 +252,14 @@ Plan IR::MAPFSolver(const Config& config_s,
     for (int i = 0; i < sample_num; ++i) sample.push_back(ids[i]);
   }
 
+  // set solver
+  Solver* solver;
   switch (refine_solver) {
-  case REFINE_SOLVER_TYPE::ECBS:
-    solver = new ECBS_REFINE(_P,
-                             current_makespan,
-                             current_soc);
+  case REFINE_SOLVER_TYPE::CBS_NORMAL:
+    solver = new CBS(_P);
+    break;
+  case REFINE_SOLVER_TYPE::ICBS_NORMAL:
+    solver = new ICBS(_P);
     break;
   case REFINE_SOLVER_TYPE::CBS:
   default:
@@ -268,6 +268,7 @@ Plan IR::MAPFSolver(const Config& config_s,
                             sample);
     break;
   }
+
   // set params
   int argc = option_refine_solver.size() + 1;
   char *argv[argc+1];
@@ -275,7 +276,6 @@ Plan IR::MAPFSolver(const Config& config_s,
     char *tmp = const_cast<char*>(option_refine_solver[i].c_str());
     argv[i+1] = tmp;
   }
-  // solver->setVerbose(true);
 
   // solve
   solver->solve();
@@ -283,7 +283,7 @@ Plan IR::MAPFSolver(const Config& config_s,
   if (solver->succeed()) {
     Plan plan = solver->getSolution();
     if (!cache_on) return plan;
-    if (plan.getSOC() < current_soc) {
+    if (plan.getSOC() < current_plan.getSOC()) {
       registerTable(plan);
       return plan;
     }
@@ -479,8 +479,10 @@ void IR::setParams(int argc, char *argv[])
       s = std::string(optarg);
       if (s == "CBS") {
         refine_solver = REFINE_SOLVER_TYPE::CBS;
-      } else if (s == "ECBS") {
-        refine_solver = REFINE_SOLVER_TYPE::ECBS;
+      } else if (s == "CBS_NORMAL") {
+        refine_solver = REFINE_SOLVER_TYPE::CBS_NORMAL;
+      } else if (s == "ICBS_NORMAL") {
+        refine_solver = REFINE_SOLVER_TYPE::ICBS_NORMAL;
       } else {
         warn("solver does not exists, use CBS");
       }

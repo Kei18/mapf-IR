@@ -46,7 +46,7 @@ void ICBS::solve()
          ", soc:", n->soc);
 
     // check conflict
-    Constraints constraints = getPrioritizedConflict(n);
+    Conflict::Constraints constraints = getPrioritizedConflict(n);
     if (constraints.empty()) {
       solved = true;
       break;
@@ -63,7 +63,7 @@ void ICBS::solve()
 
     // create new nodes
     for (auto c : constraints) {
-      Constraints new_constraints = n->constraints;
+      Conflict::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
       HighLevelNode* m = new HighLevelNode
         { h_node_num,
@@ -101,7 +101,7 @@ void ICBS::setInitialHighLevelNode(HighLevelNode* n)
   n->constraints = {};  // constraints
   n->makespan = paths.getMakespan();
   n->soc = paths.getSOC();
-  n->f = countConflict(paths);
+  n->f = Conflict::countConflict(paths);
   n->valid = true;  // valid
 
   MDDTable[n->id] = mdds;
@@ -111,7 +111,7 @@ void ICBS::invoke(HighLevelNode* h_node, int id)
 {
   Path path;
   MDD mdd = *(MDDTable[h_node->id][id]);
-  Constraint* last_constraint = *(h_node->constraints.end()-1);
+  Conflict::Constraint* last_constraint = *(h_node->constraints.end()-1);
   mdd.update({ last_constraint });  // check only last
   if (mdd.valid) {  // use mdd as much as possible
     path = mdd.getPath();
@@ -135,15 +135,15 @@ void ICBS::invoke(HighLevelNode* h_node, int id)
   paths.insert(id, path);
   // update conflicts counts
   h_node->f = h_node->f
-    - countConflict(id, h_node->paths.get(id), h_node->paths)
-    + countConflict(id, paths.get(id), h_node->paths);
+    - Conflict::countConflict(id, h_node->paths.get(id), h_node->paths)
+    + Conflict::countConflict(id, paths.get(id), h_node->paths);
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();
 }
 
 bool ICBS::findBypass(HighLevelNode* h_node,
-                      const Constraints& constraints)
+                      const Conflict::Constraints& constraints)
 {
   auto itr = MDDTable.find(h_node->id);
   if (itr == MDDTable.end()) halt("MDD is not found.");
@@ -154,9 +154,10 @@ bool ICBS::findBypass(HighLevelNode* h_node,
     while (path.size() - 1 < h_node->makespan) {
       path.push_back(*(path.end()-1));
     }
-    int conflicts_old = countConflict(c->id, h_node->paths.get(c->id),
-                                      h_node->paths);
-    int conflicts_new = countConflict(c->id, path, h_node->paths);
+    int conflicts_old = Conflict::countConflict(c->id,
+                                                h_node->paths.get(c->id),
+                                                h_node->paths);
+    int conflicts_new = Conflict::countConflict(c->id, path, h_node->paths);
     if (conflicts_old <= conflicts_new) continue;
 
     // helpful bypass found
@@ -167,10 +168,11 @@ bool ICBS::findBypass(HighLevelNode* h_node,
   return false;
 }
 
-CBS::Constraints ICBS::getPrioritizedConflict(const HighLevelNode* h_node)
+Conflict::Constraints ICBS::getPrioritizedConflict
+(HighLevelNode* h_node)
 {
-  Constraints semi_cardinal_constraints = {};
-  Constraints non_cardinal_constraints = {};
+  Conflict::Constraints semi_cardinal_constraints = {};
+  Conflict::Constraints non_cardinal_constraints = {};
   Paths paths = h_node->paths;
   MDDs mdds = MDDTable[h_node->id];
   for (int t = 1; t <= paths.getMakespan(); ++t) {
@@ -182,9 +184,9 @@ CBS::Constraints ICBS::getPrioritizedConflict(const HighLevelNode* h_node)
         int w_j = (t <= c_j) ? mdds[j]->body[t].size() : 0;
         // vertex conflict
         if (paths.get(i, t) == paths.get(j, t)) {
-          Constraint* constraint_i = new Constraint
+          Conflict::Constraint* constraint_i = new Conflict::Constraint
             { i, t, paths.get(i, t), nullptr };
-          Constraint* constraint_j = new Constraint
+          Conflict::Constraint* constraint_j = new Conflict::Constraint
             { j, t, paths.get(j, t), nullptr };
           // cardinal conflicts
           if ((t <= c_i && w_i == 1 && t <= c_j && w_j == 1) ||
@@ -205,9 +207,9 @@ CBS::Constraints ICBS::getPrioritizedConflict(const HighLevelNode* h_node)
         // swap conflict
         if (paths.get(i, t) == paths.get(j, t-1) &&
             paths.get(j, t) == paths.get(i, t-1)) {
-          Constraint* constraint_i = new Constraint
+          Conflict::Constraint* constraint_i = new Conflict::Constraint
             { i, t, paths.get(i, t), paths.get(i, t-1) };
-          Constraint* constraint_j = new Constraint
+          Conflict::Constraint* constraint_j = new Conflict::Constraint
             { j, t, paths.get(j, t), paths.get(j, t-1) };
           // cardinal conflicts
           if ((t <= c_i && w_i == 1 &&
@@ -239,4 +241,10 @@ CBS::Constraints ICBS::getPrioritizedConflict(const HighLevelNode* h_node)
     return non_cardinal_constraints;
   }
   return {};
+}
+
+void ICBS::printHelp() {
+  std::cout << ICBS::SOLVER_NAME << "\n"
+            << "  (no option)"
+            << std::endl;
 }

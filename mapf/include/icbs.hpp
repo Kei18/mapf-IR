@@ -10,7 +10,6 @@
 #pragma once
 #include "solver.hpp"
 #include "cbs.hpp"
-#include <stack>
 #include <memory>
 
 
@@ -39,12 +38,12 @@ struct MDD {
   Node* s;  // start
   Node* g;  // goal;
   std::vector<MDDNodes> body;  // t: 0...c
-  bool valid;
+  bool valid;  // false -> no path from s to g
   std::vector<MDDNode*> generated_nodes;  // for memory management
 
+  // cache
   static std::unordered_map<std::string,
                             std::shared_ptr<MDD>> PURE_MDD_TABLE;
-
 
   MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid) {
     c = _c;
@@ -55,7 +54,7 @@ struct MDD {
     valid = _valid;
   }
 
-  MDD(int _c, int _i, Problem* P, CBS::Constraints constraints) {
+  MDD(int _c, int _i, Problem* P, Conflict::Constraints constraints) {
     c = _c;
     i = _i;
     G = P->getG();
@@ -164,27 +163,27 @@ struct MDD {
       }
     }
 
-    // new ently, register
+    // new entry, register
     MDD mdd = *this;
     PURE_MDD_TABLE[getPureMDDName()] = std::make_shared<MDD>(mdd);
   }
 
-  void update(const CBS::Constraints& _constraints) {
+  void update(const Conflict::Constraints& _constraints) {
     if (!valid || _constraints.empty()) return;
     // format constraints
-    CBS::Constraints constraints;
+    Conflict::Constraints constraints;
     for (auto constraint : _constraints) {
       if (constraint->id == i) constraints.push_back(constraint);
     }
     if (constraints.empty()) halt("error, constraints never become empty");
     std::sort(constraints.begin(), constraints.end(),
-              [] (CBS::Constraint* a, CBS::Constraint* b) {
+              [] (Conflict::Constraint* a, Conflict::Constraint* b) {
                 if (a->t != b->t) return a->t < b->t;
                 if (a->u != nullptr) return true;
                 if (b->u != nullptr) return false;
                 return false;
               });
-    CBS::Constraint* last_constraint = *(constraints.end()-1);
+    Conflict::Constraint* last_constraint = *(constraints.end()-1);
     if ((last_constraint->t > c)
         || (last_constraint->t == c && last_constraint->u == nullptr)) {
       valid = false;
@@ -257,6 +256,7 @@ struct MDD {
   }
 
   Path getPathByDFS() const {
+    if (!valid) return {};
     MDDNode* node = body[0][0];
     MDDNode* goal_node = body[c][0];
     Path path;
@@ -274,7 +274,7 @@ struct MDD {
     return getPathByDFS();
   }
 
-  Path getPath(CBS::Constraint* constraint) const {
+  Path getPath(Conflict::Constraint* const constraint) const {
     if (!valid) return {};
     if (constraint == nullptr) return getPathByDFS();
     MDD mdd = *this;
@@ -323,12 +323,15 @@ protected:
   void setInitialHighLevelNode(HighLevelNode* n);
   void invoke(HighLevelNode* h_node, int id);
   bool findBypass(HighLevelNode* h_node,
-                  const Constraints& constraints);
-  Constraints getPrioritizedConflict(const HighLevelNode* h_node);
+                  const Conflict::Constraints& constraints);
+  Conflict::Constraints
+    getPrioritizedConflict(HighLevelNode* h_node);
 
 public:
   ICBS(Problem* _P);
   ~ICBS();
 
   void solve();
+
+  static void printHelp();
 };

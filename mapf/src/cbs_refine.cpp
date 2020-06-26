@@ -33,7 +33,7 @@ void CBS_REFINE::setInitialHighLevelNode(HighLevelNode* n)
   n->constraints = {};  // constraints
   n->makespan = paths.getMakespan();
   n->soc = paths.getSOC();
-  n->f = countConflict(paths);
+  n->f = Conflict::countConflict(paths);
   n->valid = true;  // valid
 }
 
@@ -108,7 +108,7 @@ Path CBS_REFINE::getConstrainedPath(HighLevelNode* h_node, int id)
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
 
-  Constraints constraints;
+  Conflict::Constraints constraints;
   int max_constraint_time = 0;
   for (auto c : h_node->constraints) {
     if (c->id == id) {

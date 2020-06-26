@@ -140,6 +140,6 @@ void printHelp() {
   WHCA::printHelp();
   CBS::printHelp();
   ECBS::printHelp();
-  IR::printHelp();
   ICBS::printHelp();
+  IR::printHelp();
 }

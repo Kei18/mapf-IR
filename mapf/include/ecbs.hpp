@@ -8,18 +8,19 @@
  */
 
 #pragma once
-#include "cbs.hpp"
+#include "solver.hpp"
+#include "conflict.hpp"
 #include <tuple>
 
 
-class ECBS : public CBS {
+class ECBS : public Solver {
 public:
   static const std::string SOLVER_NAME;
 
 protected:
-  struct HighLevelNodeECBS {
+  struct HighLevelNode {
     Paths paths;
-    Constraints constraints;
+    Conflict::Constraints constraints;
     int makespan;
     int soc;
     int f;
@@ -35,8 +36,8 @@ protected:
     int f2;
     FocalNode* p;  // parent
   };
-  using CompareHighLevelNodeECBS = std::function<bool(HighLevelNodeECBS*,
-                                                      HighLevelNodeECBS*)>;
+  using CompareHighLevelNode = std::function<bool(HighLevelNode*,
+                                                  HighLevelNode*)>;
   using CompareFocalNode = std::function<bool(FocalNode*, FocalNode*)>;
   using CheckFocalFin = std::function<bool(FocalNode*)>;
   using CheckInvalidFocalNode = std::function<bool(FocalNode*)>;
@@ -44,13 +45,13 @@ protected:
 
   float sub_optimality;
   static const float DEFAULT_SUB_OPTIMALITY;
-  void setInitialHighLevelNode(HighLevelNodeECBS* n);
+  void setInitialHighLevelNode(HighLevelNode* n);
+  Path getInitialPath(int id);
 
-  virtual CompareHighLevelNodeECBS getMainObjective();
-  virtual CompareHighLevelNodeECBS getFocalObjective();
-  virtual void invoke(HighLevelNodeECBS* h_node, int id);
-  virtual std::tuple<Path, int> getFocalPath(HighLevelNodeECBS* h_node,
-                                             int id);
+  CompareHighLevelNode getMainObjective();
+  CompareHighLevelNode getFocalObjective();
+  void invoke(HighLevelNode* h_node, int id);
+  std::tuple<Path, int> getFocalPath(HighLevelNode* h_node, int id);
   std::tuple<Path, int> getTimedPathByFocalSearch
   (Node* const s, Node* const g, float w,  // sub-optimality
    FocalHeuristics& f1Value,

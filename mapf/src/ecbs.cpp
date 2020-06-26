@@ -3,7 +3,7 @@
 const std::string ECBS::SOLVER_NAME = "ECBS";
 const float ECBS::DEFAULT_SUB_OPTIMALITY = 1.1;
 
-ECBS::ECBS(Problem* _P) : CBS(_P)
+ECBS::ECBS(Problem* _P) : Solver(_P)
 {
   sub_optimality = DEFAULT_SUB_OPTIMALITY;
   solver_name = ECBS::SOLVER_NAME + std::to_string(sub_optimality);
@@ -14,18 +14,18 @@ void ECBS::solve()
   start();
   // high-level search
 
-  CompareHighLevelNodeECBS compareOPEN = getMainObjective();
-  CompareHighLevelNodeECBS compareFOCAL = getFocalObjective();
+  CompareHighLevelNode compareOPEN = getMainObjective();
+  CompareHighLevelNode compareFOCAL = getFocalObjective();
 
   // OPEN, FOCAL
-  std::priority_queue<HighLevelNodeECBS*,
-                      std::vector<HighLevelNodeECBS*>,
+  std::priority_queue<HighLevelNode*,
+                      std::vector<HighLevelNode*>,
                       decltype(compareOPEN)> OPEN(compareOPEN);
 
   // for memory management
-  Constraints generated_constraints;
+  Conflict::Constraints generated_constraints;
 
-  HighLevelNodeECBS* n = new HighLevelNodeECBS;
+  HighLevelNode* n = new HighLevelNode;
   setInitialHighLevelNode(n);
   OPEN.push(n);
 
@@ -43,12 +43,12 @@ void ECBS::solve()
     }
     if (OPEN.empty()) break;  // failed
     float LB_bound = OPEN.top()->LB * sub_optimality;
-    std::vector<HighLevelNodeECBS*> tmp;
-    std::priority_queue<HighLevelNodeECBS*,
-                        std::vector<HighLevelNodeECBS*>,
+    std::vector<HighLevelNode*> tmp;
+    std::priority_queue<HighLevelNode*,
+                        std::vector<HighLevelNode*>,
                         decltype(compareFOCAL)> FOCAL(compareFOCAL);
     while (!OPEN.empty()) {
-      HighLevelNodeECBS* top = OPEN.top();
+      HighLevelNode* top = OPEN.top();
       OPEN.pop();
       if (!top->valid) {
         delete top;
@@ -73,7 +73,8 @@ void ECBS::solve()
          ", constraints:", n->constraints.size());
 
     // check conflict
-    Constraints constraints = getFirstConflict(n->paths);
+    Conflict::Constraints constraints =
+      Conflict::getFirstConstraints(n->paths);
     if (constraints.empty()) {
       solved = true;
       break;
@@ -82,9 +83,9 @@ void ECBS::solve()
     // create new nodes
     for (auto c : constraints) {
       generated_constraints.push_back(c);  // for memory management
-      Constraints new_constraints = n->constraints;
+      Conflict::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNodeECBS* m = new HighLevelNodeECBS
+      HighLevelNode* m = new HighLevelNode
         { n->paths,
           new_constraints,
           n->makespan,
@@ -100,15 +101,8 @@ void ECBS::solve()
     }
   }
 
-  if (solved) {  // success
-    solution = pathsToPlan(n->paths);
-  } else {  // failed
-    Config config_s;
-    for (int i = 0; i < P->getNum(); ++i) {
-      config_s.push_back(P->getStart(i));
-    }
-    solution.add(config_s);
-  }
+  // success
+  if (solved) solution = pathsToPlan(n->paths);
 
   // free
   if (!solved) delete n;
@@ -121,18 +115,18 @@ void ECBS::solve()
   end();
 }
 
-ECBS::CompareHighLevelNodeECBS ECBS::getMainObjective() {
-  CompareHighLevelNodeECBS compare =
-    [&] (HighLevelNodeECBS* a, HighLevelNodeECBS* b) {
+ECBS::CompareHighLevelNode ECBS::getMainObjective() {
+  CompareHighLevelNode compare =
+    [&] (HighLevelNode* a, HighLevelNode* b) {
       if (a->soc != b->soc) return a->soc > b->soc;
       return false;
     };
   return compare;
 }
 
-ECBS::CompareHighLevelNodeECBS ECBS::getFocalObjective() {
-  CompareHighLevelNodeECBS compare =
-    [&] (HighLevelNodeECBS* a, HighLevelNodeECBS* b) {
+ECBS::CompareHighLevelNode ECBS::getFocalObjective() {
+  CompareHighLevelNode compare =
+    [&] (HighLevelNode* a, HighLevelNode* b) {
       if (a->f != b->f) return a->f > b->f;
       if (a->soc != b->soc) return a->soc > b->soc;
       return false;
@@ -140,7 +134,7 @@ ECBS::CompareHighLevelNodeECBS ECBS::getFocalObjective() {
   return compare;
 }
 
-void ECBS::setInitialHighLevelNode(HighLevelNodeECBS* n)
+void ECBS::setInitialHighLevelNode(HighLevelNode* n)
 {
   Paths paths(P->getNum());
   std::vector<int> f_mins;
@@ -153,13 +147,44 @@ void ECBS::setInitialHighLevelNode(HighLevelNodeECBS* n)
   n->constraints = {};  // constraints
   n->makespan = paths.getMakespan();
   n->soc = paths.getSOC();
-  n->f = countConflict(paths);
+  n->f = Conflict::countConflict(paths);
   n->valid = true;  // valid
   n->f_mins = f_mins;
   n->LB = n->soc;
 }
 
-void ECBS::invoke(HighLevelNodeECBS* h_node, int id)
+Path ECBS::getInitialPath(int id)
+{
+  Node* s = P->getStart(id);
+  Node* g = P->getGoal(id);
+  Nodes config_g = P->getConfigGoal();
+
+  AstarHeuristics fValue =
+    [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+
+  CompareAstarNode compare =
+    [&] (AstarNode* a, AstarNode* b) {
+      if (a->f != b->f) return a->f > b->f;
+      // [IMPORTANT!] avoid goal locations of others
+      if (a->v != g && inArray(a->v, config_g)) return true;
+      if (b->v != g && inArray(b->v, config_g)) return false;
+      if (a->g != b->g) return a->g < b->g;
+      return false;
+    };
+
+  CheckAstarFin checkAstarFin = [&] (AstarNode* n) { return n->v == g; };
+
+  CheckInvalidAstarNode checkInvalidAstarNode =
+    [&] (AstarNode* m) {  return false; };
+
+  return getTimedPath(s, g,
+                      fValue,
+                      compare,
+                      checkAstarFin,
+                      checkInvalidAstarNode);
+}
+
+void ECBS::invoke(HighLevelNode* h_node, int id)
 {
   auto res = getFocalPath(h_node, id);
   Path path = std::get<0>(res);
@@ -171,20 +196,22 @@ void ECBS::invoke(HighLevelNodeECBS* h_node, int id)
   }
   Paths paths = h_node->paths;
   paths.insert(id, path);
+  h_node->f = h_node->f
+    - Conflict::countConflict(id, h_node->paths.get(id), h_node->paths)
+    + Conflict::countConflict(id, paths.get(id), h_node->paths);
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();
-  h_node->f = countConflict(h_node->paths);
   h_node->LB = h_node->LB - h_node->f_mins[id] + f_min;
   h_node->f_mins[id] = f_min;
 }
 
-std::tuple<Path, int> ECBS::getFocalPath(HighLevelNodeECBS* h_node, int id)
+std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode* h_node, int id)
 {
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
 
-  Constraints constraints;
+  Conflict::Constraints constraints;
   int max_constraint_time = 0;
   for (auto c : h_node->constraints) {
     if (c->id == id) {
@@ -207,7 +234,9 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNodeECBS* h_node, int id)
 
   FocalHeuristics f2Value =
     [&] (FocalNode* n) {
-      return countConflict(id, getPathFromFocalNode(n), h_node->paths);
+      return Conflict::countConflict(id,
+                                     getPathFromFocalNode(n),
+                                     h_node->paths);
     };
 
   CompareFocalNode compareOPEN =

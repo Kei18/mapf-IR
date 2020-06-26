@@ -1,5 +1,4 @@
 #include "../include/solver.hpp"
-#include "../include/util.hpp"
 #include <fstream>
 
 

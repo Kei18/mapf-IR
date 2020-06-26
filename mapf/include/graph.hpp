@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <unordered_map>
 #include <queue>
+#include "util.hpp"
 
 
 struct Pos {
@@ -144,7 +145,7 @@ protected:
 
 public:
   Graph() : id(UUID++) {};
-  Graph(const std::string& _map_file) : map_file(_map_file), id(UUID++) {};
+  Graph(const std::string& _map_file) : id(UUID++), map_file(_map_file) {};
   ~Graph() {};
 
   virtual bool nodeExist(int x, int y) const { return false; };

@@ -17,20 +17,14 @@ private:
 
 public:
   Config get(int t) const {
-    if (!(0 <= t && t < configs.size())) {
-      halt("invalid timestep.");
-    }
+    if (!(0 <= t && t < configs.size())) halt("invalid timestep");
     return configs[t];
   }
 
   Node* get(int t, int i) const {
     if (empty()) halt("invalid operation");
-    if (!(0 <= t && t < configs.size())) {
-      halt("invalid timestep.");
-    }
-    if (!(0 <= i && i < configs[0].size())) {
-      halt("invalid agent id.");
-    }
+    if (!(0 <= t && t < configs.size())) halt("invalid timestep");
+    if (!(0 <= i && i < configs[0].size())) halt("invalid agent id");
     return configs[t][i];
   }
 
