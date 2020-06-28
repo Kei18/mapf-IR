@@ -25,13 +25,14 @@ protected:
     int f;   // for tie-break
     bool valid;
   };
-  using CompareHighLevelNodes = std::function<bool(HighLevelNode*,
-                                                   HighLevelNode*)>;
+  using HighLevelNode_p = std::shared_ptr<HighLevelNode>;
+  using CompareHighLevelNodes = std::function<bool(HighLevelNode_p,
+                                                   HighLevelNode_p)>;
 
   Path getInitialPath(int id);
-  virtual void setInitialHighLevelNode(HighLevelNode* n);
-  virtual void invoke(HighLevelNode* h_node, int id);
-  virtual Path getConstrainedPath(HighLevelNode* h_node, int id);
+  virtual void setInitialHighLevelNode(HighLevelNode_p n);
+  virtual void invoke(HighLevelNode_p h_node, int id);
+  virtual Path getConstrainedPath(HighLevelNode_p h_node, int id);
   virtual CompareHighLevelNodes getObjective();
 
 public:

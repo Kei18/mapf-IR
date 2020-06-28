@@ -146,7 +146,7 @@ protected:
 public:
   Graph() : id(UUID++) {};
   Graph(const std::string& _map_file) : id(UUID++), map_file(_map_file) {};
-  ~Graph() {};
+  ~Graph();
 
   virtual bool nodeExist(int x, int y) const { return false; };
   virtual Node* getNode(int x, int y) const { return nullptr; };

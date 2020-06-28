@@ -3,11 +3,22 @@
 CBS_REFINE::CBS_REFINE(Problem* _P,
                        const Plan& _old_plan,
                        const std::vector<int>& _sample)
-  : CBS(_P), SolverRefine(_old_plan, _sample)
+  : CBS(_P),
+    old_plan(_old_plan),
+    old_paths(planToPaths(_old_plan)),
+    ub_makespan(_old_plan.getMakespan()),
+    ub_soc(_old_plan.getSOC()),
+    sample(_sample)
 {
+  if (!sample.empty()) {
+    if (_old_plan.empty()) return;
+    for (int i = 0; i < _old_plan.get(0).size(); ++i) {
+      if (!inArray(i, sample)) fixed_agents.push_back(i);
+    }
+  }
 }
 
-void CBS_REFINE::setInitialHighLevelNode(HighLevelNode* n)
+void CBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
 {
   if (!sample.empty()) {
     Paths paths(P->getNum());
@@ -80,7 +91,7 @@ Path CBS_REFINE::getInitialPath(int id)
 CBS::CompareHighLevelNodes CBS_REFINE::getObjective()
 {
   CompareHighLevelNodes compare =
-    [] (HighLevelNode* a, HighLevelNode* b)
+    [] (HighLevelNode_p a, HighLevelNode_p b)
     {
       if (a->makespan != b->makespan) return a->makespan > b->makespan;
       if (a->soc != b->soc) return a->soc > b->soc;
@@ -90,7 +101,7 @@ CBS::CompareHighLevelNodes CBS_REFINE::getObjective()
   return compare;
 }
 
-Path CBS_REFINE::getConstrainedPath(HighLevelNode* h_node, int id)
+Path CBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);

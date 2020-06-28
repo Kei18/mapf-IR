@@ -9,10 +9,8 @@
 
 class ICBS_REFINE : public ICBS, CBS_REFINE {
 private:
-  // CBS::CompareHighLevelNodes getObjective();
-  void setInitialHighLevelNode(HighLevelNode* n);
-  Path getConstrainedPath(HighLevelNode* h_node, int id);
-  // Path getInitialPath(int id);
+  void setInitialHighLevelNode(HighLevelNode_p n);
+  Path getConstrainedPath(HighLevelNode_p h_node, int id);
 
 public:
   ICBS_REFINE(Problem* _P,

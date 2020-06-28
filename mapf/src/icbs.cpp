@@ -20,11 +20,11 @@ void ICBS::solve()
   CompareHighLevelNodes compare = getObjective();
 
   // OPEN
-  std::priority_queue<HighLevelNode*,
-                      std::vector<HighLevelNode*>,
+  std::priority_queue<HighLevelNode_p,
+                      std::vector<HighLevelNode_p>,
                       decltype(compare)> HighLevelTree(compare);
 
-  HighLevelNode* n = new HighLevelNode;
+  HighLevelNode_p n(new HighLevelNode);
   setInitialHighLevelNode(n);
   HighLevelTree.push(n);
 
@@ -65,14 +65,14 @@ void ICBS::solve()
     for (auto c : constraints) {
       Conflict::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNode* m = new HighLevelNode
-        { h_node_num,
+      HighLevelNode_p m(new HighLevelNode{
+          h_node_num,
           n->paths,
           new_constraints,
           n->makespan,
           n->soc,
           n->f,
-          true };
+          true });
       MDDTable[m->id] = MDDTable[n->id];  // copy MDD
       invoke(m, c->id);
       if (!m->valid) continue;
@@ -85,7 +85,7 @@ void ICBS::solve()
   end();
 }
 
-void ICBS::setInitialHighLevelNode(HighLevelNode* n)
+void ICBS::setInitialHighLevelNode(HighLevelNode_p n)
 {
   CBS::setInitialHighLevelNode(n);
 
@@ -100,7 +100,7 @@ void ICBS::setInitialHighLevelNode(HighLevelNode* n)
 }
 
 // using MDD
-Path ICBS::getConstrainedPath(HighLevelNode* h_node, int id)
+Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
   Path path;
   MDD mdd = *(MDDTable[h_node->id][id]);
@@ -124,7 +124,7 @@ Path ICBS::getConstrainedPath(HighLevelNode* h_node, int id)
   return path;
 }
 
-bool ICBS::findBypass(HighLevelNode* h_node,
+bool ICBS::findBypass(HighLevelNode_p h_node,
                       const Conflict::Constraints& constraints)
 {
   auto itr = MDDTable.find(h_node->id);
@@ -150,7 +150,7 @@ bool ICBS::findBypass(HighLevelNode* h_node,
 }
 
 Conflict::Constraints ICBS::getPrioritizedConflict
-(HighLevelNode* const h_node)
+(HighLevelNode_p const h_node)
 {
   Conflict::Constraints semi_cardinal_constraints = {};
   Conflict::Constraints non_cardinal_constraints = {};

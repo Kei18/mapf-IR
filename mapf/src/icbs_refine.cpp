@@ -7,7 +7,7 @@ ICBS_REFINE::ICBS_REFINE(Problem* _P,
 {
 }
 
-void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode* n)
+void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
 {
   if (sample.empty()) {
     ICBS::setInitialHighLevelNode(n);
@@ -61,7 +61,7 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode* n)
 }
 
 // using MDD
-Path ICBS_REFINE::getConstrainedPath(HighLevelNode* h_node, int id)
+Path ICBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
   // set cost limit
   int prev_cost = h_node->paths.costOfPath(id);

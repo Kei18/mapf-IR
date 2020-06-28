@@ -16,14 +16,11 @@ void CBS::solve()
   CompareHighLevelNodes compare = getObjective();
 
   // OPEN
-  std::priority_queue<HighLevelNode*,
-                      std::vector<HighLevelNode*>,
+  std::priority_queue<HighLevelNode_p,
+                      std::vector<HighLevelNode_p>,
                       decltype(compare)> HighLevelTree(compare);
 
-  // for memory management
-  Conflict::Constraints generated_constraints;
-
-  HighLevelNode* n = new HighLevelNode;
+  HighLevelNode_p n(new HighLevelNode);
   setInitialHighLevelNode(n);
   HighLevelTree.push(n);
 
@@ -55,35 +52,24 @@ void CBS::solve()
 
     // create new nodes
     for (auto c : constraints) {
-      generated_constraints.push_back(c);  // for memory management
       Conflict::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNode* m = new HighLevelNode
-        { h_node_num,
+      HighLevelNode_p m(new HighLevelNode{
+          h_node_num,
           n->paths,
           new_constraints,
           n->makespan,
           n->soc,
           n->f,  // # conflicts
-          true };
+          true });
       invoke(m, c->id);
       if (!m->valid) continue;
       HighLevelTree.push(m);
       ++h_node_num;
     }
-
-    delete n;  // free
   }
 
   if (solved) solution = pathsToPlan(n->paths);
-
-  // free
-  if (!solved) delete n;
-  while (!HighLevelTree.empty()) {
-    delete HighLevelTree.top();
-    HighLevelTree.pop();
-  }
-  for (auto c : generated_constraints) delete c;
 
   end();
 }
@@ -91,7 +77,7 @@ void CBS::solve()
 CBS::CompareHighLevelNodes CBS::getObjective()
 {
   CompareHighLevelNodes compare =
-    [] (HighLevelNode* a, HighLevelNode* b)
+    [] (HighLevelNode_p a, HighLevelNode_p b)
     {
      if (a->soc != b->soc) return a->soc > b->soc;
      if (a->f != b->f) return a->f > b->f;  // tie-breaker
@@ -100,7 +86,7 @@ CBS::CompareHighLevelNodes CBS::getObjective()
   return compare;
 }
 
-void CBS::setInitialHighLevelNode(HighLevelNode* n)
+void CBS::setInitialHighLevelNode(HighLevelNode_p n)
 {
   if (n->paths.empty()) {
     Paths paths(P->getNum());
@@ -149,7 +135,7 @@ Path CBS::getInitialPath(int id)
                       checkInvalidAstarNode);
 }
 
-void CBS::invoke(HighLevelNode* h_node, int id)
+void CBS::invoke(HighLevelNode_p h_node, int id)
 {
   Path path = getConstrainedPath(h_node, id);
   if (path.empty()) {
@@ -166,7 +152,7 @@ void CBS::invoke(HighLevelNode* h_node, int id)
   h_node->soc = h_node->paths.getSOC();
 }
 
-Path CBS::getConstrainedPath(HighLevelNode* h_node, int id)
+Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);

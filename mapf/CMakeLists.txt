@@ -11,7 +11,6 @@ add_library(lib-mapf STATIC
   ./src/ecbs.cpp
   ./src/ir.cpp
   ./src/icbs.cpp
-  ./src/solver_refine.cpp
   ./src/cbs_refine.cpp
   ./src/icbs_refine.cpp
   )

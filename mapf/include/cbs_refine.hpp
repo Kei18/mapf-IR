@@ -5,12 +5,18 @@
 
 #pragma once
 #include "cbs.hpp"
-#include "solver_refine.hpp"
 
-class CBS_REFINE : public virtual CBS, public SolverRefine {
+class CBS_REFINE : public virtual CBS {
 protected:
-  virtual void setInitialHighLevelNode(HighLevelNode* n);
-  virtual Path getConstrainedPath(HighLevelNode* h_node, int id);
+  const Plan old_plan;
+  const Paths old_paths;
+  const int ub_makespan;
+  const int ub_soc;
+  const std::vector<int> sample;
+  std::vector<int> fixed_agents;
+
+  virtual void setInitialHighLevelNode(HighLevelNode_p n);
+  virtual Path getConstrainedPath(HighLevelNode_p h_node, int id);
   Path getInitialPath(int id);
   CompareHighLevelNodes getObjective();
 

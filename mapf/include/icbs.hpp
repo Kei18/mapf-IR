@@ -333,12 +333,12 @@ public:
 protected:
   std::unordered_map<int, MDDs> MDDTable;  // store MDD_c^i
 
-  virtual void setInitialHighLevelNode(HighLevelNode* n);
-  virtual Path getConstrainedPath(HighLevelNode* h_node, int id);
-  bool findBypass(HighLevelNode* h_node,
+  virtual void setInitialHighLevelNode(HighLevelNode_p n);
+  virtual Path getConstrainedPath(HighLevelNode_p h_node, int id);
+  bool findBypass(HighLevelNode_p h_node,
                   const Conflict::Constraints& constraints);
   Conflict::Constraints
-  getPrioritizedConflict(HighLevelNode* const h_node);
+  getPrioritizedConflict(HighLevelNode_p const h_node);
 
 public:
   ICBS(Problem* _P);

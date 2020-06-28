@@ -5,6 +5,10 @@
 
 int Graph::UUID = 0;
 
+Graph::~Graph() {
+  for (auto v : V) delete v;
+}
+
 Path Graph::getPath(Node* const s, Node* const g)
 {
   if (s == g) return {};
@@ -47,6 +51,7 @@ void Graph::registerPath(const Path& path)
 }
 
 // A* search but using cache as much as possible
+// I tried smart pointer but it was slow...
 Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
 {
   struct AstarNode {
