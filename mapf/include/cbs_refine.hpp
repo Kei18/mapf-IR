@@ -5,16 +5,10 @@
 
 #pragma once
 #include "cbs.hpp"
+#include "solver_refine.hpp"
 
-class CBS_REFINE : public CBS {
+class CBS_REFINE : public CBS, SolverRefine {
 private:
-  const Plan old_plan;
-  const Paths old_paths;
-  const int ub_makespan;
-  const int ub_soc;
-  const std::vector<int> sample;
-  std::vector<int> fixed_agents;
-
   void setInitialHighLevelNode(HighLevelNode* n);
   Path getInitialPath(int id);
   CompareHighLevelNodes getObjective();

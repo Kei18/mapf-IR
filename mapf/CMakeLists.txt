@@ -10,8 +10,10 @@ add_library(lib-mapf STATIC
   ./src/cbs.cpp
   ./src/ecbs.cpp
   ./src/ir.cpp
-  ./src/cbs_refine.cpp
   ./src/icbs.cpp
+  ./src/solver_refine.cpp
+  ./src/cbs_refine.cpp
+  ./src/icbs_refine.cpp
   )
 target_compile_options(lib-mapf PUBLIC -O3 -Wall -mtune=native -march=native)
 target_compile_features(lib-mapf PUBLIC cxx_std_17)

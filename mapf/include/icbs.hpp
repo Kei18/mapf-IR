@@ -173,22 +173,34 @@ struct MDD {
     // format constraints
     Conflict::Constraints constraints;
     for (auto constraint : _constraints) {
-      if (constraint->id == i) constraints.push_back(constraint);
+      if (constraint->id != i && constraint->id != -1) continue;
+      // vertex conflict, must increase cost
+      if (constraint->t >= c && constraint->u == nullptr) {
+        if (constraint-> v == g) {
+          valid = false;
+          return;
+        } else {
+          continue;
+        }
+      }
+      // swap conflict, never occur
+      if (constraint->t > c && constraint->u != nullptr) {
+        continue;
+      }
+
+      constraints.push_back(constraint);
     }
-    if (constraints.empty()) halt("error, constraints never become empty");
+
     std::sort(constraints.begin(), constraints.end(),
               [] (Conflict::Constraint* a, Conflict::Constraint* b) {
                 if (a->t != b->t) return a->t < b->t;
-                if (a->u != nullptr) return true;
-                if (b->u != nullptr) return false;
+                if (a->u != nullptr && b->u == nullptr) return true;
+                if (b->u != nullptr && a->u == nullptr) return false;
+                if (a->u != nullptr && b->u != nullptr)
+                  return a->u->id < b->u->id;
+                if (a->v->id != b->v->id) return a->v->id < b->v->id;
                 return false;
               });
-    Conflict::Constraint* last_constraint = *(constraints.end()-1);
-    if ((last_constraint->t > c)
-        || (last_constraint->t == c && last_constraint->u == nullptr)) {
-      valid = false;
-      return;
-    }
 
     // delete nodes
     for (auto constraint : constraints) {
@@ -285,6 +297,7 @@ struct MDD {
   void println() const {
     std::cout << "MDD_" << i << "^" << c << ", valid="
               << valid << std::endl;
+    if (!valid) return;
     for (int t = 0; t <= c; ++t) {
       std::cout << "t=" << t << std::endl;
       for (auto node : body[t]) {
@@ -320,12 +333,12 @@ public:
 protected:
   std::unordered_map<int, MDDs> MDDTable;  // store MDD_c^i
 
-  void setInitialHighLevelNode(HighLevelNode* n);
-  void invoke(HighLevelNode* h_node, int id);
+  virtual void setInitialHighLevelNode(HighLevelNode* n);
+  virtual void invoke(HighLevelNode* h_node, int id);
   bool findBypass(HighLevelNode* h_node,
                   const Conflict::Constraints& constraints);
   Conflict::Constraints
-    getPrioritizedConflict(HighLevelNode* h_node);
+  getPrioritizedConflict(HighLevelNode* const h_node);
 
 public:
   ICBS(Problem* _P);

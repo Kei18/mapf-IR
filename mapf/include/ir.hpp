@@ -29,7 +29,7 @@ private:
   std::vector<std::string> option_init_solver;
 
   enum struct REFINE_SOLVER_TYPE
-    { CBS, CBS_NORMAL, ICBS_NORMAL, NUM_ITMES };
+    { CBS, CBS_NORMAL, ICBS, ICBS_NORMAL, NUM_ITMES };
   REFINE_SOLVER_TYPE refine_solver;
   std::vector<std::string> option_refine_solver;
 

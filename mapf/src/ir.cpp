@@ -5,7 +5,7 @@
 #include "../include/whca.hpp"
 #include "../include/cbs_refine.hpp"
 #include "../include/ecbs.hpp"
-#include "../include/icbs.hpp"
+#include "../include/icbs_refine.hpp"
 
 
 const std::string IR::SOLVER_NAME = "IR";
@@ -120,7 +120,6 @@ bool IR::stopRefinement(const Plan& new_plan, const Plans& hist)
 {
   if (hist.size() <= threshold_nondiff_refine) return false;
   auto itr = hist.end() - 2;
-  if (new_plan.getSOC() < (*itr).getSOC()) return false;
   int cnt = 0;
   while (itr != hist.begin()) {
     if (std::abs((*itr).getSOC() - (*(itr+1)).getSOC())
@@ -258,14 +257,15 @@ Plan IR::MAPFSolver(const Config& config_s,
   case REFINE_SOLVER_TYPE::CBS_NORMAL:
     solver = new CBS(_P);
     break;
+  case REFINE_SOLVER_TYPE::ICBS:
+    solver = new ICBS_REFINE(_P, current_plan, sample);
+    break;
   case REFINE_SOLVER_TYPE::ICBS_NORMAL:
     solver = new ICBS(_P);
     break;
   case REFINE_SOLVER_TYPE::CBS:
   default:
-    solver = new CBS_REFINE(_P,
-                            current_plan,
-                            sample);
+    solver = new CBS_REFINE(_P, current_plan, sample);
     break;
   }
 
@@ -276,6 +276,7 @@ Plan IR::MAPFSolver(const Config& config_s,
     char *tmp = const_cast<char*>(option_refine_solver[i].c_str());
     argv[i+1] = tmp;
   }
+  // solver->setVerbose(true);
 
   // solve
   solver->solve();
@@ -403,7 +404,7 @@ void IR::setParams(int argc, char *argv[])
   int opt, longindex;
   std::string s, s_tmp;
 
-  while ((opt = getopt_long(argc, argv, "o:r:m:d:n:R:x:y:X:Y:",
+  while ((opt = getopt_long(argc, argv, "o:r:m:d:n:S:x:y:X:Y:",
                             longopts, &longindex)) != -1) {
     switch (opt) {
     case 'o':
@@ -441,7 +442,7 @@ void IR::setParams(int argc, char *argv[])
         threshold_nondiff_refine = DEFAULT_THRESHOLD_NONDIFF_REFINE;
       }
       break;
-    case 'R':
+    case 'S':
       sampling_rate = std::atof(optarg);
       if (sampling_rate < 0 && 1 < sampling_rate) {
         warn("sampling rate is within 0-1.");
@@ -481,6 +482,8 @@ void IR::setParams(int argc, char *argv[])
         refine_solver = REFINE_SOLVER_TYPE::CBS;
       } else if (s == "CBS_NORMAL") {
         refine_solver = REFINE_SOLVER_TYPE::CBS_NORMAL;
+      } if (s == "ICBS") {
+        refine_solver = REFINE_SOLVER_TYPE::ICBS;
       } else if (s == "ICBS_NORMAL") {
         refine_solver = REFINE_SOLVER_TYPE::ICBS_NORMAL;
       } else {
@@ -539,5 +542,9 @@ void IR::printHelp()
             << "  -Y --option-refine-solver [\"OPTION\"]\n"
             << "                                "
             << "option for refine-solver\n"
+
+            << "  -S --sampling-rate [rate]"
+            << "     "
+            << "sampling rate for refine-solver\n"
             << std::endl;
 }

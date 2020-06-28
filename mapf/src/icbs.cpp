@@ -90,6 +90,7 @@ void ICBS::setInitialHighLevelNode(HighLevelNode* n)
   Paths paths(P->getNum());
   MDDs mdds;
   for (int i = 0; i < P->getNum(); ++i) {
+    // try to avoid goal locations
     Path path = getInitialPath(i);
     MDD tmp = MDD(path.size() - 1, i, P, {});
     MDD_p mdd = std::make_shared<MDD>(tmp);
@@ -118,7 +119,7 @@ void ICBS::invoke(HighLevelNode* h_node, int id)
     if (path.empty()) halt("failed to Cal MDD");
     MDDTable[h_node->id][id] = std::make_shared<MDD>(mdd);  // update table
   } else {
-    int c = mdd.c;
+    int c = std::max(mdd.c, last_constraint->t);
     while (true) {
       ++c;
       MDD tmp_mdd = MDD(c, id, P, h_node->constraints);
@@ -169,7 +170,7 @@ bool ICBS::findBypass(HighLevelNode* h_node,
 }
 
 Conflict::Constraints ICBS::getPrioritizedConflict
-(HighLevelNode* h_node)
+(HighLevelNode* const h_node)
 {
   Conflict::Constraints semi_cardinal_constraints = {};
   Conflict::Constraints non_cardinal_constraints = {};

@@ -3,18 +3,8 @@
 CBS_REFINE::CBS_REFINE(Problem* _P,
                        const Plan& _old_plan,
                        const std::vector<int>& _sample)
-  : CBS(_P),
-    old_plan(_old_plan),
-    old_paths(planToPaths(_old_plan)),
-    ub_makespan(_old_plan.getMakespan()),
-    ub_soc(_old_plan.getSOC()),
-    sample(_sample)
+  : CBS(_P), SolverRefine(_old_plan, _sample)
 {
-  if (!sample.empty()) {
-    for (int i = 0; i < P->getNum(); ++i) {
-      if (!inArray(i, sample)) fixed_agents.push_back(i);
-    }
-  }
 }
 
 void CBS_REFINE::setInitialHighLevelNode(HighLevelNode* n)
