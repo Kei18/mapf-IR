@@ -147,7 +147,7 @@ void ECBS::setInitialHighLevelNode(HighLevelNode* n)
   n->constraints = {};  // constraints
   n->makespan = paths.getMakespan();
   n->soc = paths.getSOC();
-  n->f = Conflict::countConflict(paths);
+  n->f = paths.countConflict();
   n->valid = true;  // valid
   n->f_mins = f_mins;
   n->LB = n->soc;
@@ -197,8 +197,8 @@ void ECBS::invoke(HighLevelNode* h_node, int id)
   Paths paths = h_node->paths;
   paths.insert(id, path);
   h_node->f = h_node->f
-    - Conflict::countConflict(id, h_node->paths.get(id), h_node->paths)
-    + Conflict::countConflict(id, paths.get(id), h_node->paths);
+    - h_node->paths.countConflict(id, h_node->paths.get(id))
+    + h_node->paths.countConflict(id, paths.get(id));
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();
@@ -234,9 +234,7 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode* h_node, int id)
 
   FocalHeuristics f2Value =
     [&] (FocalNode* n) {
-      return Conflict::countConflict(id,
-                                     getPathFromFocalNode(n),
-                                     h_node->paths);
+      return h_node->paths.countConflict(id, getPathFromFocalNode(n));
     };
 
   CompareFocalNode compareOPEN =

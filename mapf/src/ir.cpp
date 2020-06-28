@@ -482,7 +482,7 @@ void IR::setParams(int argc, char *argv[])
         refine_solver = REFINE_SOLVER_TYPE::CBS;
       } else if (s == "CBS_NORMAL") {
         refine_solver = REFINE_SOLVER_TYPE::CBS_NORMAL;
-      } if (s == "ICBS") {
+      } else if (s == "ICBS") {
         refine_solver = REFINE_SOLVER_TYPE::ICBS;
       } else if (s == "ICBS_NORMAL") {
         refine_solver = REFINE_SOLVER_TYPE::ICBS_NORMAL;

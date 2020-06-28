@@ -326,7 +326,7 @@ using MDD_p = std::shared_ptr<MDD>;
 using MDDs = std::vector<MDD_p>;
 
 
-class ICBS : public CBS {
+class ICBS : public virtual CBS {
 public:
   static const std::string SOLVER_NAME;
 
@@ -334,7 +334,7 @@ protected:
   std::unordered_map<int, MDDs> MDDTable;  // store MDD_c^i
 
   virtual void setInitialHighLevelNode(HighLevelNode* n);
-  virtual void invoke(HighLevelNode* h_node, int id);
+  virtual Path getConstrainedPath(HighLevelNode* h_node, int id);
   bool findBypass(HighLevelNode* h_node,
                   const Conflict::Constraints& constraints);
   Conflict::Constraints

@@ -9,22 +9,19 @@ CBS_REFINE::CBS_REFINE(Problem* _P,
 
 void CBS_REFINE::setInitialHighLevelNode(HighLevelNode* n)
 {
-  Paths paths(P->getNum());
-  for (int i = 0; i < P->getNum(); ++i) {
-    if (sample.empty()) {
-      paths.insert(i, CBS::getInitialPath(i));
-    } else if (inArray(i, sample)) {
-      paths.insert(i, CBS_REFINE::getInitialPath(i));
-    } else {
-      paths.insert(i, old_paths.get(i));  // fixed agents
+  if (!sample.empty()) {
+    Paths paths(P->getNum());
+    for (int i = 0; i < P->getNum(); ++i) {
+      if (inArray(i, sample)) {
+        paths.insert(i, CBS_REFINE::getInitialPath(i));
+      } else {
+        paths.insert(i, old_paths.get(i));  // fixed agents
+      }
     }
+    n->paths = paths;
   }
-  n->paths = paths;
-  n->constraints = {};  // constraints
-  n->makespan = paths.getMakespan();
-  n->soc = paths.getSOC();
-  n->f = Conflict::countConflict(paths);
-  n->valid = true;  // valid
+
+  CBS::setInitialHighLevelNode(n);
 }
 
 Path CBS_REFINE::getInitialPath(int id)

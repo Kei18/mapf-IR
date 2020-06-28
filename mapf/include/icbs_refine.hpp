@@ -5,14 +5,14 @@
 
 #pragma once
 #include "icbs.hpp"
-#include "solver_refine.hpp"
+#include "cbs_refine.hpp"
 
-class ICBS_REFINE : public ICBS, SolverRefine {
+class ICBS_REFINE : public ICBS, CBS_REFINE {
 private:
-  CBS::CompareHighLevelNodes getObjective();
+  // CBS::CompareHighLevelNodes getObjective();
   void setInitialHighLevelNode(HighLevelNode* n);
-  void invoke(HighLevelNode* h_node, int id);
-  Path getInitialPath(int id);
+  Path getConstrainedPath(HighLevelNode* h_node, int id);
+  // Path getInitialPath(int id);
 
 public:
   ICBS_REFINE(Problem* _P,

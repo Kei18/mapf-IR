@@ -7,12 +7,12 @@
 #include "cbs.hpp"
 #include "solver_refine.hpp"
 
-class CBS_REFINE : public CBS, SolverRefine {
-private:
-  void setInitialHighLevelNode(HighLevelNode* n);
+class CBS_REFINE : public virtual CBS, public SolverRefine {
+protected:
+  virtual void setInitialHighLevelNode(HighLevelNode* n);
+  virtual Path getConstrainedPath(HighLevelNode* h_node, int id);
   Path getInitialPath(int id);
   CompareHighLevelNodes getObjective();
-  Path getConstrainedPath(HighLevelNode* h_node, int id);
 
 public:
   CBS_REFINE(Problem* _P,

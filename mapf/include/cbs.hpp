@@ -38,6 +38,6 @@ public:
   CBS(Problem* _P);
   virtual ~CBS() {};
 
-  void solve();
+  virtual void solve();
   static void printHelp();
 };

@@ -270,6 +270,47 @@ public:
       }
     }
   }
+
+  int countConflict() const {
+    int cnt = 0;
+    int num_agents = size();
+    int makespan = getMakespan();
+    for (int i = 0; i < num_agents; ++i) {
+      for (int j = i + 1; j < num_agents; ++j) {
+        for (int t = 1; t < makespan; ++t) {
+          // vertex conflict
+          if (get(i, t) == get(j, t)) ++cnt;
+          // swap conflict
+          if (get(i, t) == get(j, t-1) &&
+              get(j, t) == get(i, t-1)) ++cnt;
+        }
+      }
+    }
+    return cnt;
+  }
+
+  int countConflict(int id, const Path& path) const {
+    int cnt = 0;
+    int makespan = getMakespan();
+    int num_agents = size();
+    for (int i = 0; i < num_agents; ++i) {
+      if (i == id) continue;
+      for (int t = 1; t < path.size(); ++t) {
+        if (t > makespan) {
+          if (path[t] == get(i, makespan)) {
+            ++cnt;
+            break;
+          }
+          continue;
+        }
+        // vertex conflict
+        if (get(i, t) == path[t]) ++cnt;
+        // swap conflict
+        if (get(i, t) == path[t-1] && get(i, t-1) == path[t]) ++cnt;
+      }
+    }
+    return cnt;
+  }
 };
 
 static Paths planToPaths(const Plan& plan) {

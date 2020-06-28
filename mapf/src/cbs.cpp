@@ -102,16 +102,19 @@ CBS::CompareHighLevelNodes CBS::getObjective()
 
 void CBS::setInitialHighLevelNode(HighLevelNode* n)
 {
-  Paths paths(P->getNum());
-  for (int i = 0; i < P->getNum(); ++i) {
-    paths.insert(i, getInitialPath(i));
+  if (n->paths.empty()) {
+    Paths paths(P->getNum());
+    for (int i = 0; i < P->getNum(); ++i) {
+      paths.insert(i, getInitialPath(i));
+    }
+    n->paths = paths;
   }
+
   n->id = 0;
-  n->paths = paths;
   n->constraints = {};  // constraints
-  n->makespan = paths.getMakespan();
-  n->soc = paths.getSOC();
-  n->f = Conflict::countConflict(paths);
+  n->makespan = n->paths.getMakespan();
+  n->soc = n->paths.getSOC();
+  n->f = n->paths.countConflict();
   n->valid = true;  // valid
 }
 
@@ -127,7 +130,7 @@ Path CBS::getInitialPath(int id)
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
       if (a->f != b->f) return a->f > b->f;
-      // [IMPORTANT!] avoid goal locations of others
+      // IMPORTANT! Avoid goal locations of others.
       if (a->v != g && inArray(a->v, config_g)) return true;
       if (b->v != g && inArray(b->v, config_g)) return false;
       if (a->g != b->g) return a->g < b->g;
@@ -156,8 +159,8 @@ void CBS::invoke(HighLevelNode* h_node, int id)
   Paths paths = h_node->paths;
   paths.insert(id, path);
   h_node->f = h_node->f
-    - Conflict::countConflict(id, h_node->paths.get(id), h_node->paths)
-    + Conflict::countConflict(id, paths.get(id), h_node->paths);
+    - h_node->paths.countConflict(id, h_node->paths.get(id))
+    + h_node->paths.countConflict(id, paths.get(id));
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();

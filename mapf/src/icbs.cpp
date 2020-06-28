@@ -87,60 +87,41 @@ void ICBS::solve()
 
 void ICBS::setInitialHighLevelNode(HighLevelNode* n)
 {
-  Paths paths(P->getNum());
+  CBS::setInitialHighLevelNode(n);
+
+  // register mdds;
   MDDs mdds;
   for (int i = 0; i < P->getNum(); ++i) {
-    // try to avoid goal locations
-    Path path = getInitialPath(i);
-    MDD tmp = MDD(path.size() - 1, i, P, {});
-    MDD_p mdd = std::make_shared<MDD>(tmp);
-    paths.insert(i, path);
+    int c = n->paths.costOfPath(i);
+    MDD_p mdd = std::make_shared<MDD>(MDD(c, i, P, {}));
     mdds.push_back(mdd);
   }
-  n->id = 0;
-  n->paths = paths;
-  n->constraints = {};  // constraints
-  n->makespan = paths.getMakespan();
-  n->soc = paths.getSOC();
-  n->f = Conflict::countConflict(paths);
-  n->valid = true;  // valid
-
   MDDTable[n->id] = mdds;
 }
 
-void ICBS::invoke(HighLevelNode* h_node, int id)
+// using MDD
+Path ICBS::getConstrainedPath(HighLevelNode* h_node, int id)
 {
   Path path;
   MDD mdd = *(MDDTable[h_node->id][id]);
   Conflict::Constraint* last_constraint = *(h_node->constraints.end()-1);
   mdd.update({ last_constraint });  // check only last
   if (mdd.valid) {  // use mdd as much as possible
-    path = mdd.getPath();
-    if (path.empty()) halt("failed to Cal MDD");
     MDDTable[h_node->id][id] = std::make_shared<MDD>(mdd);  // update table
+    return mdd.getPath();
   } else {
     int c = std::max(mdd.c, last_constraint->t);
     while (true) {
       ++c;
-      MDD tmp_mdd = MDD(c, id, P, h_node->constraints);
-      if (tmp_mdd.valid) {
-        path = tmp_mdd.getPath();
-        MDD_p new_mdd = std::make_shared<MDD>(tmp_mdd);
+      MDD_p new_mdd = std::make_shared<MDD>
+        (MDD(c, id, P, h_node->constraints));
+      if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
-        break;
+        return new_mdd->getPath();
       }
     }
   }
-
-  Paths paths = h_node->paths;
-  paths.insert(id, path);
-  // update conflicts counts
-  h_node->f = h_node->f
-    - Conflict::countConflict(id, h_node->paths.get(id), h_node->paths)
-    + Conflict::countConflict(id, paths.get(id), h_node->paths);
-  h_node->paths = paths;
-  h_node->makespan = h_node->paths.getMakespan();
-  h_node->soc = h_node->paths.getSOC();
+  return path;
 }
 
 bool ICBS::findBypass(HighLevelNode* h_node,
@@ -155,15 +136,14 @@ bool ICBS::findBypass(HighLevelNode* h_node,
     while (path.size() - 1 < h_node->makespan) {
       path.push_back(*(path.end()-1));
     }
-    int conflicts_old = Conflict::countConflict(c->id,
-                                                h_node->paths.get(c->id),
-                                                h_node->paths);
-    int conflicts_new = Conflict::countConflict(c->id, path, h_node->paths);
-    if (conflicts_old <= conflicts_new) continue;
+    int cnum_old = h_node->paths.countConflict(c->id,
+                                               h_node->paths.get(c->id));
+    int cnum_new = h_node->paths.countConflict(c->id, path);
+    if (cnum_old <= cnum_new) continue;
 
     // helpful bypass found
     h_node->paths.insert(c->id, path);
-    h_node->f = h_node->f - conflicts_old + conflicts_new;
+    h_node->f = h_node->f - cnum_old + cnum_new;
     return true;
   }
   return false;
