@@ -18,17 +18,22 @@ void ECBS::solve()
   CompareHighLevelNode compareFOCAL = getFocalObjective();
 
   // OPEN, FOCAL
-  std::priority_queue<HighLevelNode*,
-                      std::vector<HighLevelNode*>,
-                      decltype(compareOPEN)> OPEN(compareOPEN);
+  std::priority_queue<HighLevelNode_p,
+                      std::vector<HighLevelNode_p>,
+                      CompareHighLevelNode> OPEN(compareOPEN);
+  using FocalList = std::priority_queue<HighLevelNode_p,
+                                         std::vector<HighLevelNode_p>,
+                                         CompareHighLevelNode>;
+  FocalList FOCAL(compareFOCAL);
 
-  // for memory management
-  Conflict::Constraints generated_constraints;
-
-  HighLevelNode* n = new HighLevelNode;
+  // initial node
+  HighLevelNode_p n(new HighLevelNode);
   setInitialHighLevelNode(n);
   OPEN.push(n);
+  FOCAL.push(n);
+  int LB_min = n->LB;
 
+  // main loop
   int h_node_num = 1;
   int iteration = 0;
   while (!OPEN.empty()) {
@@ -36,29 +41,25 @@ void ECBS::solve()
     // check limitation
     if (overCompTime()) break;
 
-    // build focal
-    while (!OPEN.empty() && !OPEN.top()->valid) {
-      delete OPEN.top();
-      OPEN.pop();
-    }
+    // update focal list
+    while (!OPEN.empty() && !OPEN.top()->valid) OPEN.pop();
     if (OPEN.empty()) break;  // failed
-    float LB_bound = OPEN.top()->LB * sub_optimality;
-    std::vector<HighLevelNode*> tmp;
-    std::priority_queue<HighLevelNode*,
-                        std::vector<HighLevelNode*>,
-                        decltype(compareFOCAL)> FOCAL(compareFOCAL);
-    while (!OPEN.empty()) {
-      HighLevelNode* top = OPEN.top();
-      OPEN.pop();
-      if (!top->valid) {
-        delete top;
-        continue;
+    if (LB_min != OPEN.top()->LB) {
+      LB_min = OPEN.top()->LB;
+      float LB_bound = LB_min * sub_optimality;
+      std::vector<HighLevelNode_p> tmp;
+      FocalList EMPTY(compareFOCAL);
+      FOCAL = EMPTY;
+      while (!OPEN.empty()) {
+        HighLevelNode_p top = OPEN.top();
+        OPEN.pop();
+        if (!top->valid) continue;  // already searched
+        tmp.push_back(top);  // escape
+        if ((float)top->LB > LB_bound) break;  // higher than LB_bound
+        FOCAL.push(top);  // lower than LB_bound
       }
-      tmp.push_back(top);  // escape
-      if ((float)top->LB > LB_bound) break;
-      FOCAL.push(top);
+      for (auto ele: tmp) OPEN.push(ele);   // back
     }
-    for (auto ele: tmp) OPEN.push(ele);   // back
 
     // pickup one node
     n = FOCAL.top();
@@ -82,21 +83,21 @@ void ECBS::solve()
 
     // create new nodes
     for (auto c : constraints) {
-      generated_constraints.push_back(c);  // for memory management
       Conflict::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNode* m = new HighLevelNode
-        { n->paths,
+      HighLevelNode_p m(new HighLevelNode {
+          n->paths,
           new_constraints,
           n->makespan,
           n->soc,
           n->f,
           n->LB,
           n->f_mins,
-          true };
+          true });
       invoke(m, c->id);
       if (!m->valid) continue;
       OPEN.push(m);
+      if (m->LB <= LB_min * sub_optimality) FOCAL.push(m);
       ++h_node_num;
     }
   }
@@ -104,21 +105,13 @@ void ECBS::solve()
   // success
   if (solved) solution = pathsToPlan(n->paths);
 
-  // free
-  if (!solved) delete n;
-  while (!OPEN.empty()) {
-    delete OPEN.top();
-    OPEN.pop();
-  }
-  for (auto c : generated_constraints) delete c;
-
   end();
 }
 
 ECBS::CompareHighLevelNode ECBS::getMainObjective() {
   CompareHighLevelNode compare =
-    [&] (HighLevelNode* a, HighLevelNode* b) {
-      if (a->soc != b->soc) return a->soc > b->soc;
+    [&] (HighLevelNode_p a, HighLevelNode_p b) {
+      if (a->LB != b->LB) return a->LB > b->LB;
       return false;
     };
   return compare;
@@ -126,7 +119,7 @@ ECBS::CompareHighLevelNode ECBS::getMainObjective() {
 
 ECBS::CompareHighLevelNode ECBS::getFocalObjective() {
   CompareHighLevelNode compare =
-    [&] (HighLevelNode* a, HighLevelNode* b) {
+    [&] (HighLevelNode_p a, HighLevelNode_p b) {
       if (a->f != b->f) return a->f > b->f;
       if (a->soc != b->soc) return a->soc > b->soc;
       return false;
@@ -134,7 +127,7 @@ ECBS::CompareHighLevelNode ECBS::getFocalObjective() {
   return compare;
 }
 
-void ECBS::setInitialHighLevelNode(HighLevelNode* n)
+void ECBS::setInitialHighLevelNode(HighLevelNode_p n)
 {
   Paths paths(P->getNum());
   std::vector<int> f_mins;
@@ -184,7 +177,7 @@ Path ECBS::getInitialPath(int id)
                       checkInvalidAstarNode);
 }
 
-void ECBS::invoke(HighLevelNode* h_node, int id)
+void ECBS::invoke(HighLevelNode_p h_node, int id)
 {
   auto res = getFocalPath(h_node, id);
   Path path = std::get<0>(res);
@@ -206,7 +199,7 @@ void ECBS::invoke(HighLevelNode* h_node, int id)
   h_node->f_mins[id] = f_min;
 }
 
-std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode* h_node, int id)
+std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
 {
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
@@ -326,8 +319,6 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
            && CLOSE.find(getNodeName(OPEN.top())) != CLOSE.end())
       OPEN.pop();
     if (OPEN.empty()) break;  // failed
-
-    // update focal list
     if (f1_min != OPEN.top()->f1) {
       f1_min = OPEN.top()->f1;
       float f1_bound = f1_min*w;
@@ -336,17 +327,12 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
       FOCAL = EMPTY;
       while (!OPEN.empty()) {
         FocalNode* top = OPEN.top();
-        // already searched by focal
-        if (CLOSE.find(getNodeName(top)) != CLOSE.end()) {
-          OPEN.pop();
-          continue;
-        }
-        // higher than f1_bound
-        if ((float)top->f1 > f1_bound) break;
-        // lower than f1_bound
-        FOCAL.push(top);
-        tmp.push_back(top);  // escape
         OPEN.pop();
+        // already searched by focal
+        if (CLOSE.find(getNodeName(top)) != CLOSE.end()) continue;
+        tmp.push_back(top);  // escape
+        if ((float)top->f1 > f1_bound) break;  // higher than f1_bound
+        FOCAL.push(top);  // lower than f1_bound
       }
       for (auto ele: tmp) OPEN.push(ele);   // back
     }
