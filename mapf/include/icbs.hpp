@@ -27,12 +27,11 @@ protected:
   virtual Path getConstrainedPath(HighLevelNode_p h_node, int id);
   bool findBypass(HighLevelNode_p h_node,
                   const LibCBS::Constraints& constraints);
+  void run();
 
 public:
   ICBS(Problem* _P);
   ~ICBS();
-
-  void solve();
 
   static void printHelp();
 };

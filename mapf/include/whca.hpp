@@ -25,11 +25,11 @@ private:
   Path getPrioritizedPartialPath(int id, Node* s, Node* g,
                                  const Paths& paths);
 
+  void run();
+
 public:
   WHCA(Problem* _P);
   ~WHCA() {};
-
-  void solve();
 
   void setParams(int argc, char *argv[]);
   static void printHelp();

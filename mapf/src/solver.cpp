@@ -13,6 +13,13 @@ Solver::Solver(Problem* _P)
   verbose = false;
 }
 
+void Solver::solve()
+{
+  start();
+  run();
+  end();
+}
+
 // pure A* search
 Path Solver::getTimedPath(Node* const s,
                           Node* const g,
@@ -117,6 +124,38 @@ double Solver::getSolverElapsedTime() const {
 
 bool Solver::overCompTime() const {
   return getSolverElapsedTime() >= max_comp_time;
+}
+
+Paths Solver::planToPaths(const Plan& plan)
+{
+  if (plan.empty()) halt("invalid operation.");
+  int num_agents = plan.get(0).size();
+  Paths paths(num_agents);
+  int makespan = plan.getMakespan();
+  for (int i = 0; i < num_agents; ++i) {
+    Path path;
+    for (int t = 0; t <= makespan; ++t) {
+      path.push_back(plan.get(t, i));
+    }
+    paths.insert(i, path);
+  }
+  return paths;
+}
+
+Plan Solver::pathsToPlan(const Paths& paths)
+{
+  Plan plan;
+  if (paths.empty()) return plan;
+  int makespan = paths.getMakespan();
+  int num_agents = paths.size();
+  for (int t = 0; t <= makespan; ++t) {
+    Config c;
+    for (int i = 0; i < num_agents; ++i) {
+      c.push_back(paths.get(i, t));
+    }
+    plan.add(c);
+  }
+  return plan;
 }
 
 void Solver::printResult() {

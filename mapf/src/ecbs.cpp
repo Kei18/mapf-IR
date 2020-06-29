@@ -9,11 +9,9 @@ ECBS::ECBS(Problem* _P) : Solver(_P)
   solver_name = ECBS::SOLVER_NAME + std::to_string(sub_optimality);
 }
 
-void ECBS::solve()
+void ECBS::run()
 {
-  start();
   // high-level search
-
   CompareHighLevelNode compareOPEN = getMainObjective();
   CompareHighLevelNode compareFOCAL = getFocalObjective();
 
@@ -104,8 +102,6 @@ void ECBS::solve()
 
   // success
   if (solved) solution = pathsToPlan(n->paths);
-
-  end();
 }
 
 ECBS::CompareHighLevelNode ECBS::getMainObjective() {

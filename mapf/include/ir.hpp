@@ -78,11 +78,11 @@ private:
   static std::string getPlanTableKey(const std::string& config_s_key,
                                      const std::string& config_g_key);
 
+  void run();
+
 public:
   IR(Problem* _P);
   ~IR() {};
-
-  void solve();
 
   void setParams(int argc, char *argv[]);
   static void printHelp();

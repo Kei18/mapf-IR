@@ -9,10 +9,8 @@ WHCA::WHCA(Problem* _P) : Solver(_P)
   solver_name = SOLVER_NAME + "-" + std::to_string(window);
 }
 
-void WHCA::solve()
+void WHCA::run()
 {
-  start();
-
   // initialize
   Paths paths(P->getNum());
   for (int i = 0; i < P->getNum(); ++i) {
@@ -69,7 +67,6 @@ void WHCA::solve()
   }
 
   solution = pathsToPlan(paths);
-  end();
 }
 
 Path WHCA::getPrioritizedPartialPath(int id,

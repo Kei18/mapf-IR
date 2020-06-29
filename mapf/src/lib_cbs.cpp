@@ -124,6 +124,27 @@ LibCBS::Constraints LibCBS::getPrioritizedConflict(const Paths& paths,
   return {};
 }
 
+LibCBS::Constraints LibCBS::getConstraintsByFixedPaths
+(const Plan& plan, const std::vector<int>& fixed_agents)
+{
+  Constraints constraints;
+  int makespan = plan.getMakespan();
+  int num_agents = plan.get(0).size();
+  for (int i = 0; i < num_agents; ++i) {
+    if (!inArray(i, fixed_agents)) continue;
+    for (int t = 1; t <= makespan; ++t) {
+      Constraint_p c_vertex
+        (new Constraint{ -1, t, plan.get(t, i), nullptr });
+      constraints.push_back(c_vertex);
+      // notice! be careful to set swap constraints
+      Constraint_p c_swap
+        (new Constraint{ -1, t, plan.get(t-1, i), plan.get(t, i) });
+      constraints.push_back(c_swap);
+    }
+  }
+  return constraints;
+}
+
 LibCBS::MDDNode::MDDNode(int _t, Node* _v) : t(_t), v(_v)
 {
 }
@@ -360,7 +381,9 @@ std::string LibCBS::MDD::getPureMDDName()
     + std::to_string(i) + "-";
 }
 
-Path LibCBS::MDD::getPathByDFS() const
+// make path using MDD
+// if MDD is valid the search must success
+Path LibCBS::MDD::getPath() const
 {
   if (!valid) return {};
   MDDNode* node = body[0][0];
@@ -375,16 +398,10 @@ Path LibCBS::MDD::getPathByDFS() const
   return path;
 }
 
-Path LibCBS::MDD::getPath() const
-{
-  if (!valid) return {};
-  return getPathByDFS();
-}
-
 Path LibCBS::MDD::getPath(Constraint_p const constraint) const
 {
   if (!valid) return {};
-  if (constraint == nullptr) return getPathByDFS();
+  if (constraint == nullptr) return getPath();
   MDD mdd = *this;
   mdd.update({ constraint });
   return mdd.getPath();

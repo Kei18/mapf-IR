@@ -18,23 +18,8 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   LibCBS::MDDs mdds;
 
   // constraints by fixed agents
-  LibCBS::Constraints constraints;
-  int makespan = old_plan.getMakespan();
-  for (int i = 0; i < P->getNum(); ++i) {
-    if (inArray(i, sample)) continue;
-    for (int t = 1; t <= makespan; ++t) {
-      // id is complemented later
-      LibCBS::Constraint_p c_vertex
-        (new LibCBS::Constraint
-         { -1, t, old_plan.get(t, i), nullptr });
-      constraints.push_back(c_vertex);
-      // notice! be careful to set swap constraints
-      LibCBS::Constraint_p c_swap
-        (new LibCBS::Constraint
-         { -1, t, old_plan.get(t-1, i), old_plan.get(t, i) });
-      constraints.push_back(c_swap);
-    }
-  }
+  LibCBS::Constraints constraints
+    = LibCBS::getConstraintsByFixedPaths(old_plan, fixed_agents);
 
   // find paths
   for (int i = 0; i < P->getNum(); ++i) {

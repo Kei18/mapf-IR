@@ -29,6 +29,7 @@ protected:
   using CompareHighLevelNodes = std::function<bool(HighLevelNode_p,
                                                    HighLevelNode_p)>;
 
+  virtual void run();
   Path getInitialPath(int id);
   virtual void setInitialHighLevelNode(HighLevelNode_p n);
   virtual void invoke(HighLevelNode_p h_node, int id);
@@ -39,6 +40,5 @@ public:
   CBS(Problem* _P);
   virtual ~CBS() {};
 
-  virtual void solve();
   static void printHelp();
 };

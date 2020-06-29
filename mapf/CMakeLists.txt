@@ -3,6 +3,8 @@ project(lib-mapf)
 add_library(lib-mapf STATIC
   ./src/graph.cpp
   ./src/problem.cpp
+  ./src/paths.cpp
+  ./src/plan.cpp
   ./src/solver.cpp
   ./src/pibt.cpp
   ./src/hca.cpp

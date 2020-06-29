@@ -38,11 +38,11 @@ private:
                    std::unordered_map<int, Agent*>& occupied_now,
                    std::unordered_map<int, Agent*>& occupied_next);
 
+  void run();
+
 public:
   PIBT(Problem* _P);
   ~PIBT();
-
-  void solve();
 
   void setParams(int argc, char *argv[]);
   static void printHelp();

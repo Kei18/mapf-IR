@@ -35,6 +35,10 @@ namespace LibCBS {
   Constraints getPrioritizedConflict(const Paths& paths,
                                      const MDDs& mdds);
 
+  Constraints getConstraintsByFixedPaths
+  (const Plan& plan, const std::vector<int>& fixed_agents);
+
+
   // ======================================
   // MDD
   struct MDDNode {
@@ -73,7 +77,6 @@ namespace LibCBS {
     void update(const Constraints& _constraints);
     void deleteForward(MDDNode* node);
     void deleteBackword(MDDNode* node);
-    Path getPathByDFS() const;
     Path getPath() const;
     Path getPath(Constraint_p const constraint) const;
     int getWidth(int t) const;

@@ -36,11 +36,9 @@ IR::IR(Problem* _P) : Solver(_P)
   sampling_rate = 0;
 }
 
-void IR::solve()
+void IR::run()
 {
-  start();
   iterativeRefinement();
-  end();
 }
 
 void IR::iterativeRefinement()

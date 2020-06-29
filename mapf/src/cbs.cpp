@@ -7,11 +7,8 @@ CBS::CBS(Problem* _P) : Solver(_P)
   solver_name = CBS::SOLVER_NAME;
 }
 
-void CBS::solve()
+void CBS::run()
 {
-  start();
-  // high-level search
-
   // set objective function
   CompareHighLevelNodes compare = getObjective();
 
@@ -70,8 +67,6 @@ void CBS::solve()
   }
 
   if (solved) solution = pathsToPlan(n->paths);
-
-  end();
 }
 
 CBS::CompareHighLevelNodes CBS::getObjective()

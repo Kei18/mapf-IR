@@ -64,13 +64,11 @@ protected:
    CheckInvalidFocalNode& checkInvalidFocalNode);
 
   Path getPathFromFocalNode(FocalNode* _n);
-
+  void run();
 
 public:
   ECBS(Problem* _P);
   ~ECBS() {};
-
-  void solve();
 
   void setParams(int argc, char *argv[]);
   static void printHelp();

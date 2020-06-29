@@ -9,11 +9,8 @@ ICBS::ICBS(Problem* _P) : CBS(_P)
 
 ICBS::~ICBS() {}
 
-void ICBS::solve()
+void ICBS::run()
 {
-  start();
-  // high-level search
-
   // set objective function
   CompareHighLevelNodes compare = getObjective();
 
@@ -81,7 +78,6 @@ void ICBS::solve()
   }
 
   if (solved) solution = pathsToPlan(n->paths);
-  end();
 }
 
 void ICBS::setInitialHighLevelNode(HighLevelNode_p n)

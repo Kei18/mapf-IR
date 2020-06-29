@@ -29,11 +29,11 @@ private:
   Path getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths);
   Path getPrioritizedPath(int id, const Paths& paths);
 
+  void run();
+
 public:
   HCA(Problem* _P);
   ~HCA() {};
-
-  void solve();
 
   void setParams(int argc, char *argv[]);
   static void printHelp();

@@ -8,10 +8,8 @@ HCA::HCA(Problem* _P) : Solver(_P)
   solver_name = HCA::SOLVER_NAME;
 }
 
-void HCA::solve()
+void HCA::run()
 {
-  start();
-
   Paths paths(P->getNum());
 
   // prioritization
@@ -51,7 +49,6 @@ void HCA::solve()
     solution = pathsToPlan(paths);
     solved = true;
   }
-  end();
 }
 
 Path HCA::getPrioritizedPath(int id, const Paths& paths)

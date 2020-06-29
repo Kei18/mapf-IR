@@ -11,10 +11,8 @@ PIBT::~PIBT() {
 }
 
 
-void PIBT::solve()
+void PIBT::run()
 {
-  start();
-
   Plan plan;
   auto compare = [] (Agent* a, const Agent* b) {
                    if (a->elapsed != b->elapsed)
@@ -105,7 +103,6 @@ void PIBT::solve()
   }
 
   solution = plan;
-  end();
 }
 
 bool PIBT::funcPIBT(Agent* ai,
