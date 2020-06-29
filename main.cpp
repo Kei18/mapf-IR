@@ -9,9 +9,10 @@
 #include <hca.hpp>
 #include <whca.hpp>
 #include <cbs.hpp>
+#include <icbs.hpp>
 #include <ecbs.hpp>
 #include <ir.hpp>
-#include <icbs.hpp>
+#include <meta_ir.hpp>
 
 
 void printHelp();
@@ -30,7 +31,6 @@ int main(int argc, char *argv[]) {
   std::string solver_name = DEFAULT_SOLVER_NAME;
   bool verbose = false;
   char *argv_copy[argc+1];
-
   for (int i = 0; i < argc; ++i) argv_copy[i] = argv[i];
 
   struct option longopts[] = {
@@ -115,6 +115,8 @@ Solver* getSolver(const std::string solver_name,
     solver = new IR(P);
   } else if (solver_name == "ICBS") {
     solver = new ICBS(P);
+  } else if (solver_name == "META_IR") {
+    solver = new META_IR(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -142,4 +144,5 @@ void printHelp() {
   ECBS::printHelp();
   ICBS::printHelp();
   IR::printHelp();
+  META_IR::printHelp();
 }

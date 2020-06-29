@@ -34,6 +34,8 @@ IR::IR(Problem* _P) : Solver(_P)
 
   cache_on = true;
   sampling_rate = 0;
+  timeout_refinement = max_comp_time;
+  verbose_underlying_solver = false;
 }
 
 void IR::run()
@@ -65,6 +67,11 @@ void IR::iterativeRefinement()
     if (stopRefinement(new_plan, hist)) break;
     solution = new_plan;
   }
+
+  info("  refinement results, soc:", hist.begin()->getSOC(),
+       "->", solution.getSOC(),
+       ", makespan:", hist.begin()->getMakespan(),
+       "->", solution.getMakespan());
 }
 
 Plan IR::getInitialPlan()
@@ -102,6 +109,7 @@ Plan IR::getInitialPlan()
     }
     solver->setParams(argc, argv);
   }
+  solver->setVerbose(verbose_underlying_solver);
 
   // solve
   solver->solve();
@@ -221,7 +229,8 @@ Plan IR::MAPFSolver(const Config& config_s,
                     const Plan& current_plan)
 {
   if (current_plan.getMakespan() <= 1) return current_plan;
-  int comp_time_limit = max_comp_time - getSolverElapsedTime();
+  int comp_time_limit = std::min(max_comp_time - (int)getSolverElapsedTime(),
+                                 timeout_refinement);
   if (comp_time_limit <= 0) return current_plan;
 
   // caching
@@ -274,7 +283,7 @@ Plan IR::MAPFSolver(const Config& config_s,
     char *tmp = const_cast<char*>(option_refine_solver[i].c_str());
     argv[i+1] = tmp;
   }
-  // solver->setVerbose(true);
+  solver->setVerbose(verbose_underlying_solver);
 
   // solve
   solver->solve();
@@ -391,7 +400,9 @@ void IR::setParams(int argc, char *argv[])
     { "threshold-makespan", required_argument, 0, 'm' },
     { "threshold-soc-diff", required_argument, 0, 'd' },
     { "threshold-nondiff", required_argument, 0, 'n' },
+    { "timeout-refinement", required_argument, 0, 't' },
     { "sampling-rate", required_argument, 0, 'S' },
+    { "verbose-underlying", no_argument, 0, 'V' },
     { "init-solver", required_argument, 0, 'x' },
     { "refine-solver", required_argument, 0, 'y' },
     { "option-init-solver", required_argument, 0, 'X' },
@@ -402,7 +413,7 @@ void IR::setParams(int argc, char *argv[])
   int opt, longindex;
   std::string s, s_tmp;
 
-  while ((opt = getopt_long(argc, argv, "o:r:m:d:n:S:x:y:X:Y:",
+  while ((opt = getopt_long(argc, argv, "o:r:m:d:n:S:t:x:y:X:Y:V",
                             longopts, &longindex)) != -1) {
     switch (opt) {
     case 'o':
@@ -440,13 +451,25 @@ void IR::setParams(int argc, char *argv[])
         threshold_nondiff_refine = DEFAULT_THRESHOLD_NONDIFF_REFINE;
       }
       break;
+    case 't':
+      timeout_refinement = std::atoi(optarg);
+      if (timeout_refinement < 0 || max_comp_time < timeout_refinement) {
+        warn("invalid early-stop time, using max_comp_time");
+        timeout_refinement = max_comp_time;
+      }
+      break;
+    case 'V':
+      verbose_underlying_solver = true;
+      break;
     case 'S':
       sampling_rate = std::atof(optarg);
-      if (sampling_rate < 0 && 1 < sampling_rate) {
+      if (sampling_rate < 0 || 1 < sampling_rate) {
         warn("sampling rate is within 0-1.");
         sampling_rate = 0;
       }
-      if (sampling_rate > 0) cache_on = false;
+      if (sampling_rate > 0) {
+        cache_on = false;
+      }
       break;
     case 'x':
       s = std::string(optarg);
@@ -541,8 +564,17 @@ void IR::printHelp()
             << "                                "
             << "option for refine-solver\n"
 
+            << "  -t --timeout-refinement [INT]"
+            << " "
+            << "timeout for refinement\n"
+
             << "  -S --sampling-rate [rate]"
             << "     "
             << "sampling rate for refine-solver\n"
+
+            << "  -v --verbose-underlying"
+            << "       "
+            << "verbose, underlying solvers"
+
             << std::endl;
 }

@@ -6,7 +6,7 @@ const float ECBS::DEFAULT_SUB_OPTIMALITY = 1.1;
 ECBS::ECBS(Problem* _P) : Solver(_P)
 {
   sub_optimality = DEFAULT_SUB_OPTIMALITY;
-  solver_name = ECBS::SOLVER_NAME + std::to_string(sub_optimality);
+  solver_name = ECBS::SOLVER_NAME + "-" + std::to_string(sub_optimality);
 }
 
 void ECBS::run()

@@ -27,6 +27,10 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
     LibCBS::MDD_p mdd;
     if (inArray(i, sample)) {
       path = CBS_REFINE::getInitialPath(i);
+      if (path.empty()) {
+        n->valid = false;
+        return;
+      }
       paths.insert(i, path);
       mdd = std::make_shared<LibCBS::MDD>
         (LibCBS::MDD(path.size()-1, i, P, constraints));

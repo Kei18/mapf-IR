@@ -19,6 +19,7 @@ void CBS::run()
 
   HighLevelNode_p n(new HighLevelNode);
   setInitialHighLevelNode(n);
+  if (!n->valid) return;  // failed to plan initial paths
   HighLevelTree.push(n);
 
   int h_node_num = 1;
@@ -26,7 +27,10 @@ void CBS::run()
   while (!HighLevelTree.empty()) {
     ++iteration;
     // check limitation
-    if (overCompTime()) break;
+    if (overCompTime()) {
+      info(" ", "timeout");
+      break;
+    }
 
     n = HighLevelTree.top();
     HighLevelTree.pop();
@@ -86,7 +90,12 @@ void CBS::setInitialHighLevelNode(HighLevelNode_p n)
   if (n->paths.empty()) {
     Paths paths(P->getNum());
     for (int i = 0; i < P->getNum(); ++i) {
-      paths.insert(i, getInitialPath(i));
+      Path path = getInitialPath(i);
+      if (path.empty()) {
+        n->valid = false;
+        return;
+      }
+      paths.insert(i, path);
     }
     n->paths = paths;
   }

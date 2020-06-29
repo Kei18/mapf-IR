@@ -24,7 +24,12 @@ void CBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
     Paths paths(P->getNum());
     for (int i = 0; i < P->getNum(); ++i) {
       if (inArray(i, sample)) {
-        paths.insert(i, CBS_REFINE::getInitialPath(i));
+        Path path = CBS_REFINE::getInitialPath(i);
+        if (path.empty()) {
+          n->valid = false;
+          return;
+        }
+        paths.insert(i, path);
       } else {
         paths.insert(i, old_paths.get(i));  // fixed agents
       }

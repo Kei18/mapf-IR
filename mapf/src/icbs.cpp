@@ -21,6 +21,7 @@ void ICBS::run()
 
   HighLevelNode_p n(new HighLevelNode);
   setInitialHighLevelNode(n);
+  if (!n->valid) return;  // failed to plan initial paths
   HighLevelTree.push(n);
 
   int h_node_num = 1;
@@ -83,6 +84,7 @@ void ICBS::run()
 void ICBS::setInitialHighLevelNode(HighLevelNode_p n)
 {
   CBS::setInitialHighLevelNode(n);
+  if (!n->valid) return;
 
   // register mdds;
   LibCBS::MDDs mdds;

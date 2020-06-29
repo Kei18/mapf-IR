@@ -9,7 +9,7 @@ class IR : public Solver {
 public:
   static const std::string SOLVER_NAME;
 
-private:
+protected:
   std::string output_file;
 
   // used in solvableDirectly
@@ -41,6 +41,9 @@ private:
   static const INIT_SOLVER_TYPE DEFAULT_INIT_SOLVER;
   static const REFINE_SOLVER_TYPE DEFAULT_REFINE_SOLVER;
 
+  // early stop
+  int timeout_refinement;
+
   // sampling rate
   float sampling_rate;
 
@@ -48,7 +51,10 @@ private:
   bool cache_on;
   std::unordered_map<std::string, Plan> PLAN_TABLE;
 
-  void iterativeRefinement();
+  // verbose for underlying solver
+  bool verbose_underlying_solver;
+
+  virtual void iterativeRefinement();
   Plan getInitialPlan();
   bool stopRefinement(const Plan& new_plan, const Plans& hist);
   Plan refinePlan(const Config& config_s,
@@ -84,6 +90,6 @@ public:
   IR(Problem* _P);
   ~IR() {};
 
-  void setParams(int argc, char *argv[]);
+  virtual void setParams(int argc, char *argv[]);
   static void printHelp();
 };

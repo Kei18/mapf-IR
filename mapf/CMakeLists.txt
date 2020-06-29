@@ -13,6 +13,7 @@ add_library(lib-mapf STATIC
   ./src/cbs.cpp
   ./src/ecbs.cpp
   ./src/ir.cpp
+  ./src/meta_ir.cpp
   ./src/icbs.cpp
   ./src/cbs_refine.cpp
   ./src/icbs_refine.cpp

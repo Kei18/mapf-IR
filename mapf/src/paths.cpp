@@ -37,6 +37,7 @@ bool Paths::empty() const
 void Paths::insert(int i, const Path& path)
 {
   if (!(0 <= i && i < paths.size())) halt("invalid index.");
+  if (path.empty()) halt("path must not be empty");
   int old_len = paths[i].size();
   paths[i] = path;
   format();
@@ -51,6 +52,7 @@ int Paths::size() const
 
 void Paths::operator+=(const Paths& other)
 {
+  if (other.empty()) return;
   if (paths.size() != other.paths.size()) halt("invalid operation.");
   if (makespan == 0) {// empty
     for (int i = 0; i < paths.size(); ++i) insert(i, other.get(i));

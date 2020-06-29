@@ -110,6 +110,7 @@ void Solver::start() {
 
 void Solver::end() {
   comp_time = getSolverElapsedTime();
+  info("  finish, elapsed=", comp_time);
   // format
   if (solved && !solution.validate(P)) {
     warn("failed to solve.");
@@ -159,7 +160,6 @@ Plan Solver::pathsToPlan(const Paths& paths)
 }
 
 void Solver::printResult() {
-  info("  finish");
   std::cout << "solved=" << solved
             << ", solver=" << std::right << std::setw(8)
             << solver_name
