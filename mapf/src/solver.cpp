@@ -24,15 +24,24 @@ Path Solver::getTimedPath(Node* const s,
   auto getNodeName = [] (AstarNode* n)
                      { return std::to_string(n->v->id)
                          + "-" + std::to_string(n->g); };
+
+  std::vector<AstarNode*> GC;  // for memory management
+  auto createNewNode =
+    [&] (Node* v, int g, int f, AstarNode* p)
+    {
+      AstarNode* new_node = new AstarNode{ v, g, f, p };
+      GC.push_back(new_node);
+      return new_node;
+    };
+
   // OPEN and CLOSE
   std::priority_queue<AstarNode*,
                       std::vector<AstarNode*>,
                       CompareAstarNode> OPEN(compare);
-  std::unordered_map<std::string, AstarNode*> CLOSE;
+  std::unordered_map<std::string, bool> CLOSE;
 
   // initial node
-  AstarNode* n;
-  n = new AstarNode { s, 0, 0, nullptr };
+  AstarNode* n = createNewNode(s, 0, 0, nullptr);
   n->f = fValue(n);
   OPEN.push(n);
 
@@ -46,7 +55,7 @@ Path Solver::getTimedPath(Node* const s,
     // minimum node
     n = OPEN.top();
     OPEN.pop();
-    CLOSE[getNodeName(n)] = n;
+    CLOSE[getNodeName(n)] = true;
 
     // check goal condition
     if (checkAstarFin(n)) {
@@ -59,7 +68,7 @@ Path Solver::getTimedPath(Node* const s,
     C.push_back(n->v);
     for (auto u : C) {
       int g_cost = n->g+1;
-      AstarNode* m = new AstarNode { u, g_cost, 0, n };
+      AstarNode* m = createNewNode(u, g_cost, 0, n);
       m->f = fValue(m);
       // already searched?
       if (CLOSE.find(getNodeName(m)) != CLOSE.end()) continue;
@@ -79,13 +88,10 @@ Path Solver::getTimedPath(Node* const s,
   }
 
   // free
-  while (!OPEN.empty()) {
-    delete OPEN.top();
-    OPEN.pop();
-  }
-  for (auto itr = CLOSE.begin(); itr != CLOSE.end(); ++itr) {
-    delete itr->second;
-  }
+  while (!OPEN.empty()) OPEN.pop();
+  for (auto p : GC) delete p;
+  GC.clear();
+  CLOSE.clear();
 
   return path;
 }

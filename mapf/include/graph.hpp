@@ -62,6 +62,10 @@ struct Node {
   std::vector<Node*> neighbor;
   Pos pos;
 
+  ~Node() {
+    neighbor.clear();
+  }
+
   int getDegree() const { return neighbor.size(); }
 
   float manhattanDist(const Node& node) const {

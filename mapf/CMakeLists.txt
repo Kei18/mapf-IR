@@ -7,6 +7,7 @@ add_library(lib-mapf STATIC
   ./src/pibt.cpp
   ./src/hca.cpp
   ./src/whca.cpp
+  ./src/lib_cbs.cpp
   ./src/cbs.cpp
   ./src/ecbs.cpp
   ./src/ir.cpp

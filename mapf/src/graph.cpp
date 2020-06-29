@@ -7,6 +7,7 @@ int Graph::UUID = 0;
 
 Graph::~Graph() {
   for (auto v : V) delete v;
+  V.clear();
 }
 
 Path Graph::getPath(Node* const s, Node* const g)
@@ -66,15 +67,23 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
                    if (a->g != b->g) return a->g < b->g;
                    return false; };
 
+  std::vector<AstarNode*> GC;  // for memory management
+  auto createNewNode =
+    [&] (Node* v, int g, int f, AstarNode* p)
+    {
+      AstarNode* new_node = new AstarNode{ v, g, f, p };
+      GC.push_back(new_node);
+      return new_node;
+    };
+
   // OPEN and CLOSE
   std::priority_queue<AstarNode*,
                       std::vector<AstarNode*>,
                       decltype(compare)> OPEN(compare);
-  std::unordered_map<int, AstarNode*> CLOSE;
+  std::unordered_map<int, bool> CLOSE;
 
   // initial node
-  AstarNode* n;
-  n = new AstarNode { s, 0, dist(s, g), nullptr };
+  AstarNode* n = createNewNode(s, 0, dist(s, g), nullptr);
   OPEN.push(n);
 
   bool invalid = true;
@@ -84,7 +93,7 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
 
     // check CLOSE list
     if (CLOSE.find(n->v->id) != CLOSE.end()) continue;
-    CLOSE[n->v->id] = n;
+    CLOSE[n->v->id] = true;
 
     // check goal condition
     if (n->v == g) {
@@ -97,8 +106,7 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
     if (itr != PATH_TABLE.end()) {
       Path path = itr->second;
       for (int t = 1; t < path.size(); ++t) {
-        n = new AstarNode { path[t], 0, 0, n };
-        CLOSE[n->v->id] = n;
+        n = createNewNode(path[t], 0, 0, n);
       }
       invalid = false;
       break;
@@ -117,7 +125,7 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
       if (itr != PATH_TABLE.end()) {
         h_value = g_value + itr->second.size() - 1;
       }
-      AstarNode* m = new AstarNode { u, g_value, h_value, n };
+      AstarNode* m = createNewNode(u, g_value, h_value, n);
       OPEN.push(m);
     }
   }
@@ -132,13 +140,10 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
   std::reverse(path.begin(), path.end());
 
   // free
-  while (!OPEN.empty()) {
-    delete OPEN.top();
-    OPEN.pop();
-  }
-  for (auto itr = CLOSE.begin(); itr != CLOSE.end(); ++itr) {
-    delete itr->second;
-  }
+  while (!OPEN.empty()) OPEN.pop();
+  for (auto p : GC) delete p;
+  GC.clear();
+  CLOSE.clear();
 
   return path;
 }

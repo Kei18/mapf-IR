@@ -1,8 +1,6 @@
 #include "../include/icbs.hpp"
 
 const std::string ICBS::SOLVER_NAME = "ICBS";
-std::unordered_map<std::string, MDD_p> MDD::PURE_MDD_TABLE;
-
 
 ICBS::ICBS(Problem* _P) : CBS(_P)
 {
@@ -46,7 +44,8 @@ void ICBS::solve()
          ", soc:", n->soc);
 
     // check conflict
-    Conflict::Constraints constraints = getPrioritizedConflict(n);
+    LibCBS::Constraints constraints =
+      LibCBS::getPrioritizedConflict(n->paths, MDDTable[n->id]);
     if (constraints.empty()) {
       solved = true;
       break;
@@ -63,7 +62,7 @@ void ICBS::solve()
 
     // create new nodes
     for (auto c : constraints) {
-      Conflict::Constraints new_constraints = n->constraints;
+      LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
       HighLevelNode_p m(new HighLevelNode{
           h_node_num,
@@ -90,10 +89,10 @@ void ICBS::setInitialHighLevelNode(HighLevelNode_p n)
   CBS::setInitialHighLevelNode(n);
 
   // register mdds;
-  MDDs mdds;
+  LibCBS::MDDs mdds;
   for (int i = 0; i < P->getNum(); ++i) {
     int c = n->paths.costOfPath(i);
-    MDD_p mdd = std::make_shared<MDD>(MDD(c, i, P, {}));
+    LibCBS::MDD_p mdd(new LibCBS::MDD(c, i, P, {}));
     mdds.push_back(mdd);
   }
   MDDTable[n->id] = mdds;
@@ -103,18 +102,18 @@ void ICBS::setInitialHighLevelNode(HighLevelNode_p n)
 Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
   Path path;
-  MDD mdd = *(MDDTable[h_node->id][id]);
-  Conflict::Constraint* last_constraint = *(h_node->constraints.end()-1);
+  LibCBS::MDD mdd = *(MDDTable[h_node->id][id]);
+  LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
   mdd.update({ last_constraint });  // check only last
   if (mdd.valid) {  // use mdd as much as possible
-    MDDTable[h_node->id][id] = std::make_shared<MDD>(mdd);  // update table
+    // update table
+    MDDTable[h_node->id][id] = std::make_shared<LibCBS::MDD>(mdd);
     return mdd.getPath();
   } else {
     int c = std::max(mdd.c, last_constraint->t);
     while (true) {
       ++c;
-      MDD_p new_mdd = std::make_shared<MDD>
-        (MDD(c, id, P, h_node->constraints));
+      LibCBS::MDD_p new_mdd(new LibCBS::MDD(c, id, P, h_node->constraints));
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
         return new_mdd->getPath();
@@ -125,7 +124,7 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 }
 
 bool ICBS::findBypass(HighLevelNode_p h_node,
-                      const Conflict::Constraints& constraints)
+                      const LibCBS::Constraints& constraints)
 {
   auto itr = MDDTable.find(h_node->id);
   if (itr == MDDTable.end()) halt("MDD is not found.");
@@ -147,81 +146,6 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
     return true;
   }
   return false;
-}
-
-Conflict::Constraints ICBS::getPrioritizedConflict
-(HighLevelNode_p const h_node)
-{
-  Conflict::Constraints semi_cardinal_constraints = {};
-  Conflict::Constraints non_cardinal_constraints = {};
-  Paths paths = h_node->paths;
-  MDDs mdds = MDDTable[h_node->id];
-  for (int t = 1; t <= paths.getMakespan(); ++t) {
-    for (int i = 0; i < P->getNum(); ++i) {
-      for (int j = i + 1; j < P->getNum(); ++j) {
-        int c_i = mdds[i]->c;
-        int c_j = mdds[j]->c;
-        int w_i = (t <= c_i) ? mdds[i]->body[t].size() : 0;
-        int w_j = (t <= c_j) ? mdds[j]->body[t].size() : 0;
-        // vertex conflict
-        if (paths.get(i, t) == paths.get(j, t)) {
-          Conflict::Constraint* constraint_i = new Conflict::Constraint
-            { i, t, paths.get(i, t), nullptr };
-          Conflict::Constraint* constraint_j = new Conflict::Constraint
-            { j, t, paths.get(j, t), nullptr };
-          // cardinal conflicts
-          if ((t <= c_i && w_i == 1 && t <= c_j && w_j == 1) ||
-              (t > c_i && w_j == 1) || (t > c_j && w_i == 1)) {
-            return { constraint_i, constraint_j };
-          }
-          // semi-cardinal conflicts
-          if (semi_cardinal_constraints.empty() &&
-              (t > c_i || t > c_j || w_i == 1 || w_j == 1)) {
-            semi_cardinal_constraints.push_back(constraint_i);
-            semi_cardinal_constraints.push_back(constraint_j);
-
-          } else if (non_cardinal_constraints.empty()) {
-            non_cardinal_constraints.push_back(constraint_i);
-            non_cardinal_constraints.push_back(constraint_j);
-          }
-        }
-        // swap conflict
-        if (paths.get(i, t) == paths.get(j, t-1) &&
-            paths.get(j, t) == paths.get(i, t-1)) {
-          Conflict::Constraint* constraint_i = new Conflict::Constraint
-            { i, t, paths.get(i, t), paths.get(i, t-1) };
-          Conflict::Constraint* constraint_j = new Conflict::Constraint
-            { j, t, paths.get(j, t), paths.get(j, t-1) };
-          // cardinal conflicts
-          if ((t <= c_i && w_i == 1 &&
-               mdds[i]->body[t][0]->prev.size() == 1) &&
-              (t <= c_j && w_j == 1 &&
-               mdds[j]->body[t][0]->prev.size() == 1)) {
-            return { constraint_i, constraint_j };
-          }
-          // semi-cardinal conflicts
-          if (semi_cardinal_constraints.empty() &&
-              (t > c_i || t > c_j ||
-               (w_i == 1 &&
-                mdds[i]->body[t][0]->prev.size() == 1) ||
-               (w_j == 1 &&
-                mdds[j]->body[t][0]->prev.size() == 1))) {
-            semi_cardinal_constraints.push_back(constraint_i);
-            semi_cardinal_constraints.push_back(constraint_j);
-          } else if (non_cardinal_constraints.empty()) {
-            non_cardinal_constraints.push_back(constraint_i);
-            non_cardinal_constraints.push_back(constraint_j);
-          }
-        }
-      }
-    }
-  }
-  if (!semi_cardinal_constraints.empty()) {
-    return semi_cardinal_constraints;
-  } else if (!non_cardinal_constraints.empty()) {
-    return non_cardinal_constraints;
-  }
-  return {};
 }
 
 void ICBS::printHelp() {

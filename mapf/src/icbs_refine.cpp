@@ -15,21 +15,23 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   }
 
   Paths paths(P->getNum());
-  MDDs mdds;
+  LibCBS::MDDs mdds;
 
   // constraints by fixed agents
-  Conflict::Constraints constraints;
+  LibCBS::Constraints constraints;
   int makespan = old_plan.getMakespan();
   for (int i = 0; i < P->getNum(); ++i) {
     if (inArray(i, sample)) continue;
     for (int t = 1; t <= makespan; ++t) {
       // id is complemented later
-      Conflict::Constraint* c_vertex = new Conflict::Constraint
-        { -1, t, old_plan.get(t, i), nullptr };
+      LibCBS::Constraint_p c_vertex
+        (new LibCBS::Constraint
+         { -1, t, old_plan.get(t, i), nullptr });
       constraints.push_back(c_vertex);
       // notice! be careful to set swap constraints
-      Conflict::Constraint* c_swap = new Conflict::Constraint
-        { -1, t, old_plan.get(t-1, i), old_plan.get(t, i) };
+      LibCBS::Constraint_p c_swap
+        (new LibCBS::Constraint
+         { -1, t, old_plan.get(t-1, i), old_plan.get(t, i) });
       constraints.push_back(c_swap);
     }
   }
@@ -37,14 +39,16 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   // find paths
   for (int i = 0; i < P->getNum(); ++i) {
     Path path;
-    MDD_p mdd;
+    LibCBS::MDD_p mdd;
     if (inArray(i, sample)) {
       path = CBS_REFINE::getInitialPath(i);
       paths.insert(i, path);
-      mdd = std::make_shared<MDD>(MDD(path.size()-1, i, P, constraints));
+      mdd = std::make_shared<LibCBS::MDD>
+        (LibCBS::MDD(path.size()-1, i, P, constraints));
     } else {  // fixed agents
       path = old_paths.get(i);  // fixed agents
-      mdd = std::make_shared<MDD>(MDD(path.size()-1, i, P, {}));
+      mdd = std::make_shared<LibCBS::MDD>
+        (LibCBS::MDD(path.size()-1, i, P, {}));
     }
     paths.insert(i, path);
     mdds.push_back(mdd);
@@ -69,18 +73,18 @@ Path ICBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
   cost_limit = std::min(ub_makespan, cost_limit);
 
   Path path;
-  MDD mdd = *(MDDTable[h_node->id][id]);
-  Conflict::Constraint* last_constraint = *(h_node->constraints.end()-1);
+  LibCBS::MDD mdd = *(MDDTable[h_node->id][id]);
+  LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
   mdd.update({ last_constraint });  // check only last
   if (mdd.valid) {  // use mdd as much as possible
-    MDDTable[h_node->id][id] = std::make_shared<MDD>(mdd);  // update table
+    // update table
+    MDDTable[h_node->id][id] = std::make_shared<LibCBS::MDD>(mdd);
     return mdd.getPath();
   } else {
     int c = std::max(mdd.c, last_constraint->t);
     while (c <= cost_limit) {  // different from original
       ++c;
-      MDD_p new_mdd = std::make_shared<MDD>
-        (MDD(c, id, P, h_node->constraints));
+      LibCBS::MDD_p new_mdd(new LibCBS::MDD(c, id, P, h_node->constraints));
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
         return new_mdd->getPath();

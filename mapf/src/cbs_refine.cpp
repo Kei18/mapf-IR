@@ -106,7 +106,7 @@ Path CBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
 
-  Conflict::Constraints constraints;
+  LibCBS::Constraints constraints;
   int max_constraint_time = 0;
   for (auto c : h_node->constraints) {
     if (c->id == id) {

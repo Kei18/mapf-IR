@@ -9,7 +9,7 @@
 
 #pragma once
 #include "solver.hpp"
-#include "conflict.hpp"
+#include "lib_cbs.hpp"
 #include <tuple>
 #include <memory>
 
@@ -21,7 +21,7 @@ public:
 protected:
   struct HighLevelNode {
     Paths paths;
-    Conflict::Constraints constraints;
+    LibCBS::Constraints constraints;
     int makespan;
     int soc;
     int f;

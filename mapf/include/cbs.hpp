@@ -9,7 +9,7 @@
 
 #pragma once
 #include "solver.hpp"
-#include "conflict.hpp"
+#include "lib_cbs.hpp"
 
 class CBS : public Solver {
 public:
@@ -19,7 +19,7 @@ protected:
   struct HighLevelNode {
     int id;  // high level node id
     Paths paths;
-    Conflict::Constraints constraints;
+    LibCBS::Constraints constraints;
     int makespan;
     int soc;
     int f;   // for tie-break

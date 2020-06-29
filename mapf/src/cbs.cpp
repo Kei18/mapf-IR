@@ -43,8 +43,8 @@ void CBS::solve()
          ", soc:", n->soc);
 
     // check conflict
-    Conflict::Constraints constraints =
-      Conflict::getFirstConstraints(n->paths);
+    LibCBS::Constraints constraints =
+      LibCBS::getFirstConstraints(n->paths);
     if (constraints.empty()) {
       solved = true;
       break;
@@ -52,7 +52,7 @@ void CBS::solve()
 
     // create new nodes
     for (auto c : constraints) {
-      Conflict::Constraints new_constraints = n->constraints;
+      LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
       HighLevelNode_p m(new HighLevelNode{
           h_node_num,
@@ -157,7 +157,7 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
 
-  Conflict::Constraints constraints;
+  LibCBS::Constraints constraints;
   int max_constraint_time = 0;
   for (auto c : h_node->constraints) {
     if (c->id == id) {
