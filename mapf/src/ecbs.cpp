@@ -69,7 +69,8 @@ void ECBS::run()
          ", explored_node_num:", iteration,
          ", nodes_num:", h_node_num,
          ", conflicts:", n->f,
-         ", constraints:", n->constraints.size());
+         ", constraints:", n->constraints.size(),
+         ", soc:", n->soc);
 
     // check conflict
     LibCBS::Constraints constraints =

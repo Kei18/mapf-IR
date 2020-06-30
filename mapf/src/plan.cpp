@@ -57,11 +57,11 @@ int Plan::getSOC() const
   for (int i = 0; i < num_agents; ++i) {
     int c = makespan;
     Node* g = configs[makespan][i];
-    while (configs[c][i] == g) {
+    while (configs[c-1][i] == g) {
       --c;
       if (c <= 0) break;
     }
-    soc += c + 1;
+    soc += c;
   }
   return soc;
 }

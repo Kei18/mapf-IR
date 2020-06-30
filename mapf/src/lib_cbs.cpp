@@ -386,6 +386,8 @@ std::string LibCBS::MDD::getPureMDDName()
 Path LibCBS::MDD::getPath() const
 {
   if (!valid) return {};
+  if (body[0].empty() || body[c].empty()) halt("invalid MDD");
+
   MDDNode* node = body[0][0];
   MDDNode* goal_node = body[c][0];
   Path path;

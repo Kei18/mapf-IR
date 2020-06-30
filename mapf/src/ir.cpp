@@ -24,6 +24,8 @@ IR::IR(Problem* _P) : Solver(_P)
 {
   solver_name = IR::SOLVER_NAME;
 
+  output_file = DEFAULT_OUTPUT_FILE;
+
   refinement_type = DEFAULT_REFINEMENT_TYPE;
   init_solver = DEFAULT_INIT_SOLVER;
   refine_solver = DEFAULT_REFINE_SOLVER;
@@ -63,6 +65,8 @@ void IR::iterativeRefinement()
     Plan new_plan = refinePlan(P->getConfigStart(),
                                P->getConfigGoal(),
                                solution);
+    // new_plan = shrink(new_plan);
+
     hist.push_back(new_plan);
     if (stopRefinement(new_plan, hist)) break;
     solution = new_plan;
@@ -242,6 +246,13 @@ Plan IR::MAPFSolver(const Config& config_s,
     }
   }
 
+  // check lower bound
+  int LB = 0;
+  for (int i = 0; i < P->getNum(); ++i) {
+    LB += pathDist(config_s[i], config_g[i]);
+  }
+  if (current_plan.getSOC() == LB) return current_plan;
+
   Problem* _P = new Problem(P,
                             config_s,
                             config_g,
@@ -290,6 +301,12 @@ Plan IR::MAPFSolver(const Config& config_s,
 
   if (solver->succeed()) {
     Plan plan = solver->getSolution();
+
+    // info("    refine, lower bound: ", LB,
+    //      ", soc:", current_plan.getSOC(), "->",
+    //      planToPaths(plan).getSOC(),
+    //      ", makespan:", current_plan.getMakespan(),
+    //      "->", plan.getMakespan());
     if (!cache_on) return plan;
     if (plan.getSOC() < current_plan.getSOC()) {
       registerTable(plan);

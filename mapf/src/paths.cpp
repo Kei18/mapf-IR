@@ -92,6 +92,7 @@ int Paths::getMakespan() const
 int Paths::costOfPath(int i) const
 {
   if (!(0 <= i && i < paths.size())) halt("invalid index.");
+  if (paths[i].empty()) halt("invalid operation");
   int c = paths[i].size();
   auto itr = paths[i].end() - 1;
   Node* g = *itr;

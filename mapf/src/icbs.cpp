@@ -99,7 +99,6 @@ void ICBS::setInitialHighLevelNode(HighLevelNode_p n)
 // using MDD
 Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
-  Path path;
   LibCBS::MDD mdd = *(MDDTable[h_node->id][id]);
   LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
   mdd.update({ last_constraint });  // check only last
@@ -118,7 +117,7 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
       }
     }
   }
-  return path;
+  return {};
 }
 
 bool ICBS::findBypass(HighLevelNode_p h_node,
