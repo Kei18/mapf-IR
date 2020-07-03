@@ -12,10 +12,8 @@
 #include <icbs.hpp>
 #include <ecbs.hpp>
 #include <ir.hpp>
-#include <meta_ir.hpp>
+#include <ir_configs.hpp>
 #include <ir_paths.hpp>
-#include <ir_tester.hpp>
-
 
 void printHelp();
 Solver* getSolver(const std::string solver_name,
@@ -114,18 +112,14 @@ Solver* getSolver(const std::string solver_name,
     solver = new WHCA(P);
   } else if (solver_name == "CBS") {
     solver = new CBS(P);
-  } else if (solver_name == "ECBS") {
-    solver = new ECBS(P);
-  } else if (solver_name == "IR") {
-    solver = new IR(P);
   } else if (solver_name == "ICBS") {
     solver = new ICBS(P);
-  } else if (solver_name == "META_IR") {
-    solver = new META_IR(P);
+  } else if (solver_name == "ECBS") {
+    solver = new ECBS(P);
+  } else if (solver_name == "IR_CONFIGS") {
+    solver = new IR_CONFIGS(P);
   } else if (solver_name == "IR_PATHS") {
     solver = new IR_PATHS(P);
-  } else if (solver_name == "IR_TESTER") {
-    solver = new IR_TESTER(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -153,6 +147,6 @@ void printHelp() {
   ECBS::printHelp();
   ICBS::printHelp();
   IR::printHelp();
-  META_IR::printHelp();
+  IR_CONFIGS::printHelp();
   IR_PATHS::printHelp();
 }

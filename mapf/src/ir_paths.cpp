@@ -3,12 +3,14 @@
 
 
 const std::string IR_PATHS::SOLVER_NAME = "IR_PATHS";
-
+const int IR_PATHS::DEFAULT_MAX_ITERATION = 100;
 
 IR_PATHS::IR_PATHS(Problem* _P)
   : IR(_P)
 {
   solver_name = IR_PATHS::SOLVER_NAME;
+
+  max_iteration = DEFAULT_MAX_ITERATION;
   find_all_interacting_agents = false;
 }
 
@@ -16,15 +18,21 @@ IR_PATHS::~IR_PATHS()
 {
 }
 
+bool IR_PATHS::stopRefinement(const Plans& hist)
+{
+  return hist.size() >= max_iteration;
+}
 
 Plan IR_PATHS::refinePlan(const Config& config_s,
                           const Config& config_g,
-                          const Plan& old_plan)
+                          const Plan& current_plan)
 {
-  Paths old_paths = planToPaths(old_plan);
+  // ============================================
+  // sampling
+  Paths current_paths = planToPaths(current_plan);
   auto gap =
     [&] (int i) {
-      return old_paths.costOfPath(i) - pathDist(i);
+      return current_paths.costOfPath(i) - pathDist(i);
     };
 
   // find agent with largest gap
@@ -40,79 +48,65 @@ Plan IR_PATHS::refinePlan(const Config& config_s,
   }
   if (id_largest_gap == -1) {
     CLOSE_GAP.clear();
-    return old_plan;
+    return current_plan;
   }
 
   // find interacting agents
-  std::vector<int> sample_vec;
+  std::vector<int> sample;
   if (find_all_interacting_agents) {
-    sample_vec = getAllInteractingAgents(old_paths, id_largest_gap);
+    sample = getAllInteractingAgents(current_paths, id_largest_gap);
   } else {
-    sample_vec = getDirectInteractingAgents(old_paths, id_largest_gap);
+    sample = getDirectInteractingAgents(current_paths, id_largest_gap);
   }
-
   info("   ", "id=", id_largest_gap,
        ", gap=", gap_largest,
-       ", interacting size:", sample_vec.size());
+       ", interacting size:", sample.size());
 
-  int comp_time_limit = std::min(max_comp_time
-                                 - (int)getSolverElapsedTime(),
-                                 timeout_refinement);
-  if (comp_time_limit <= 0) return old_plan;
+  // ============================================
+  // create problem
+  int comp_time_limit
+    = std::min(max_comp_time - (int)getSolverElapsedTime(),
+               timeout_refinement);
+  if (comp_time_limit <= 0) return current_plan;
   Problem* _P = new Problem(P,
                             config_s,
                             config_g,
                             comp_time_limit,
                             max_timestep);
-  Solver* solver = new ICBS_REFINE(_P, old_plan, sample_vec);
-  solver->setVerbose(verbose_underlying_solver);
 
-  solver->solve();
-
-  if (solver->succeed()) {
-    Plan plan = solver->getSolution();
-    int old_soc = old_plan.getSOC();
-    int new_soc = plan.getSOC();
-    if (new_soc == old_soc) {
-      CLOSE_GAP.push_back(id_largest_gap);
-    } else if (new_soc > old_soc) {
-      halt("error, something wrong");
-    }
-    return plan;
+  // solve
+  auto res = getOptimalPlan(_P, current_plan, sample);
+  Plan plan = std::get<1>(res);
+  if (!std::get<0>(res) || plan.getSOC() == current_plan.getSOC()) {
+    CLOSE_GAP.push_back(id_largest_gap);
   }
-
-  CLOSE_GAP.push_back(id_largest_gap);
-  return old_plan;
+  return plan;
 }
 
-std::vector<int> IR_PATHS::getDirectInteractingAgents
-(const Paths& old_paths, const int id_largest_gap)
+Ints IR_PATHS::getDirectInteractingAgents
+(const Paths& current_paths, const int id_largest_gap)
 {
-  int cost_largest_gap = old_paths.costOfPath(id_largest_gap);
+  int cost_largest_gap = current_paths.costOfPath(id_largest_gap);
   int dist_largest_gap = pathDist(id_largest_gap);
   std::set<int> sample = { id_largest_gap };
   Node* g = P->getGoal(id_largest_gap);
   for (int t = cost_largest_gap - 1; t >= dist_largest_gap; --t) {
     for (int i = 0; i < P->getNum(); ++i) {
       if (i == id_largest_gap) continue;
-      if (old_paths.get(i, t) == g) sample.insert(i);
+      if (current_paths.get(i, t) == g) sample.insert(i);
     }
   }
   std::vector<int> sample_vec(sample.begin(), sample.end());
   return sample_vec;
 }
 
-
-// find interacting agents, seems to be slow
-std::vector<int> IR_PATHS::getAllInteractingAgents
-(const Paths& old_paths, const int id_largest_gap)
+Ints IR_PATHS::getAllInteractingAgents
+(const Paths& current_paths, const int id_largest_gap)
 {
-  if (id_largest_gap == -1) return {};
   auto gap =
     [&] (int i) {
-      return old_paths.costOfPath(i) - pathDist(i);
+      return current_paths.costOfPath(i) - pathDist(i);
     };
-
   auto compare = [&] (int i, int j) { return gap(i) < gap(j); };
   std::priority_queue<int, std::vector<int>,
                       decltype(compare)> OPEN(compare);
@@ -125,12 +119,12 @@ std::vector<int> IR_PATHS::getAllInteractingAgents
     if (inArray(id, CLOSE)) continue;
     CLOSE.push_back(id);
     Node* g = P->getGoal(id);
-    int cost = old_paths.costOfPath(id);
+    int cost = current_paths.costOfPath(id);
     int dist = pathDist(id);
     for (int t = cost - 1; t >= dist; --t) {
       for (int i = 0; i < P->getNum(); ++i) {
         if (i == id) continue;
-        if (old_paths.get(i, t) == g) OPEN.push(i);
+        if (current_paths.get(i, t) == g) OPEN.push(i);
       }
     }
   }
@@ -141,21 +135,24 @@ void IR_PATHS::setParams(int argc, char *argv[])
 {
   struct option longopts[] = {
     { "find-all-interacting-agents", no_argument, 0, 'f' },
+    { "max-iteration", required_argument, 0, 'n' },
     { 0, 0, 0, 0 },
   };
 
-  // copy
   char *argv_copy[argc+1];
   for (int i = 0; i < argc; ++i) argv_copy[i] = argv[i];
-
   IR::setParams(argc, argv_copy);
+
   optind = 1;  // reset
   int opt, longindex;
-  while ((opt = getopt_long(argc, argv, "f",
+  while ((opt = getopt_long(argc, argv, "fn:",
                             longopts, &longindex)) != -1) {
     switch (opt) {
     case 'f':
       find_all_interacting_agents = true;
+      break;
+    case 'n':
+      max_iteration = std::atoi(optarg);
       break;
     default:
       break;
@@ -169,6 +166,9 @@ void IR_PATHS::printHelp()
             << "  -f --find-all-interacting-agents"
             << "\n"
 
-            << "  (other: same as IR)"
-            << std::endl;
+            << "  -n --max-iteration [INT]"
+            << "      "
+            << "max iteration\n"
+
+            << "  (other: same as IR)\n";
 }

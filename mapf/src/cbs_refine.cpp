@@ -8,7 +8,8 @@ CBS_REFINE::CBS_REFINE(Problem* _P,
     old_paths(planToPaths(_old_plan)),
     ub_makespan(_old_plan.getMakespan()),
     ub_soc(_old_plan.getSOC()),
-    sample(_sample)
+    sample(_sample),
+    makespan_prioritized(true)
 {
   if (!sample.empty()) {
     if (_old_plan.empty()) return;
@@ -75,7 +76,7 @@ Path CBS_REFINE::getInitialPath(int id)
 
   CheckInvalidAstarNode checkInvalidAstarNode =
     [&] (AstarNode* m) {
-      if (m->g > ub_makespan) return true;
+      if (makespan_prioritized && m->g > ub_makespan) return true;
       for (auto i : fixed_agents) {
         // vertex conflicts
         if (m->v == old_paths.get(i, m->g)) return true;
@@ -96,9 +97,10 @@ Path CBS_REFINE::getInitialPath(int id)
 CBS::CompareHighLevelNodes CBS_REFINE::getObjective()
 {
   CompareHighLevelNodes compare =
-    [] (HighLevelNode_p a, HighLevelNode_p b)
+    [&] (HighLevelNode_p a, HighLevelNode_p b)
     {
-      if (a->makespan != b->makespan) return a->makespan > b->makespan;
+      if (makespan_prioritized && a->makespan != b->makespan)
+        return a->makespan > b->makespan;
       if (a->soc != b->soc) return a->soc > b->soc;
       if (a->f != b->f) return a->f > b->f;  // tie-breaker
       return false;
@@ -184,4 +186,26 @@ Path CBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
                       compare,
                       checkAstarFin,
                       checkInvalidAstarNode);
+}
+
+void CBS_REFINE::setParams(int argc, char *argv[])
+{
+  struct option longopts[] = {
+    { "makespan-prioritized", no_argument, 0, 'p' },
+    { 0, 0, 0, 0 },
+  };
+  optind = 1;  // reset
+  int opt, longindex;
+  std::string s, s_tmp;
+
+  while ((opt = getopt_long(argc, argv, "p",
+                            longopts, &longindex)) != -1) {
+    switch (opt) {
+    case 'p':
+      makespan_prioritized = false;
+      break;
+    default:
+      break;
+    }
+  }
 }

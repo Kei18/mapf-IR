@@ -11,94 +11,71 @@
 #include "../include/ecbs.hpp"
 #include "../include/icbs_refine.hpp"
 
+using Ints = std::vector<int>;
+using Strings = std::vector<std::string>;
+
+
 class IR : public Solver {
 public:
   static const std::string SOLVER_NAME;
 
 protected:
-  std::string output_file;
-
-  // used in solvableDirectly
-  int threshold_makespan;
-
-  // used in stopRefinement
-  int threshold_soc_diff;
-  int threshold_nondiff_refine;
-
-  enum struct REFINEMENT_TYPE
-    { SIMPLE, QUADRATIC, NUM_ITMES };
-  REFINEMENT_TYPE refinement_type;
-
   enum struct INIT_SOLVER_TYPE
-    { PIBT, HCA, WHCA, ECBS, NUM_ITMES };
+    { PIBT, HCA, WHCA, ECBS };
   INIT_SOLVER_TYPE init_solver;
-  std::vector<std::string> option_init_solver;
+  Strings option_init_solver;
 
-  enum struct REFINE_SOLVER_TYPE
-    { CBS, CBS_NORMAL, ICBS, ICBS_NORMAL, NUM_ITMES };
-  REFINE_SOLVER_TYPE refine_solver;
-  std::vector<std::string> option_refine_solver;
-
-  // default params
-  static const int DEFAULT_THRESHOLD_MAKESPAN;
-  static const int DEFAULT_THRESHOLD_SOC_DIFF;
-  static const int DEFAULT_THRESHOLD_NONDIFF_REFINE;
-  static const REFINEMENT_TYPE DEFAULT_REFINEMENT_TYPE;
-  static const INIT_SOLVER_TYPE DEFAULT_INIT_SOLVER;
-  static const REFINE_SOLVER_TYPE DEFAULT_REFINE_SOLVER;
+  enum struct OPTIMAL_SOLVER_TYPE
+    { CBS, CBS_NORMAL, ICBS, ICBS_NORMAL };
+  OPTIMAL_SOLVER_TYPE refine_solver;
+  Strings option_optimal_solver;
 
   // for log
+  std::string output_file;
   bool make_log_every_itr;
 
   // early stop
   int timeout_refinement;
 
-  // sampling rate
-  float sampling_rate;
-
-  // cache
-  bool cache_on;
-  std::unordered_map<std::string, Plan> PLAN_TABLE;
-
-  // verbose for underlying solver
+  // for debug
   bool verbose_underlying_solver;
 
-  virtual void iterativeRefinement();
-  virtual Plan getInitialPlan();
-  virtual bool stopRefinement(const Plan& new_plan, const Plans& hist);
-  virtual Plan refinePlan(const Config& config_s,
-                          const Config& config_g,
-                          const Plan& old_plan);
-  virtual bool solvableDirectly(const Config& config_s,
-                                const Config& config_g,
-                                const Plan& old_plan);
-  virtual Plan MAPFSolver(const Config& config_s,
-                          const Config& config_g,
-                          const Plan& old_plan);
-  std::tuple<int, Config> subgoalConfig(Plan plan);
-  Plan simpleRefine(const Config& config_s,
-                    const Config& config_g,
-                    const Plan& old_plan);
-  Plan quadraticRefine(const Config& config_s,
-                       const Config& config_g,
-                       const Plan& old_plan);
-  void registerTable(const Plan& plan);
-  Plan shrink(const Plan& plan);
-  static std::string getPlanTableKey(const Config& config_s,
-                                     const Config& config_g);
-  static std::string getPlanTableKey(const std::string& config_s_key,
-                                     const Config& config_g);
-  static std::string getPlanTableKey(const Config& config_s,
-                                     const std::string& config_g_key);
-  static std::string getPlanTableKey(const std::string& config_s_key,
-                                     const std::string& config_g_key);
+  // default params
+  static const INIT_SOLVER_TYPE DEFAULT_INIT_SOLVER;
+  static const OPTIMAL_SOLVER_TYPE DEFAULT_REFINE_SOLVER;
 
   void run();
+  Plan getInitialPlan();
+  // success?, solution
+  std::tuple<bool, Plan> getOptimalPlan(Problem* _P,
+                                        const Plan& current_plan,
+                                        const Ints& sample);
+
+  // should be defined
+  virtual bool stopRefinement(const Plans& hist) { return false; }
+  virtual Plan refinePlan(const Config& config_s,
+                          const Config& config_g,
+                          const Plan& current_plan) { return current_plan; }
+  virtual Ints sampling(const Plan& current_plan);
 
 public:
   IR(Problem* _P);
-  ~IR() {};
+  ~IR();
 
   virtual void setParams(int argc, char *argv[]);
   static void printHelp();
 };
+
+
+
+static void setSolverOption(Solver* solver, const Strings& option)
+{
+  if (option.empty()) return;
+  int argc = option.size() + 1;
+  char *argv[argc+1];
+  for (int i = 0; i < argc; ++i) {
+    char *tmp = const_cast<char*>(option[i].c_str());
+    argv[i+1] = tmp;
+  }
+  solver->setParams(argc, argv);
+}

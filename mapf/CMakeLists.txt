@@ -13,9 +13,8 @@ add_library(lib-mapf STATIC
   ./src/cbs.cpp
   ./src/ecbs.cpp
   ./src/ir.cpp
-  ./src/meta_ir.cpp
+  ./src/ir_configs.cpp
   ./src/ir_paths.cpp
-  ./src/ir_tester.cpp
   ./src/icbs.cpp
   ./src/cbs_refine.cpp
   ./src/icbs_refine.cpp

@@ -3,7 +3,8 @@
 ICBS_REFINE::ICBS_REFINE(Problem* _P,
                          const Plan& _old_plan,
                          const std::vector<int>& _sample)
-  : CBS(_P), ICBS(_P), CBS_REFINE(_P, _old_plan, _sample)
+  : CBS(_P), ICBS(_P),
+    CBS_REFINE(_P, _old_plan, _sample)
 {
 }
 
@@ -67,5 +68,9 @@ LibCBS::Constraints ICBS_REFINE::getPrioritizedConflict
 // using MDD
 Path ICBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
-  return ICBS::getConstrainedPath(h_node, id);
+  Path path = ICBS::getConstrainedPath(h_node, id);
+  if (makespan_prioritized && path.size() - 1 > ub_makespan) {
+    return {};
+  }
+  return path;
 }

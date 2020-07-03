@@ -15,6 +15,8 @@ protected:
   const std::vector<int> sample;
   std::vector<int> fixed_agents;
 
+  bool makespan_prioritized;
+
   virtual void setInitialHighLevelNode(HighLevelNode_p n);
   virtual Path getConstrainedPath(HighLevelNode_p h_node, int id);
   Path getInitialPath(int id);
@@ -25,4 +27,6 @@ public:
              const Plan& _old_plan,
              const std::vector<int>& _sample);
   ~CBS_REFINE() {};
+
+  void setParams(int argc, char *argv[]);
 };
