@@ -13,7 +13,7 @@ namespace Color {
      ofColor(233, 30, 99), ofColor(33, 150, 243),
      ofColor(76, 175, 80), ofColor(255, 152, 0),
      ofColor(0, 188, 212),  ofColor(156, 39, 176),
-     ofColor(121, 85, 72), ofColor(255, 235, 59),
+     ofColor(121, 85, 72), ofColor(255, 187, 59),
      ofColor(244, 67, 54), ofColor(96, 125, 139),
      ofColor(0, 150, 136), ofColor(63, 81, 181)
     };

@@ -17,6 +17,7 @@ public:
   int getSOC() const;
   Plan operator+(const Plan& other) const;
   void operator+=(const Plan& other);
+  int getTimestep(const Config& c) const;
   Plan getPartialPlan(const Config& config_i,
                       const Config& config_j) const;
   Plan getPartialPlan(int i, int j) const;

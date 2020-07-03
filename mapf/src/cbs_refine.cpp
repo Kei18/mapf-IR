@@ -55,8 +55,8 @@ Path CBS_REFINE::getInitialPath(int id)
     }
   }
 
-  AstarHeuristics fValue =
-    [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+  AstarHeuristics fValue
+    = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
 
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
@@ -127,10 +127,14 @@ Path CBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
       return n->g + pathDist(n->v, g);
     };
 
+  Nodes config_g = P->getConfigGoal();
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
       if (a->f != b->f) return a->f > b->f;
       if (a->g != b->g) return a->g < b->g;
+      // avoid other's goal
+      if (a->v != g && inArray(a->v, config_g)) return true;
+      if (b->v != g && inArray(b->v, config_g)) return false;
       // avoid conflict with others
       for (int i = 0; i < P->getNum(); ++i) {
         if (i == id) continue;

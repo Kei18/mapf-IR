@@ -377,11 +377,7 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
   std::tuple<Path, int> ret = std::make_tuple(path, f1_min);
 
   // free
-  while (!OPEN.empty()) OPEN.pop();
-  while (!FOCAL.empty()) FOCAL.pop();
   for (auto p : GC) delete p;
-  GC.clear();
-  CLOSE.clear();
 
   return ret;
 }

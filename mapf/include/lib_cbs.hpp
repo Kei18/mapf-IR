@@ -32,8 +32,20 @@ namespace LibCBS {
   Constraints getFirstConstraints(const Paths& paths);
 
   // for ICBS
+  void getPrioritizedConflict
+  (const int t,
+   const int i,
+   const int j,
+   const Paths& paths,
+   const MDDs& mdds,
+   Constraints& cardinal_conflicts,
+   Constraints& semi_cardinal_constraints,
+   Constraints& non_cardinal_constraints);
   Constraints getPrioritizedConflict(const Paths& paths,
                                      const MDDs& mdds);
+  Constraints getPrioritizedConflict(const Paths& paths,
+                                     const MDDs& mdds,
+                                     const std::vector<int>& sample);
 
   Constraints getConstraintsByFixedPaths
   (const Plan& plan, const std::vector<int>& fixed_agents);
@@ -64,6 +76,9 @@ namespace LibCBS {
 
     // MDD without any constraints
     static std::unordered_map<std::string, MDD_p> PURE_MDD_TABLE;
+
+    // for finding paths
+    static std::mt19937* MT;
 
     MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid);
     MDD(int _c, int _i, Problem* P, Constraints constraints);

@@ -1,6 +1,7 @@
 #include "../include/lib_cbs.hpp"
 
 std::unordered_map<std::string, LibCBS::MDD_p> LibCBS::MDD::PURE_MDD_TABLE;
+std::mt19937* LibCBS::MDD::MT;
 
 
 void LibCBS::Constraint::println()
@@ -50,69 +51,119 @@ LibCBS::Constraints LibCBS::getFirstConstraints(const Paths& paths)
   return {};
 }
 
+void LibCBS::getPrioritizedConflict
+(const int t,
+ const int i,
+ const int j,
+ const Paths& paths,
+ const MDDs& mdds,
+ Constraints& cardinal_conflicts,
+ Constraints& semi_cardinal_constraints,
+ Constraints& non_cardinal_constraints)
+{
+  int c_i = mdds[i]->c;
+  int c_j = mdds[j]->c;
+  int w_i = (t <= c_i) ? mdds[i]->getWidth(t) : 0;
+  int w_j = (t <= c_j) ? mdds[j]->getWidth(t) : 0;
+  // vertex conflict
+  if (paths.get(i, t) == paths.get(j, t)) {
+    Constraint_p constraint_i
+      (new Constraint { i, t, paths.get(i, t), nullptr });
+    Constraint_p constraint_j
+      (new Constraint { j, t, paths.get(j, t), nullptr });
+    // cardinal conflicts
+    if ((t <= c_i && w_i == 1 && t <= c_j && w_j == 1) ||
+        (t > c_i && w_j == 1) || (t > c_j && w_i == 1)) {
+      cardinal_conflicts.push_back(constraint_i);
+      cardinal_conflicts.push_back(constraint_j);
+      return;
+    }
+    // semi-cardinal conflicts
+    if (semi_cardinal_constraints.empty() &&
+        (t > c_i || t > c_j || w_i == 1 || w_j == 1)) {
+      semi_cardinal_constraints.push_back(constraint_i);
+      semi_cardinal_constraints.push_back(constraint_j);
+    } else if (non_cardinal_constraints.empty()) {
+      non_cardinal_constraints.push_back(constraint_i);
+      non_cardinal_constraints.push_back(constraint_j);
+    }
+  }
+  // swap conflict
+  if (paths.get(i, t) == paths.get(j, t-1) &&
+      paths.get(j, t) == paths.get(i, t-1)) {
+    Constraint_p constraint_i
+      (new Constraint { i, t, paths.get(i, t), paths.get(i, t-1) });
+    Constraint_p constraint_j
+      (new Constraint { j, t, paths.get(j, t), paths.get(j, t-1) });
+    // cardinal conflicts
+    if ((t <= c_i && w_i == 1 &&
+         mdds[i]->body[t][0]->prev.size() == 1) &&
+        (t <= c_j && w_j == 1 &&
+         mdds[j]->body[t][0]->prev.size() == 1)) {
+      cardinal_conflicts.push_back(constraint_i);
+      cardinal_conflicts.push_back(constraint_j);
+      return;
+    }
+    // semi-cardinal conflicts
+    if (semi_cardinal_constraints.empty() &&
+        (t > c_i || t > c_j ||
+         (w_i == 1 &&
+          mdds[i]->body[t][0]->prev.size() == 1) ||
+         (w_j == 1 &&
+          mdds[j]->body[t][0]->prev.size() == 1))) {
+      semi_cardinal_constraints.push_back(constraint_i);
+      semi_cardinal_constraints.push_back(constraint_j);
+    } else if (non_cardinal_constraints.empty()) {
+      non_cardinal_constraints.push_back(constraint_i);
+      non_cardinal_constraints.push_back(constraint_j);
+    }
+  }
+}
+
 LibCBS::Constraints LibCBS::getPrioritizedConflict(const Paths& paths,
                                                    const MDDs& mdds)
 {
+  Constraints cardinal_constraints = {};
   Constraints semi_cardinal_constraints = {};
   Constraints non_cardinal_constraints = {};
   int num_agents = paths.size();
   for (int t = 1; t <= paths.getMakespan(); ++t) {
     for (int i = 0; i < num_agents; ++i) {
       for (int j = i + 1; j < num_agents; ++j) {
-        int c_i = mdds[i]->c;
-        int c_j = mdds[j]->c;
-        int w_i = (t <= c_i) ? mdds[i]->getWidth(t) : 0;
-        int w_j = (t <= c_j) ? mdds[j]->getWidth(t) : 0;
-        // vertex conflict
-        if (paths.get(i, t) == paths.get(j, t)) {
-          Constraint_p constraint_i
-            (new Constraint { i, t, paths.get(i, t), nullptr });
-          Constraint_p constraint_j
-            (new Constraint { j, t, paths.get(j, t), nullptr });
-          // cardinal conflicts
-          if ((t <= c_i && w_i == 1 && t <= c_j && w_j == 1) ||
-              (t > c_i && w_j == 1) || (t > c_j && w_i == 1)) {
-            return { constraint_i, constraint_j };
-          }
-          // semi-cardinal conflicts
-          if (semi_cardinal_constraints.empty() &&
-              (t > c_i || t > c_j || w_i == 1 || w_j == 1)) {
-            semi_cardinal_constraints.push_back(constraint_i);
-            semi_cardinal_constraints.push_back(constraint_j);
+        getPrioritizedConflict(t, i, j,
+                               paths, mdds,
+                               cardinal_constraints,
+                               semi_cardinal_constraints,
+                               non_cardinal_constraints);
+        if (!cardinal_constraints.empty()) return cardinal_constraints;
+      }
+    }
+  }
+  if (!semi_cardinal_constraints.empty()) {
+    return semi_cardinal_constraints;
+  } else if (!non_cardinal_constraints.empty()) {
+    return non_cardinal_constraints;
+  }
+  return {};
+}
 
-          } else if (non_cardinal_constraints.empty()) {
-            non_cardinal_constraints.push_back(constraint_i);
-            non_cardinal_constraints.push_back(constraint_j);
-          }
-        }
-        // swap conflict
-        if (paths.get(i, t) == paths.get(j, t-1) &&
-            paths.get(j, t) == paths.get(i, t-1)) {
-          Constraint_p constraint_i
-            (new Constraint { i, t, paths.get(i, t), paths.get(i, t-1) });
-          Constraint_p constraint_j
-            (new Constraint { j, t, paths.get(j, t), paths.get(j, t-1) });
-          // cardinal conflicts
-          if ((t <= c_i && w_i == 1 &&
-               mdds[i]->body[t][0]->prev.size() == 1) &&
-              (t <= c_j && w_j == 1 &&
-               mdds[j]->body[t][0]->prev.size() == 1)) {
-            return { constraint_i, constraint_j };
-          }
-          // semi-cardinal conflicts
-          if (semi_cardinal_constraints.empty() &&
-              (t > c_i || t > c_j ||
-               (w_i == 1 &&
-                mdds[i]->body[t][0]->prev.size() == 1) ||
-               (w_j == 1 &&
-                mdds[j]->body[t][0]->prev.size() == 1))) {
-            semi_cardinal_constraints.push_back(constraint_i);
-            semi_cardinal_constraints.push_back(constraint_j);
-          } else if (non_cardinal_constraints.empty()) {
-            non_cardinal_constraints.push_back(constraint_i);
-            non_cardinal_constraints.push_back(constraint_j);
-          }
-        }
+LibCBS::Constraints LibCBS::getPrioritizedConflict
+(const Paths& paths,
+ const MDDs& mdds,
+ const std::vector<int>& sample)
+{
+  Constraints cardinal_constraints = {};
+  Constraints semi_cardinal_constraints = {};
+  Constraints non_cardinal_constraints = {};
+  for (int t = 1; t <= paths.getMakespan(); ++t) {
+    for (int i = 0; i < sample.size(); ++i) {
+      for (int j = i + 1; j < sample.size(); ++j) {
+        getPrioritizedConflict(t, sample[i], sample[j],
+                               paths, mdds,
+                               cardinal_constraints,
+                               semi_cardinal_constraints,
+                               non_cardinal_constraints);
+        if (!cardinal_constraints.empty()) return cardinal_constraints;
       }
     }
   }
@@ -294,17 +345,6 @@ void LibCBS::MDD::update(const Constraints& _constraints)
     constraints.push_back(constraint);
   }
 
-  std::sort(constraints.begin(), constraints.end(),
-            [] (Constraint_p a, Constraint_p b) {
-              if (a->t != b->t) return a->t < b->t;
-              if (a->u != nullptr && b->u == nullptr) return true;
-              if (b->u != nullptr && a->u == nullptr) return false;
-              if (a->u != nullptr && b->u != nullptr)
-                return a->u->id < b->u->id;
-              if (a->v->id != b->v->id) return a->v->id < b->v->id;
-              return false;
-            });
-
   // delete nodes
   for (auto constraint : constraints) {
     auto itr_v = std::find_if(body[constraint->t].begin(),
@@ -394,7 +434,7 @@ Path LibCBS::MDD::getPath() const
   while (node != goal_node) {
     path.push_back(node->v);
     if (node->next.empty()) halt("invalid MDD");
-    node = node->next[0];
+    node = randomChoose(node->next, MT);  // randomize
   }
   path.push_back(goal_node->v);
   return path;

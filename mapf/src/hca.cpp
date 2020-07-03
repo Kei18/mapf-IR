@@ -78,8 +78,8 @@ Path HCA::getPrioritizedPath(int id,
     }
   }
 
-  AstarHeuristics fValue =
-    [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+  AstarHeuristics fValue
+    = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
 
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {

@@ -15,6 +15,7 @@ class ofApp : public ofBaseApp {
   // gui
   ofxFloatSlider timestep_slider;
   ofxFloatSlider speed_slider;
+  ofxIntSlider agent_slider;
   ofxPanel gui;
 
   // flg
@@ -23,6 +24,7 @@ class ofApp : public ofBaseApp {
   bool flg_goal;
   bool flg_font;
   bool flg_line;
+  bool flg_focus;
 
   // visual
   ofTrueTypeFont font;

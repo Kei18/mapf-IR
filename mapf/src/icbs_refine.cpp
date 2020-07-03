@@ -36,8 +36,7 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
         (LibCBS::MDD(path.size()-1, i, P, constraints));
     } else {  // fixed agents
       path = old_paths.get(i);  // fixed agents
-      mdd = std::make_shared<LibCBS::MDD>
-        (LibCBS::MDD(path.size()-1, i, P, {}));
+      // mdd is not required
     }
     paths.insert(i, path);
     mdds.push_back(mdd);
@@ -49,36 +48,24 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   n->constraints = constraints;
   n->makespan = paths.getMakespan();
   n->soc = paths.getSOC();
-  n->f = paths.countConflict();
+  n->f = paths.countConflict(sample);
   n->valid = true;  // valid
+}
+
+LibCBS::Constraints ICBS_REFINE::getPrioritizedConflict
+(HighLevelNode_p h_node)
+{
+  if (sample.empty()) {
+    return LibCBS::getPrioritizedConflict(h_node->paths,
+                                          MDDTable[h_node->id]);
+  }
+  return LibCBS::getPrioritizedConflict(h_node->paths,
+                                        MDDTable[h_node->id],
+                                        sample);
 }
 
 // using MDD
 Path ICBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
-  // set cost limit
-  int prev_cost = h_node->paths.costOfPath(id);
-  int cost_limit = ub_soc - h_node->paths.getSOC() + prev_cost;
-  cost_limit = std::min(ub_makespan, cost_limit);
-
-  Path path;
-  LibCBS::MDD mdd = *(MDDTable[h_node->id][id]);
-  LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
-  mdd.update({ last_constraint });  // check only last
-  if (mdd.valid) {  // use mdd as much as possible
-    // update table
-    MDDTable[h_node->id][id] = std::make_shared<LibCBS::MDD>(mdd);
-    return mdd.getPath();
-  } else {
-    int c = std::max(mdd.c, last_constraint->t);
-    while (c <= cost_limit) {  // different from original
-      ++c;
-      LibCBS::MDD_p new_mdd(new LibCBS::MDD(c, id, P, h_node->constraints));
-      if (new_mdd->valid) {
-        MDDTable[h_node->id][id] = new_mdd;
-        return new_mdd->getPath();
-      }
-    }
-  }
-  return {};
+  return ICBS::getConstrainedPath(h_node, id);
 }

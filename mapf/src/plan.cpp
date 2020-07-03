@@ -82,7 +82,8 @@ Plan Plan::operator+(const Plan& other) const
   return new_plan;
 }
 
-void Plan::operator+=(const Plan& other) {
+void Plan::operator+=(const Plan& other)
+{
   if (configs.empty()) {
     configs = other.configs;
     return;
@@ -91,6 +92,15 @@ void Plan::operator+=(const Plan& other) {
   if (!sameConfig(last(), other.get(0))) halt("invalid operation");
   // merge
   for (int t = 1; t < other.size(); ++t) add(other.get(t));
+}
+
+int Plan::getTimestep(const Config& c) const
+{
+  for (int t = 0; t <= getMakespan(); ++t) {
+    if (sameConfig(c, get(t))) return t;
+  }
+  warn("Plan does not have such config");
+  return -1;
 }
 
 Plan Plan::getPartialPlan(const Config& config_i,

@@ -4,6 +4,12 @@
 
 #pragma once
 #include "solver.hpp"
+#include "../include/pibt.hpp"
+#include "../include/hca.hpp"
+#include "../include/whca.hpp"
+#include "../include/cbs_refine.hpp"
+#include "../include/ecbs.hpp"
+#include "../include/icbs_refine.hpp"
 
 class IR : public Solver {
 public:
@@ -41,6 +47,9 @@ protected:
   static const INIT_SOLVER_TYPE DEFAULT_INIT_SOLVER;
   static const REFINE_SOLVER_TYPE DEFAULT_REFINE_SOLVER;
 
+  // for log
+  bool make_log_every_itr;
+
   // early stop
   int timeout_refinement;
 
@@ -55,17 +64,17 @@ protected:
   bool verbose_underlying_solver;
 
   virtual void iterativeRefinement();
-  Plan getInitialPlan();
-  bool stopRefinement(const Plan& new_plan, const Plans& hist);
-  Plan refinePlan(const Config& config_s,
-                  const Config& config_g,
-                  const Plan& old_plan);
-  bool solvableDirectly(const Config& config_s,
-                        const Config& config_g,
-                        const Plan& old_plan);
-  Plan MAPFSolver(const Config& config_s,
-                  const Config& config_g,
-                  const Plan& old_plan);
+  virtual Plan getInitialPlan();
+  virtual bool stopRefinement(const Plan& new_plan, const Plans& hist);
+  virtual Plan refinePlan(const Config& config_s,
+                          const Config& config_g,
+                          const Plan& old_plan);
+  virtual bool solvableDirectly(const Config& config_s,
+                                const Config& config_g,
+                                const Plan& old_plan);
+  virtual Plan MAPFSolver(const Config& config_s,
+                          const Config& config_g,
+                          const Plan& old_plan);
   std::tuple<int, Config> subgoalConfig(Plan plan);
   Plan simpleRefine(const Config& config_s,
                     const Config& config_g,

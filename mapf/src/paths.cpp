@@ -5,6 +5,7 @@ Paths::Paths(int num_agents)
 {
   std::vector<Path> tmp(num_agents, Path(0));
   paths = tmp;
+  makespan = 0;
 }
 
 Paths::~Paths()
@@ -40,6 +41,7 @@ void Paths::insert(int i, const Path& path)
   if (path.empty()) halt("path must not be empty");
   int old_len = paths[i].size();
   paths[i] = path;
+  if (path.size()-1 == getMakespan()) return;
   format();
   if (paths[i].size() < old_len) shrink();
   makespan = getMaxLengthPaths();  // update makespan
@@ -91,7 +93,9 @@ int Paths::getMakespan() const
 
 int Paths::costOfPath(int i) const
 {
-  if (!(0 <= i && i < paths.size())) halt("invalid index.");
+  if (!(0 <= i && i < paths.size())) {
+    halt("invalid index " + std::to_string(i));
+  }
   if (paths[i].empty()) halt("invalid operation");
   int c = paths[i].size();
   auto itr = paths[i].end() - 1;
@@ -139,6 +143,15 @@ void Paths::shrink()
   }
 }
 
+bool Paths::conflicted(int i, int j, int t) const
+{
+  // vertex conflict
+  if (get(i, t) == get(j, t)) return true;
+  // swap conflict
+  if (get(i, t) == get(j, t-1) && get(j, t) == get(i, t-1)) return true;
+  return false;
+}
+
 int Paths::countConflict() const
 {
   int cnt = 0;
@@ -147,11 +160,21 @@ int Paths::countConflict() const
   for (int i = 0; i < num_agents; ++i) {
     for (int j = i + 1; j < num_agents; ++j) {
       for (int t = 1; t < makespan; ++t) {
-        // vertex conflict
-        if (get(i, t) == get(j, t)) ++cnt;
-        // swap conflict
-        if (get(i, t) == get(j, t-1) &&
-            get(j, t) == get(i, t-1)) ++cnt;
+        if (conflicted(i, j, t)) ++cnt;
+      }
+    }
+  }
+  return cnt;
+}
+
+int Paths::countConflict(const std::vector<int>& sample) const
+{
+  int cnt = 0;
+  int makespan = getMakespan();
+  for (int i = 0; i < sample.size(); ++i) {
+    for (int j = i + 1; j < sample.size(); ++j) {
+      for (int t = 1; t < makespan; ++t) {
+        if (conflicted(sample[i], sample[j], t)) ++cnt;
       }
     }
   }
@@ -174,7 +197,10 @@ int Paths::countConflict(int id, const Path& path) const
         continue;
       }
       // vertex conflict
-      if (get(i, t) == path[t]) ++cnt;
+      if (get(i, t) == path[t]) {
+        ++cnt;
+        continue;
+      }
       // swap conflict
       if (get(i, t) == path[t-1] && get(i, t-1) == path[t]) ++cnt;
     }

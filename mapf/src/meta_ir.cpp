@@ -96,12 +96,12 @@ void META_IR::setParams(int argc, char *argv[])
 void META_IR::printHelp()
 {
   std::cout << META_IR::SOLVER_NAME << "\n"
-            << "  -m --min-threshold-makespan [INT]"
-            << " "
+            << "  -m --min-threshold-makespan [INT]\n"
+            << "                                "
             << "min threshold makespan\n"
 
-            << "  -M --max-threshold-makespan [INT]"
-            << " "
+            << "  -M --max-threshold-makespan [INT]\n"
+            << "                                "
             << "max threshold makespan\n"
 
             << "  (other: same as IR)"

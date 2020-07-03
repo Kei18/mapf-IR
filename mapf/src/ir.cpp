@@ -1,11 +1,5 @@
 #include "../include/ir.hpp"
 #include "../include/problem.hpp"
-#include "../include/pibt.hpp"
-#include "../include/hca.hpp"
-#include "../include/whca.hpp"
-#include "../include/cbs_refine.hpp"
-#include "../include/ecbs.hpp"
-#include "../include/icbs_refine.hpp"
 
 
 const std::string IR::SOLVER_NAME = "IR";
@@ -35,6 +29,7 @@ IR::IR(Problem* _P) : Solver(_P)
   threshold_soc_diff = DEFAULT_THRESHOLD_SOC_DIFF;
 
   cache_on = true;
+  make_log_every_itr = false;
   sampling_rate = 0;
   timeout_refinement = max_comp_time;
   verbose_underlying_solver = false;
@@ -55,7 +50,7 @@ void IR::iterativeRefinement()
   // start refinement
   Plans hist = { solution };
   while (true) {
-    makeLog(output_file);  // anytime planning
+    if (make_log_every_itr) makeLog(output_file);  // anytime planning
     if (overCompTime()) break;
 
     info("  iter: ", iteration++,
@@ -418,6 +413,7 @@ void IR::setParams(int argc, char *argv[])
     { "threshold-soc-diff", required_argument, 0, 'd' },
     { "threshold-nondiff", required_argument, 0, 'n' },
     { "timeout-refinement", required_argument, 0, 't' },
+    { "log-every-iter", required_argument, 0, 'l' },
     { "sampling-rate", required_argument, 0, 'S' },
     { "verbose-underlying", no_argument, 0, 'V' },
     { "init-solver", required_argument, 0, 'x' },
@@ -430,7 +426,7 @@ void IR::setParams(int argc, char *argv[])
   int opt, longindex;
   std::string s, s_tmp;
 
-  while ((opt = getopt_long(argc, argv, "o:r:m:d:n:S:t:x:y:X:Y:V",
+  while ((opt = getopt_long(argc, argv, "o:r:m:d:n:S:lt:x:y:X:Y:V",
                             longopts, &longindex)) != -1) {
     switch (opt) {
     case 'o':
@@ -453,6 +449,9 @@ void IR::setParams(int argc, char *argv[])
         warn("threshold must be >= 2, using default value");
         threshold_makespan = DEFAULT_THRESHOLD_MAKESPAN;
       }
+      break;
+    case 'l':
+      make_log_every_itr = true;
       break;
     case 'd':
       threshold_soc_diff = std::atoi(optarg);
@@ -564,6 +563,10 @@ void IR::printHelp()
             << "  -n --threshold-nondiff [INT]"
             << "  "
             << "threshold non-diff value used to finish refinement\n"
+
+            << "  -l --log-every-iter"
+            << "              "
+            << "make log for every iteration\n"
 
             << "  -x --init-solver [SOLVER]"
             << "     "

@@ -26,6 +26,7 @@ protected:
     bool valid;
   };
   using HighLevelNode_p = std::shared_ptr<HighLevelNode>;
+  using HighLevelNodes = std::vector<HighLevelNode_p>;
   using CompareHighLevelNodes = std::function<bool(HighLevelNode_p,
                                                    HighLevelNode_p)>;
 

@@ -172,15 +172,8 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
     }
   }
 
-  AstarHeuristics fValue;
-  if (h_node->paths.costOfPath(id) > max_constraint_time) {
-    fValue = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
-  } else {
-    fValue =
-      [&] (AstarNode* n) {
-        return std::max(n->g, max_constraint_time) + pathDist(n->v, g);
-      };
-  }
+  AstarHeuristics fValue
+    = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
 
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {

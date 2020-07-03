@@ -43,6 +43,7 @@ protected:
 
   Path getPath(Node* const s, Node* const g) { return G->getPath(s, g); };
   int pathDist(Node* const s, Node* const g) { return G->pathDist(s, g); };
+  int pathDist(int i) { return G->pathDist(P->getStart(i),P->getGoal(i));};
   Path getTimedPath(Node* const s,
                     Node* const g,
                     AstarHeuristics& fValue,

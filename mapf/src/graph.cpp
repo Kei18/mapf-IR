@@ -140,10 +140,7 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
   std::reverse(path.begin(), path.end());
 
   // free
-  while (!OPEN.empty()) OPEN.pop();
   for (auto p : GC) delete p;
-  GC.clear();
-  CLOSE.clear();
 
   return path;
 }

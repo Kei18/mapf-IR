@@ -23,6 +23,8 @@ public:
   int getSOC() const;
   void format();
   void shrink();
+  bool conflicted(int i, int j, int t) const;
   int countConflict() const;
+  int countConflict(const std::vector<int>& sample) const;
   int countConflict(int id, const Path& path) const;
 };

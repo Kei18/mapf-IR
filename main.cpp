@@ -13,6 +13,8 @@
 #include <ecbs.hpp>
 #include <ir.hpp>
 #include <meta_ir.hpp>
+#include <ir_paths.hpp>
+#include <ir_tester.hpp>
 
 
 void printHelp();
@@ -81,6 +83,9 @@ int main(int argc, char *argv[]) {
   // solve
   Solver* solver = getSolver(solver_name, P, verbose, argc, argv_copy);
   solver->solve();
+  if (solver->succeed() && !solver->getSolution().validate(P)) {
+    halt("invalid results");
+  }
   solver->printResult();
 
   // output result
@@ -117,6 +122,10 @@ Solver* getSolver(const std::string solver_name,
     solver = new ICBS(P);
   } else if (solver_name == "META_IR") {
     solver = new META_IR(P);
+  } else if (solver_name == "IR_PATHS") {
+    solver = new IR_PATHS(P);
+  } else if (solver_name == "IR_TESTER") {
+    solver = new IR_TESTER(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -145,4 +154,5 @@ void printHelp() {
   ICBS::printHelp();
   IR::printHelp();
   META_IR::printHelp();
+  IR_PATHS::printHelp();
 }

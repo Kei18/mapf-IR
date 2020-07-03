@@ -62,6 +62,9 @@ Path Solver::getTimedPath(Node* const s,
     // minimum node
     n = OPEN.top();
     OPEN.pop();
+
+    // check CLOSE list
+    if (CLOSE.find(getNodeName(n)) != CLOSE.end()) continue;
     CLOSE[getNodeName(n)] = true;
 
     // check goal condition
@@ -95,10 +98,7 @@ Path Solver::getTimedPath(Node* const s,
   }
 
   // free
-  while (!OPEN.empty()) OPEN.pop();
   for (auto p : GC) delete p;
-  GC.clear();
-  CLOSE.clear();
 
   return path;
 }
@@ -112,10 +112,6 @@ void Solver::end() {
   comp_time = getSolverElapsedTime();
   info("  finish, elapsed=", comp_time);
   // format
-  if (solved && !solution.validate(P)) {
-    warn("failed to solve.");
-    solved = false;
-  }
   if (!solved && solution.empty()) solution.add(P->getConfigStart());
 }
 
@@ -160,6 +156,14 @@ Plan Solver::pathsToPlan(const Paths& paths)
 }
 
 void Solver::printResult() {
+  int LB_soc = 0;
+  int LB_makespan = 0;
+  for (int i = 0; i < P->getNum(); ++i) {
+    int d = pathDist(i);
+    LB_soc += d;
+    if (d > LB_makespan) LB_makespan = d;
+  }
+
   std::cout << "solved=" << solved
             << ", solver=" << std::right << std::setw(8)
             << solver_name
@@ -167,8 +171,12 @@ void Solver::printResult() {
             << comp_time
             << ", soc=" << std::right << std::setw(6)
             << solution.getSOC()
-            << ", makespan=" << std::right << std::setw(5)
+            << " (LB=" << std::right << std::setw(6)
+            << LB_soc << ")"
+            << ", makespan=" << std::right << std::setw(4)
             << solution.getMakespan()
+            << " (LB=" << std::right << std::setw(6)
+            << LB_makespan << ")"
             << std::endl;
 }
 

@@ -8,6 +8,7 @@ ofApp::ofApp(MAPFPlan* _P): P(_P) {
   flg_goal = true;
   flg_font = false;
   flg_line = true;
+  flg_focus = false;
 }
 
 void ofApp::setup() {
@@ -38,6 +39,7 @@ void ofApp::setup() {
   gui.setup();
   gui.add(timestep_slider.setup("time step", 0, 0, P->makespan));
   gui.add(speed_slider.setup("speed", 0.1, 0, 1));
+  gui.add(agent_slider.setup("agent", 0, 0, P->num_agents-1));
 }
 
 void ofApp::update() {
@@ -81,6 +83,7 @@ void ofApp::draw() {
   // draw goals
   if (flg_goal) {
     for (int i = 0; i < P->num_agents; ++i) {
+      if (flg_focus && i != agent_slider) continue;
       ofSetColor(Color::agents[i % Color::agents.size()]);
       Node* g = P->config_g[i];
       Pos pos1 = g->pos * scale;
@@ -92,6 +95,7 @@ void ofApp::draw() {
 
   // draw agents
   for (int i = 0; i < P->num_agents; ++i) {
+    if (flg_focus && i != agent_slider) continue;
     ofSetColor(Color::agents[i % Color::agents.size()]);
     int t1 = (int)timestep_slider;
     int t2 = t1 + 1;
@@ -161,6 +165,7 @@ void ofApp::keyPressed(int key) {
   if (key == 'p') flg_autoplay = !flg_autoplay;
   if (key == 'l') flg_loop = !flg_loop;
   if (key == 'v') flg_line = !flg_line;
+  if (key == 'a') flg_focus = !flg_focus;
   if (key == 'f') {
     flg_font = !flg_font;
     flg_font &= (scale - font_size > 6);
@@ -183,6 +188,13 @@ void ofApp::keyPressed(int key) {
     t = speed_slider - 0.001;
     speed_slider = std::max(t, (float)speed_slider.getMin());
   }
+  if (key == '+') {
+    agent_slider = std::min(agent_slider+1, P->num_agents);
+  }
+  if (key == '-') {
+    agent_slider = std::max(agent_slider-1, 0);
+  }
+
 }
 
 void ofApp::dragEvent(ofDragInfo dragInfo) {}

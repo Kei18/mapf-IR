@@ -21,10 +21,17 @@ public:
   static const std::string SOLVER_NAME;
 
 protected:
+  int LAZY_EVAL_LB_SOC;
+  std::unordered_map<int, HighLevelNodes> LAZY_EVAL_TABLE;
+  void registerLazyEval(const int LB_SOC, HighLevelNode_p h_node);
+  CBS::HighLevelNodes lazyEval();
+
+protected:
   std::unordered_map<int, LibCBS::MDDs> MDDTable;  // store MDD_c^i
 
   virtual void setInitialHighLevelNode(HighLevelNode_p n);
   virtual Path getConstrainedPath(HighLevelNode_p h_node, int id);
+  virtual LibCBS::Constraints getPrioritizedConflict(HighLevelNode_p h_node);
   bool findBypass(HighLevelNode_p h_node,
                   const LibCBS::Constraints& constraints);
   void run();
