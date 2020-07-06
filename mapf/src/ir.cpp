@@ -1,5 +1,5 @@
 #include "../include/ir.hpp"
-#include "../include/problem.hpp"
+#include <fstream>
 
 
 const std::string IR::SOLVER_NAME = "IR";
@@ -31,26 +31,27 @@ void IR::run()
   solution = getInitialPlan();
   solved = !solution.empty();
   if (!solved) return;  // failure
+  Plan init_plan = solution;
 
   // start refinement
-  Plans hist = { solution };
+  HIST.push_back(std::make_tuple(getSolverElapsedTime(), solution));
   while (true) {
     if (make_log_every_itr) makeLog(output_file);
     if (overCompTime()) break;
-    info("  iter: ", hist.size(),
+    info("  iter: ", HIST.size(),
          ", comp_time:", getSolverElapsedTime(),
          ", soc:", solution.getSOC(),
          ", makespan:", solution.getMakespan());
     solution = refinePlan(P->getConfigStart(),
                           P->getConfigGoal(),
                           solution);
-    hist.push_back(solution);
-    if (stopRefinement(hist)) break;
+    HIST.push_back(std::make_tuple(getSolverElapsedTime(), solution));
+    if (stopRefinement()) break;
   }
 
-  info("  refinement results, soc:", hist.begin()->getSOC(),
+  info("  refinement results, soc:", init_plan.getSOC(),
        "->", solution.getSOC(),
-       ", makespan:", hist.begin()->getMakespan(),
+       ", makespan:", init_plan.getMakespan(),
        "->", solution.getMakespan());
 }
 
@@ -259,4 +260,49 @@ void IR::printHelp()
             << "option for refine-solver\n"
 
             << std::endl;
+}
+
+void IR::makeLog(const std::string& logfile)
+{
+  std::ofstream log;
+  log.open(logfile, std::ios::out);
+  log << "instance= " << P->getInstanceFileName() << "\n";
+  log << "agents=" << P->getNum() << "\n";
+  log << "map_file=" << P->getG()->getMapFileName() << "\n";
+  log << "solver=" << solver_name << "\n";
+  log << "solved=" << solved << "\n";
+  log << "soc=" << solution.getSOC() << "\n";
+  log << "makespan=" << solution.getMakespan() << "\n";
+  log << "comp_time=" << comp_time << "\n";
+
+  // print hist
+  for (int t = 0; t < HIST.size(); ++t) {
+    Plan plan = std::get<1>(HIST[t]);
+    log << "iter=" << t << ","
+        << "comp_time=" << std::get<0>(HIST[t]) << ","
+        << "soc=" << plan.getSOC() << ","
+        << "makespan=" << plan.getMakespan() << "\n";
+  }
+
+  log << "starts=";
+  for (int i = 0; i < P->getNum(); ++i) {
+    Node* v = P->getStart(i);
+    log << "(" << v->pos.x << "," << v->pos.y << "),";
+  }
+  log << "\ngoals=";
+  for (int i = 0; i < P->getNum(); ++i) {
+    Node* v = P->getGoal(i);
+    log << "(" << v->pos.x << "," << v->pos.y << "),";
+  }
+  log << "\n";
+  log << "solution=\n";
+  for (int t = 0; t <= solution.getMakespan(); ++t) {
+    log << t << ":";
+    auto c = solution.get(t);
+    for (auto v : c) {
+      log << "(" << v->pos.x << "," << v->pos.y << "),";
+    }
+    log << "\n";
+  }
+  log.close();
 }

@@ -39,13 +39,15 @@ int main(int argc, char *argv[]) {
     { "solver", required_argument, 0, 's' },
     { "verbose", no_argument, 0, 'v' },
     { "help", no_argument, 0, 'h' },
+    { "make-scen", no_argument, 0, 'P' },
     { 0, 0, 0, 0 },
   };
+  bool make_scen = false;
 
   // command line args
   int opt, longindex;
   opterr = 0;  // ignore getopt error
-  while ((opt = getopt_long(argc, argv, "i:o:s:vh",
+  while ((opt = getopt_long(argc, argv, "i:o:s:vhP",
                             longopts, &longindex)) != -1) {
     switch (opt) {
     case 'i':
@@ -63,6 +65,9 @@ int main(int argc, char *argv[]) {
     case 'h':
       printHelp();
       return 0;
+   case 'P':
+      make_scen = true;
+      break;
     default:
       break;
     }
@@ -77,6 +82,12 @@ int main(int argc, char *argv[]) {
 
   // set problem
   Problem* P = new Problem(instance_file);
+
+  // create scenario
+  if (make_scen) {
+    P->makeScenFile(output_file);
+    return 0;
+  }
 
   // solve
   Solver* solver = getSolver(solver_name, P, verbose, argc, argv_copy);

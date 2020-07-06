@@ -79,7 +79,7 @@ public:
   virtual void setParams(int argc, char *argv[]) {};
   void setVerbose(bool _verbose) { verbose = _verbose; }
   void printResult();
-  void makeLog(const std::string& logfile="./result.txt");
+  virtual void makeLog(const std::string& logfile="./result.txt");
 
   Plan getSolution() const { return solution; };
   bool succeed() const { return solved; };

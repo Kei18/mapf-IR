@@ -210,3 +210,22 @@ void Problem::setScenStartsGoals(const std::string& scen_file)
     }
   }
 }
+
+void Problem::makeScenFile(const std::string& output_file)
+{
+  std::ofstream log;
+  log.open(output_file, std::ios::out);
+  log << "map_file=" << G->getMapFileName() << "\n";
+  log << "agents=" << num_agents << "\n";
+  log << "seed=0\n";
+  log << "random_problem=0\n";
+  log << "max_timestep=" << max_timestep << "\n";
+  log << "max_comp_time=" << max_comp_time << "\n";
+  for (int i = 0; i < num_agents; ++i) {
+    log << config_s[i]->pos.x << ","
+        << config_s[i]->pos.y << ","
+        << config_g[i]->pos.x << ","
+        << config_g[i]->pos.y << "\n";
+  }
+  log.close();
+}

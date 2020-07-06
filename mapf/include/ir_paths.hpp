@@ -6,7 +6,7 @@ public:
   static const std::string SOLVER_NAME;
 
 protected:
-  bool stopRefinement(const Plans& hist);
+  bool stopRefinement();
   Plan refinePlan(const Config& config_s,
                   const Config& config_g,
                   const Plan& old_plan);

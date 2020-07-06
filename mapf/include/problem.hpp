@@ -36,4 +36,5 @@ public:
   int getMaxTimestep() { return max_timestep; };
   int getMaxCompTime() { return max_comp_time; };
   std::string getInstanceFileName() { return instance; };
+  void makeScenFile(const std::string& output_file);
 };

@@ -34,6 +34,9 @@ protected:
   std::string output_file;
   bool make_log_every_itr;
 
+  // elapsed timestep, plan
+  std::vector<std::tuple<int, Plan>> HIST;
+
   // early stop
   int timeout_refinement;
 
@@ -52,7 +55,7 @@ protected:
                                         const Ints& sample);
 
   // should be defined
-  virtual bool stopRefinement(const Plans& hist) { return false; }
+  virtual bool stopRefinement() { return false; }
   virtual Plan refinePlan(const Config& config_s,
                           const Config& config_g,
                           const Plan& current_plan) { return current_plan; }
@@ -61,6 +64,8 @@ protected:
 public:
   IR(Problem* _P);
   ~IR();
+
+  void makeLog(const std::string& logfile);
 
   virtual void setParams(int argc, char *argv[]);
   static void printHelp();
