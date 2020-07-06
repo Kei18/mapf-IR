@@ -7,6 +7,7 @@ const std::string PIBT_ICBS::SOLVER_NAME = "PIBT_ICBS";
 PIBT_ICBS::PIBT_ICBS(Problem* _P)
   : Solver(_P)
 {
+  solver_name = SOLVER_NAME;
 }
 
 PIBT_ICBS::~PIBT_ICBS()
