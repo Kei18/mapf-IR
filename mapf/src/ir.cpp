@@ -75,6 +75,9 @@ Plan IR::getInitialPlan()
   case INIT_SOLVER_TYPE::ECBS:
     solver = new ECBS(_P);
     break;
+  case INIT_SOLVER_TYPE::PIBT_ICBS:
+    solver = new PIBT_ICBS(_P);
+    break;
   case INIT_SOLVER_TYPE::PIBT:
   default:
     solver = new PIBT(_P);
@@ -181,6 +184,8 @@ void IR::setParams(int argc, char *argv[])
         init_solver = INIT_SOLVER_TYPE::WHCA;
       } else if (s == "ECBS") {
         init_solver = INIT_SOLVER_TYPE::ECBS;
+      } else if (s == "PIBT_ICBS") {
+        init_solver = INIT_SOLVER_TYPE::PIBT_ICBS;
       } else {
         warn("solver does not exists, use PIBT");
       }
@@ -236,7 +241,7 @@ void IR::printHelp()
 {
   std::cout << IR::SOLVER_NAME << "\n"
             << "  -l --log-every-iter"
-            << "              "
+            << "           "
             << "make log for every iteration\n"
 
             << "  -t --timeout-refinement [INT]"
@@ -257,7 +262,7 @@ void IR::printHelp()
 
             << "  -Y --option-refine-solver [\"OPTION\"]\n"
             << "                                "
-            << "option for refine-solver\n"
+            << "option for refine-solver"
 
             << std::endl;
 }

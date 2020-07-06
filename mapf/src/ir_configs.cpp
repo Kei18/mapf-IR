@@ -312,6 +312,8 @@ void IR_CONFIGS::printHelp()
 
             << "  -S --sampling-rate [rate]"
             << "     "
-            << "sampling rate for refine-solver"
+            << "sampling rate for refine-solver\n"
+
+            << "  (other: same as IR)"
             << std::endl;
 }

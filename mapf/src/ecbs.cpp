@@ -213,13 +213,13 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
   }
 
   FocalHeuristics f1Value;
-  if (h_node->paths.costOfPath(id) > max_constraint_time) {
+  if (pathDist(id) > max_constraint_time) {
     f1Value = [&] (FocalNode* n) { return n->g + pathDist(n->v, g); };
   } else {
-    f1Value =
-      [&] (FocalNode* n) {
-        return std::max(n->g, max_constraint_time) + pathDist(n->v, g);
-      };
+    f1Value = [&] (FocalNode* n) {
+                return std::max(max_constraint_time + 1,
+                                n->g + pathDist(n->v, g));
+              };
   }
 
   FocalHeuristics f2Value =

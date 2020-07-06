@@ -10,6 +10,7 @@
 #include "../include/cbs_refine.hpp"
 #include "../include/ecbs.hpp"
 #include "../include/icbs_refine.hpp"
+#include "../include/pibt_icbs.hpp"
 
 using Ints = std::vector<int>;
 using Strings = std::vector<std::string>;
@@ -21,7 +22,7 @@ public:
 
 protected:
   enum struct INIT_SOLVER_TYPE
-    { PIBT, HCA, WHCA, ECBS };
+    { PIBT, HCA, WHCA, ECBS, PIBT_ICBS };
   INIT_SOLVER_TYPE init_solver;
   Strings option_init_solver;
 

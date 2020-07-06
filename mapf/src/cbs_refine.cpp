@@ -56,8 +56,15 @@ Path CBS_REFINE::getInitialPath(int id)
     }
   }
 
-  AstarHeuristics fValue
-    = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+  AstarHeuristics fValue;
+  if (pathDist(id) > max_constraint_time) {
+    fValue = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+  } else {
+    fValue = [&] (AstarNode* n) {
+               return std::max(max_constraint_time + 1,
+                               n->g + pathDist(n->v, g));
+             };
+  }
 
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {

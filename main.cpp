@@ -11,6 +11,7 @@
 #include <cbs.hpp>
 #include <icbs.hpp>
 #include <ecbs.hpp>
+#include <pibt_icbs.hpp>
 #include <ir.hpp>
 #include <ir_configs.hpp>
 #include <ir_paths.hpp>
@@ -131,6 +132,8 @@ Solver* getSolver(const std::string solver_name,
     solver = new IR_CONFIGS(P);
   } else if (solver_name == "IR_PATHS") {
     solver = new IR_PATHS(P);
+  } else if (solver_name == "PIBT_ICBS") {
+    solver = new PIBT_ICBS(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -157,6 +160,7 @@ void printHelp() {
   CBS::printHelp();
   ECBS::printHelp();
   ICBS::printHelp();
+  PIBT_ICBS::printHelp();
   IR::printHelp();
   IR_CONFIGS::printHelp();
   IR_PATHS::printHelp();
