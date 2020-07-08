@@ -58,9 +58,9 @@ Plan IR_PATHS::refinePlan(const Config& config_s,
   } else {
     sample = getDirectInteractingAgents(current_paths, id_largest_gap);
   }
-  // info("   ", "id=", id_largest_gap,
-  //      ", gap=", gap_largest,
-  //      ", interacting size:", sample.size());
+  info("   ", "id=", id_largest_gap,
+       ", gap=", gap_largest,
+       ", interacting size:", sample.size());
 
   // ============================================
   // create problem

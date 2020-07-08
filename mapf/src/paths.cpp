@@ -96,7 +96,7 @@ int Paths::costOfPath(int i) const
   if (!(0 <= i && i < paths.size())) {
     halt("invalid index " + std::to_string(i));
   }
-  if (paths[i].empty()) halt("invalid operation");
+  if (paths[i].empty()) halt("invalid operation, id=" + std::to_string(i));
   int c = paths[i].size();
   auto itr = paths[i].end() - 1;
   Node* g = *itr;

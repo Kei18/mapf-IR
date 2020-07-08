@@ -215,11 +215,20 @@ LibCBS::MDD::MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid)
 {
 }
 
-LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints)
+LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints,
+                 int time_limit)
   : c(_c), i(_i), G(P->getG()), s(P->getStart(i)), g(P->getGoal(i))
 {
+  auto t_s = Time::now();
+
   valid = G->pathDist(s, g) <= c;
-  build();
+  build(time_limit);
+
+  if (time_limit > 0 && (int)getElapsedTime(t_s) > time_limit) {
+    valid = false;
+    return;
+  }
+
   update(constraints);
 }
 
@@ -273,8 +282,9 @@ void LibCBS::MDD::copy(const MDD& other)
   }
 }
 
-void LibCBS::MDD::build()
+void LibCBS::MDD::build(int time_limit)
 {
+  auto t_s = Time::now();
   // impossible
   if (!valid) return;
   // check registered
@@ -292,6 +302,12 @@ void LibCBS::MDD::build()
     MDDNodes nodes_at_t = body[t];
     MDDNodes nodes_at_t_next;
     for (auto node : nodes_at_t) {
+      // check time limit
+      if (time_limit > 0 && getElapsedTime(t_s) > time_limit) {
+        valid = false;
+        return;
+      }
+
       Nodes cands = node->v->neighbor;
       cands.push_back(node->v);
       for (auto v : cands) {
@@ -316,9 +332,7 @@ void LibCBS::MDD::build()
     body.push_back(nodes_at_t_next);
   }
 
-  // new entry, register
-  MDD mdd = *this;
-  PURE_MDD_TABLE[getPureMDDName()] = std::make_shared<MDD>(mdd);
+  PURE_MDD_TABLE[getPureMDDName()] = std::make_shared<MDD>(*this);
 }
 
 void LibCBS::MDD::update(const Constraints& _constraints)
@@ -341,7 +355,6 @@ void LibCBS::MDD::update(const Constraints& _constraints)
     if (constraint->t > c && constraint->u != nullptr) {
       continue;
     }
-
     constraints.push_back(constraint);
   }
 

@@ -22,8 +22,15 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   LibCBS::Constraints constraints
     = LibCBS::getConstraintsByFixedPaths(old_plan, fixed_agents);
 
+  auto t_s = Time::now();
+
   // find paths
   for (int i = 0; i < P->getNum(); ++i) {
+    // check time limit
+    if (overCompTime()) {
+      n->valid = false;
+      return;
+    }
     Path path;
     LibCBS::MDD_p mdd;
     if (inArray(i, sample)) {
@@ -32,9 +39,18 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
         n->valid = false;
         return;
       }
-      paths.insert(i, path);
+      // time limit
+      int time_limit = max_comp_time - (int)getSolverElapsedTime();
+      if (time_limit <= 0) {
+        n->valid = false;
+        return;
+      }
       mdd = std::make_shared<LibCBS::MDD>
-        (LibCBS::MDD(path.size()-1, i, P, constraints));
+        (LibCBS::MDD(path.size()-1, i, P, constraints, time_limit));
+      if (!mdd->valid) {
+        n->valid = false;
+        return;
+      }
     } else {  // fixed agents
       path = old_paths.get(i);  // fixed agents
       // mdd is not required

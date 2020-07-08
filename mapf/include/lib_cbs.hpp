@@ -81,14 +81,15 @@ namespace LibCBS {
     static std::mt19937* MT;
 
     MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid);
-    MDD(int _c, int _i, Problem* P, Constraints constraints);
+    MDD(int _c, int _i, Problem* P, Constraints constraints,
+        int time_limit=-1);
     ~MDD();
     MDD(const MDD& other);  // copy
 
     MDDNode* createNewNode(int t, Node* v);
     void copy(const MDD& other);
     std::string getPureMDDName();
-    void build();
+    void build(int time_limit=-1);
     void update(const Constraints& _constraints);
     void deleteForward(MDDNode* node);
     void deleteBackword(MDDNode* node);

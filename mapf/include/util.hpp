@@ -4,9 +4,12 @@
 
 
 static void halt(const std::string& msg,
-                 const char* caller=__builtin_FUNCTION())
+                 const char* caller=__builtin_FUNCTION(),
+                 const char* filename=__builtin_FILE())
 {
-  std::cout << "error@" << caller << ": ";
+  std::cout << "error@" << caller
+            << " in " << filename
+            << ": ";
   std::cout << msg << std::endl;
   std::exit(1);
 }

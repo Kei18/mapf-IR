@@ -83,6 +83,11 @@ Path CBS_REFINE::getInitialPath(int id)
 
   CheckInvalidAstarNode checkInvalidAstarNode =
     [&] (AstarNode* m) {
+      if (m->g > ub_makespan) {
+        if (makespan_prioritized) return true;
+        if (inArray(m->v, config_g) && m->v != g) return true;
+        return false;
+      }
       if (makespan_prioritized && m->g > ub_makespan) return true;
       for (auto i : fixed_agents) {
         // vertex conflicts

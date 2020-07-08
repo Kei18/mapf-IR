@@ -36,7 +36,8 @@ void PIBT_ICBS::run()
     solved = true;
     return;
   }
-  info(" ", "PIBT failed, try ICBS");
+  info(" ", "elapsed:", getSolverElapsedTime(),
+       ", PIBT failed, try ICBS");
 
   // solved by ICBS
   int comp_time_limit

@@ -132,9 +132,27 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
     }
 
     int c = mdd.c;
+
+    const int THRESHOLD = 20;
+
     while (true) {
       ++c;
       if (overCompTime()) break;
+
+      /*
+       * There are two ways to get a single-agent path:
+       * 1. A-star based (like CBS implementation)
+       * 2. MDD based (like ICBS implementation).
+       * I figured out that the approach 2 is faster than 1,
+       * thus I used MDD here.
+       * Different from the A-star based approach,
+       * but MDD cannot detect non-existence of path.
+       * To detect it, I use threshold value.
+       * Note, this is not complete,
+       * but I never have met with a bad example.
+       */
+      if (c > mdd.c + THRESHOLD) break;
+
       LibCBS::MDD_p new_mdd(new LibCBS::MDD(c, id, P, h_node->constraints));
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
