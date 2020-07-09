@@ -95,6 +95,7 @@ namespace LibCBS {
     void deleteBackword(MDDNode* node);
     Path getPath() const;
     Path getPath(Constraint_p const constraint) const;
+    Path getPath(const Constraints& _constraints) const;
     int getWidth(int t) const;
     void println() const;
   };

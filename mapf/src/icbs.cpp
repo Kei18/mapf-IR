@@ -6,8 +6,6 @@ ICBS::ICBS(Problem* _P) : CBS(_P)
 {
   solver_name = ICBS::SOLVER_NAME;
   LAZY_EVAL_LB_SOC = -1;
-
-  LibCBS::MDD::MT = MT;
 }
 
 ICBS::~ICBS() {}
@@ -35,14 +33,6 @@ void ICBS::run()
     if (overCompTime()) break;
 
     n = HighLevelTree.top();
-
-    // check lazy table
-    if (LAZY_EVAL_LB_SOC > 0 && n->soc >= LAZY_EVAL_LB_SOC) {
-      auto nodes = lazyEval();
-      for (auto node : nodes) HighLevelTree.push(node);
-      --iteration;
-      continue;
-    }
 
     info(" ",
          "elapsed:", getSolverElapsedTime(),
@@ -85,6 +75,14 @@ void ICBS::run()
       invoke(m, c->id);
       if (!m->valid) continue;
       HighLevelTree.push(m);
+    }
+
+    // check lazy table
+    if (HighLevelTree.empty() ||
+        (LAZY_EVAL_LB_SOC > 0 &&
+         HighLevelTree.top()->soc >= LAZY_EVAL_LB_SOC)) {
+      auto nodes = lazyEval();
+      for (auto node : nodes) HighLevelTree.push(node);
     }
   }
 

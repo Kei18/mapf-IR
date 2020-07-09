@@ -462,6 +462,14 @@ Path LibCBS::MDD::getPath(Constraint_p const constraint) const
   return mdd.getPath();
 }
 
+Path LibCBS::MDD::getPath(const Constraints& _constraints) const
+{
+  if (!valid) return {};
+  MDD mdd = *this;
+  mdd.update(_constraints);
+  return mdd.getPath();
+}
+
 int LibCBS::MDD::getWidth(int t) const
 {
   if (t < 0 || c < t) halt("invalid index");

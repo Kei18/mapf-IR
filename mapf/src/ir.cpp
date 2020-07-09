@@ -33,15 +33,22 @@ void IR::run()
   if (!solved) return;  // failure
   Plan init_plan = solution;
 
+  int last_soc = init_plan.getSOC();
+
   // start refinement
   HIST.push_back(std::make_tuple(getSolverElapsedTime(), solution));
   while (true) {
     if (make_log_every_itr) makeLog(output_file);
     if (overCompTime()) break;
+
+    int soc = solution.getSOC();
     info("  iter: ", HIST.size(),
          ", comp_time:", getSolverElapsedTime(),
-         ", soc:", solution.getSOC(),
+         ", soc:", soc,
+         "(improved: ", last_soc - soc, ")"
          ", makespan:", solution.getMakespan());
+    last_soc = solution.getSOC();
+
     solution = refinePlan(P->getConfigStart(),
                           P->getConfigGoal(),
                           solution);

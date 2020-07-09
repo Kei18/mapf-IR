@@ -1,5 +1,6 @@
 #include "../include/solver.hpp"
 #include <fstream>
+#include "../include/lib_cbs.hpp"
 
 
 Solver::Solver(Problem* _P)
@@ -11,6 +12,9 @@ Solver::Solver(Problem* _P)
 {
   solved = false;
   verbose = false;
+
+  // for mdd
+  LibCBS::MDD::MT = MT;
 }
 
 void Solver::solve()
