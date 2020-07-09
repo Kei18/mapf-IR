@@ -15,6 +15,7 @@
 #include <ir.hpp>
 #include <ir_configs.hpp>
 #include <ir_paths.hpp>
+#include <ir_tester.hpp>
 
 void printHelp();
 Solver* getSolver(const std::string solver_name,
@@ -132,6 +133,8 @@ Solver* getSolver(const std::string solver_name,
     solver = new IR_CONFIGS(P);
   } else if (solver_name == "IR_PATHS") {
     solver = new IR_PATHS(P);
+  } else if (solver_name == "IR_TESTER") {
+    solver = new IR_TESTER(P);
   } else if (solver_name == "PIBT_ICBS") {
     solver = new PIBT_ICBS(P);
   } else {

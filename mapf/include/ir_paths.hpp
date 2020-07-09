@@ -7,9 +7,9 @@ public:
 
 protected:
   bool stopRefinement();
-  Plan refinePlan(const Config& config_s,
-                  const Config& config_g,
-                  const Plan& old_plan);
+  virtual Plan refinePlan(const Config& config_s,
+                          const Config& config_g,
+                          const Plan& old_plan);
 
   int max_iteration;
   static const int DEFAULT_MAX_ITERATION;

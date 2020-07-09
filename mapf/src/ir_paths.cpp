@@ -1,5 +1,5 @@
 #include "../include/ir_paths.hpp"
-#include<set>
+#include <set>
 
 
 const std::string IR_PATHS::SOLVER_NAME = "IR_PATHS";
@@ -110,7 +110,7 @@ Ints IR_PATHS::getAllInteractingAgents
   auto compare = [&] (int i, int j) { return gap(i) < gap(j); };
   std::priority_queue<int, std::vector<int>,
                       decltype(compare)> OPEN(compare);
-  std::vector<int> CLOSE;
+  Ints CLOSE;
   OPEN.push(id_largest_gap);
 
   while (!OPEN.empty()) {
