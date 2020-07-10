@@ -6,6 +6,10 @@ public:
   static const std::string SOLVER_NAME;
 
 protected:
+  // for log
+  Ints HIST_GAP;
+  Ints HIST_GROUP_SIZE;
+
   bool stopRefinement();
   virtual Plan refinePlan(const Config& config_s,
                           const Config& config_g,
@@ -26,6 +30,7 @@ public:
   IR_PATHS(Problem* _P);
   ~IR_PATHS();
 
+  void makeLog(const std::string& logfile);
   void setParams(int argc, char *argv[]);
   static void printHelp();
 };

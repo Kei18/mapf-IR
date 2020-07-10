@@ -1,6 +1,6 @@
 #include "../include/ir_paths.hpp"
 #include <set>
-
+#include <fstream>
 
 const std::string IR_PATHS::SOLVER_NAME = "IR_PATHS";
 const int IR_PATHS::DEFAULT_MAX_ITERATION = 100;
@@ -12,6 +12,9 @@ IR_PATHS::IR_PATHS(Problem* _P)
 
   max_iteration = DEFAULT_MAX_ITERATION;
   find_all_interacting_agents = false;
+
+  HIST_GROUP_SIZE.push_back(0);
+  HIST_GAP.push_back(0);
 }
 
 IR_PATHS::~IR_PATHS()
@@ -48,6 +51,8 @@ Plan IR_PATHS::refinePlan(const Config& config_s,
   }
   if (id_largest_gap == -1) {
     CLOSE_GAP.clear();
+    HIST_GROUP_SIZE.push_back(0);
+    HIST_GAP.push_back(0);
     return current_plan;
   }
 
@@ -58,6 +63,8 @@ Plan IR_PATHS::refinePlan(const Config& config_s,
   } else {
     sample = getDirectInteractingAgents(current_paths, id_largest_gap);
   }
+  HIST_GROUP_SIZE.push_back(sample.size());
+  HIST_GAP.push_back(gap_largest);
   info("   ", "id=", id_largest_gap,
        ", gap=", gap_largest,
        ", interacting size:", sample.size());
@@ -171,4 +178,52 @@ void IR_PATHS::printHelp()
             << "max iteration\n"
 
             << "  (other: same as IR)\n";
+}
+
+void IR_PATHS::makeLog(const std::string& logfile)
+{
+  std::ofstream log;
+  log.open(logfile, std::ios::out);
+  log << "instance= " << P->getInstanceFileName() << "\n";
+  log << "agents=" << P->getNum() << "\n";
+  log << "map_file=" << P->getG()->getMapFileName() << "\n";
+  log << "solver=" << solver_name << "\n";
+  log << "solved=" << solved << "\n";
+  log << "soc=" << solution.getSOC() << "\n";
+  log << "makespan=" << solution.getMakespan() << "\n";
+  log << "comp_time=" << comp_time << "\n";
+
+  // print hist
+  for (int t = 0; t < HIST.size(); ++t) {
+    Plan plan = std::get<1>(HIST[t]);
+    log << "iter=" << t << ","
+        << "comp_time=" << std::get<0>(HIST[t]) << ","
+        << "soc=" << plan.getSOC() << ","
+        << "makespan=" << plan.getMakespan() << ","
+        << "group=" << HIST_GROUP_SIZE[t] << ","
+        << "gap=" << HIST_GAP[t]
+        << "\n";
+  }
+
+  log << "starts=";
+  for (int i = 0; i < P->getNum(); ++i) {
+    Node* v = P->getStart(i);
+    log << "(" << v->pos.x << "," << v->pos.y << "),";
+  }
+  log << "\ngoals=";
+  for (int i = 0; i < P->getNum(); ++i) {
+    Node* v = P->getGoal(i);
+    log << "(" << v->pos.x << "," << v->pos.y << "),";
+  }
+  log << "\n";
+  log << "solution=\n";
+  for (int t = 0; t <= solution.getMakespan(); ++t) {
+    log << t << ":";
+    auto c = solution.get(t);
+    for (auto v : c) {
+      log << "(" << v->pos.x << "," << v->pos.y << "),";
+    }
+    log << "\n";
+  }
+  log.close();
 }

@@ -66,7 +66,7 @@ public:
   IR(Problem* _P);
   ~IR();
 
-  void makeLog(const std::string& logfile);
+  virtual void makeLog(const std::string& logfile);
 
   virtual void setParams(int argc, char *argv[]);
   static void printHelp();
