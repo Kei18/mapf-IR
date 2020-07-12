@@ -158,6 +158,7 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
       }
     }
   }
+
   return {};
 }
 
@@ -184,6 +185,7 @@ CBS::HighLevelNodes ICBS::lazyEval()
 {
   info(" ", "lazy eval, soc=", LAZY_EVAL_LB_SOC);
   auto itr_lb = LAZY_EVAL_TABLE.find(LAZY_EVAL_LB_SOC);
+  if (itr_lb == LAZY_EVAL_TABLE.end()) return {};
   HighLevelNodes h_nodes = itr_lb->second;
   for (auto h_node : h_nodes) {
     LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
