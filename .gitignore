@@ -1,5 +1,4 @@
 .DS_Store
 /build/
 test.sh
-/instance/sample.txt
 /instance/map/sample.map

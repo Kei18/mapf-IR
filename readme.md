@@ -11,7 +11,26 @@ Tested on OSX 10.15
 
 ## Building
 
-### Visualizer
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
+## Usage
+```
+./app -i ../instance/sample.txt -s PIBT -o result.txt -v
+```
+
+You can find details and explanations for all parameters with:
+```
+./app --help
+```
+
+## Visualizer
+
+### Building
 The visualization relies on [openFrameworks](https://openframeworks.cc).
 You need to install openFrameworks beforehand and export `OF_ROOT` of your environment.
 ```
@@ -20,14 +39,17 @@ export OF_ROOT={your openFrameworks directory}
 
 Then, at the project directory, run as;
 ```sh
-cd visualize/
+cd visualizer/
 make
 cd ..
 chmod +x ./visualize.sh
 ```
 
-## Usage
-
+### Usage
+```sh
+cd build
+../visualize.sh result.txt
+```
 
 ## Licence
 This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).

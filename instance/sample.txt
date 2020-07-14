@@ -1,0 +1,31 @@
+## ==== necessary ====
+## .map file, use absolute path for visualizer
+map_file=../instance/map/arena.map
+
+## number of agents
+agents=100
+
+## ==== custom =======
+## seed of randomization
+seed=1
+
+## true  -> random starts/goals
+## false -> use custom starts/goals
+random_problem=1
+
+## scen file, invalid when random_problem=0
+## follows MAPF benchmark style
+# scen_file=../instance/scen/ost003d-random-1.scen
+
+## timestep limit, sec
+max_timestep=1000
+
+## computation time limit, ms
+max_comp_time=5000
+
+## custom starts/goals
+## invalid when random_problem=1 or scen_file exists
+## (x_s, y_s, x_g, y_g)
+## (0, 0): left-top corner
+# 0,0,4,0
+# 3,1,3,0
