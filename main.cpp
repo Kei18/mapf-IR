@@ -106,6 +106,8 @@ int main(int argc, char *argv[]) {
   }
 
   delete solver;
+  delete P->getG();
+  delete P;
 
   return 0;
 }

@@ -87,6 +87,7 @@ Plan IR_PATHS::refinePlan(const Config& config_s,
   if (!std::get<0>(res) || plan.getSOC() == current_plan.getSOC()) {
     CLOSE_GAP.push_back(id_largest_gap);
   }
+  delete _P;
   return plan;
 }
 

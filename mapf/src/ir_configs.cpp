@@ -162,6 +162,8 @@ std::tuple<bool, Plan> IR_CONFIGS::getOptimalPlan(const Config& config_s,
   if (cache_on && std::get<0>(res)) {
     registerTable(std::get<1>(res));
   }
+
+  delete _P;
   return res;
 }
 

@@ -70,6 +70,7 @@ Plan IR::getInitialPlan()
                             P->getConfigGoal(),
                             max_comp_time,
                             max_timestep);
+
   // set solver
   Solver* solver;
   switch (init_solver) {
@@ -90,6 +91,7 @@ Plan IR::getInitialPlan()
     solver = new PIBT(_P);
     break;
   }
+
   setSolverOption(solver, option_init_solver);
   solver->setVerbose(verbose_underlying_solver);
 
@@ -97,11 +99,15 @@ Plan IR::getInitialPlan()
   solver->solve();
 
   // success
-  if (solver->succeed()) return solver->getSolution();
+  Plan plan;
+  if (solver->succeed()) {
+    plan = solver->getSolution();
+  }
 
-  // failed
-  Plan dummy;
-  return dummy;
+  delete solver;
+  delete _P;
+
+  return plan;
 }
 
 std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P,
@@ -131,13 +137,17 @@ std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P,
   // solve
   solver->solve();
 
+  Plan plan = current_plan;
+  bool success = false;
+
   // success
   if (solver->succeed()) {
-    return std::make_tuple(true, solver->getSolution());
+    plan = solver->getSolution();
+    success = true;
   }
+  delete solver;
 
-  // failed
-  return std::make_tuple(false, current_plan);
+  return std::make_tuple(success, plan);
 }
 
 Ints IR::sampling(const Plan& current_plan)

@@ -32,25 +32,32 @@ void PIBT_ICBS::run()
   info(" ", "try PIBT");
   init_solver->solve();
   solution = init_solver->getSolution();
+
   if (init_solver->succeed()) {
     solved = true;
-    return;
-  }
-  info(" ", "elapsed:", getSolverElapsedTime(),
-       ", PIBT failed, try ICBS");
+  } else {
+    info(" ", "elapsed:", getSolverElapsedTime(),
+         ", PIBT failed, try ICBS");
 
-  // solved by ICBS
-  int comp_time_limit
-    = max_comp_time - (int)getSolverElapsedTime();
-  Problem* _Q = new Problem(P,
-                            solution.last(),
-                            P->getConfigGoal(),
-                            comp_time_limit,
-                            max_timestep - LB_makespan);
-  Solver* second_solver = new ICBS(_Q);
-  second_solver->solve();
-  solution += second_solver->getSolution();
-  if (second_solver->succeed()) solved = true;
+    // solved by ICBS
+    int comp_time_limit
+      = max_comp_time - (int)getSolverElapsedTime();
+    Problem* _Q = new Problem(P,
+                              solution.last(),
+                              P->getConfigGoal(),
+                              comp_time_limit,
+                              max_timestep - LB_makespan);
+    Solver* second_solver = new ICBS(_Q);
+    second_solver->solve();
+    solution += second_solver->getSolution();
+    if (second_solver->succeed()) solved = true;
+
+    delete second_solver;
+    delete _Q;
+  }
+
+  delete init_solver;
+  delete _P;
 }
 
 void PIBT_ICBS::printHelp()
