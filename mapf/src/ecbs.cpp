@@ -25,7 +25,7 @@ void ECBS::run()
   FocalList FOCAL(compareFOCAL);
 
   // initial node
-  HighLevelNode_p n(new HighLevelNode);
+  HighLevelNode_p n = std::make_shared<HighLevelNode>();
   setInitialHighLevelNode(n);
   OPEN.push(n);
   FOCAL.push(n);
@@ -84,7 +84,7 @@ void ECBS::run()
     for (auto c : constraints) {
       LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNode_p m(new HighLevelNode {
+      HighLevelNode_p m = std::make_shared<HighLevelNode>(
           n->paths,
           new_constraints,
           n->makespan,
@@ -92,7 +92,7 @@ void ECBS::run()
           n->f,
           n->LB,
           n->f_mins,
-          true });
+          true );
       invoke(m, c->id);
       if (!m->valid) continue;
       OPEN.push(m);

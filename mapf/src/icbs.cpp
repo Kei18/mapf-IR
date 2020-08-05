@@ -20,7 +20,7 @@ void ICBS::run()
                       std::vector<HighLevelNode_p>,
                       decltype(compare)> HighLevelTree(compare);
 
-  HighLevelNode_p n(new HighLevelNode);
+  HighLevelNode_p n = std::make_shared<HighLevelNode>();
   setInitialHighLevelNode(n);
   if (!n->valid) return;  // failed to plan initial paths
   HighLevelTree.push(n);
@@ -63,14 +63,14 @@ void ICBS::run()
       if (c->id < 0 || P->getNum() <= c->id) halt("invalid id");
       LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNode_p m(new HighLevelNode{
+      HighLevelNode_p m = std::make_shared<HighLevelNode>(
           ++h_node_num,
           n->paths,
           new_constraints,
           n->makespan,
           n->soc,
           n->f,
-          true });
+          true );
       MDDTable[m->id] = MDDTable[n->id];  // copy MDD
       invoke(m, c->id);
       if (!m->valid) continue;
@@ -98,7 +98,7 @@ void ICBS::setInitialHighLevelNode(HighLevelNode_p n)
   LibCBS::MDDs mdds;
   for (int i = 0; i < P->getNum(); ++i) {
     int c = n->paths.costOfPath(i);
-    LibCBS::MDD_p mdd(new LibCBS::MDD(c, i, P, {}));
+    LibCBS::MDD_p mdd = std::make_shared<LibCBS::MDD>(c, i, P);
     mdds.push_back(mdd);
   }
   MDDTable[n->id] = mdds;
@@ -151,7 +151,8 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
        */
       if (c > mdd.c + THRESHOLD) break;
 
-      LibCBS::MDD_p new_mdd(new LibCBS::MDD(c, id, P, h_node->constraints));
+      LibCBS::MDD_p new_mdd
+        = std::make_shared<LibCBS::MDD>(c, id, P, h_node->constraints);
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
         return new_mdd->getPath();
@@ -193,7 +194,8 @@ CBS::HighLevelNodes ICBS::lazyEval()
     int c = last_constraint->t;
     while (true) {
       ++c;
-      LibCBS::MDD_p new_mdd(new LibCBS::MDD(c, id, P, h_node->constraints));
+      LibCBS::MDD_p new_mdd
+        = std::make_shared<LibCBS::MDD>(c, id, P, h_node->constraints);
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
         Path path = new_mdd->getPath();

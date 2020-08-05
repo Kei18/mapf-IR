@@ -28,6 +28,15 @@ protected:
     int LB;  // lower bound
     std::vector<int> f_mins;
     bool valid;
+
+    HighLevelNode() {}
+    HighLevelNode(Paths _paths, LibCBS::Constraints _c,
+                  int _m, int _soc, int _f,
+                  int _LB, std::vector<int> _f_mins,
+                  bool _valid)
+      : paths(_paths), constraints(_c),
+        makespan(_m), soc(_soc), f(_f),
+        LB(_LB), f_mins(_f_mins), valid(_valid) {}
   };
   using HighLevelNode_p = std::shared_ptr<HighLevelNode>;
   using CompareHighLevelNode = std::function<bool(HighLevelNode_p,

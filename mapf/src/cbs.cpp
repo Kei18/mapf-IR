@@ -17,7 +17,7 @@ void CBS::run()
                       std::vector<HighLevelNode_p>,
                       decltype(compare)> HighLevelTree(compare);
 
-  HighLevelNode_p n(new HighLevelNode);
+  HighLevelNode_p n = std::make_shared<HighLevelNode>();
   setInitialHighLevelNode(n);
   if (!n->valid) return;  // failed to plan initial paths
   HighLevelTree.push(n);
@@ -55,14 +55,14 @@ void CBS::run()
     for (auto c : constraints) {
       LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNode_p m(new HighLevelNode{
+      HighLevelNode_p m = std::make_shared<HighLevelNode>(
           h_node_num,
           n->paths,
           new_constraints,
           n->makespan,
           n->soc,
           n->f,  // # conflicts
-          true });
+          true );
       invoke(m, c->id);
       if (!m->valid) continue;
       HighLevelTree.push(m);

@@ -28,20 +28,22 @@ LibCBS::Constraints LibCBS::getFirstConstraints(const Paths& paths)
       for (int j = i + 1; j < num_agents; ++j) {
         // vertex conflict
         if (paths.get(i, t) == paths.get(j, t)) {
-          Constraint_p c_i(new Constraint
-                           { i, t, paths.get(i, t), nullptr });
-          Constraint_p c_j(new Constraint
-                           { j, t, paths.get(j, t), nullptr });
+          Constraint_p c_i
+            = std::make_shared<Constraint>(i, t, paths.get(i, t), nullptr);
+          Constraint_p c_j
+            = std::make_shared<Constraint>(j, t, paths.get(j, t), nullptr);
           Constraints constraints = { c_i, c_j };
           return constraints;
         }
         // swap conflict
         if (paths.get(i, t) == paths.get(j, t-1) &&
             paths.get(j, t) == paths.get(i, t-1)) {
-          Constraint_p c_i(new Constraint
-                           { i, t, paths.get(i, t), paths.get(i, t-1) });
-          Constraint_p c_j(new Constraint
-                           { j, t, paths.get(j, t), paths.get(j, t-1) });
+          Constraint_p c_i
+            = std::make_shared<Constraint>
+            ( i, t, paths.get(i, t), paths.get(i, t-1) );
+          Constraint_p c_j
+            = std::make_shared<Constraint>
+            ( j, t, paths.get(j, t), paths.get(j, t-1) );
           Constraints constraints = { c_i, c_j };
           return constraints;
         }
@@ -68,9 +70,9 @@ void LibCBS::getPrioritizedConflict
   // vertex conflict
   if (paths.get(i, t) == paths.get(j, t)) {
     Constraint_p constraint_i
-      (new Constraint { i, t, paths.get(i, t), nullptr });
+      = std::make_shared<Constraint>(i, t, paths.get(i, t), nullptr);
     Constraint_p constraint_j
-      (new Constraint { j, t, paths.get(j, t), nullptr });
+      = std::make_shared<Constraint>(j, t, paths.get(j, t), nullptr);
     // cardinal conflicts
     if ((t <= c_i && w_i == 1 && t <= c_j && w_j == 1) ||
         (t > c_i && w_j == 1) || (t > c_j && w_i == 1)) {
@@ -92,9 +94,11 @@ void LibCBS::getPrioritizedConflict
   if (paths.get(i, t) == paths.get(j, t-1) &&
       paths.get(j, t) == paths.get(i, t-1)) {
     Constraint_p constraint_i
-      (new Constraint { i, t, paths.get(i, t), paths.get(i, t-1) });
+      = std::make_shared<Constraint>
+      (i, t, paths.get(i, t), paths.get(i, t-1));
     Constraint_p constraint_j
-      (new Constraint { j, t, paths.get(j, t), paths.get(j, t-1) });
+      = std::make_shared<Constraint>
+      (j, t, paths.get(j, t), paths.get(j, t-1));
     // cardinal conflicts
     if ((t <= c_i && w_i == 1 &&
          mdds[i]->body[t][0]->prev.size() == 1) &&
@@ -185,11 +189,12 @@ LibCBS::Constraints LibCBS::getConstraintsByFixedPaths
     if (!inArray(i, fixed_agents)) continue;
     for (int t = 1; t <= makespan; ++t) {
       Constraint_p c_vertex
-        (new Constraint{ -1, t, plan.get(t, i), nullptr });
+        = std::make_shared<Constraint>(-1, t, plan.get(t, i), nullptr);
       constraints.push_back(c_vertex);
       // notice! be careful to set swap constraints
       Constraint_p c_swap
-        (new Constraint{ -1, t, plan.get(t-1, i), plan.get(t, i) });
+        = std::make_shared<Constraint>
+        (-1, t, plan.get(t-1, i), plan.get(t, i));
       constraints.push_back(c_swap);
     }
   }
@@ -231,6 +236,12 @@ LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints,
 
   update(constraints);
 }
+
+LibCBS::MDD::MDD(int _c, int _i, Problem* P)
+  : LibCBS::MDD::MDD(_c, _i, P, {}, -1)
+{
+}
+
 
 LibCBS::MDD::~MDD()
 {

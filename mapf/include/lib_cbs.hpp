@@ -25,6 +25,8 @@ namespace LibCBS {
     Node* v;  // at t
     Node* u;  // used only for swap conflict, at t-1
 
+    Constraint(int _id, int _t, Node* _v, Node* _u)
+      : id(_id), t(_t), v(_v), u(_u) {};
     void println();
   };
 
@@ -83,6 +85,7 @@ namespace LibCBS {
     MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid);
     MDD(int _c, int _i, Problem* P, Constraints constraints,
         int time_limit=-1);
+    MDD(int _c, int _i, Problem* P);
     ~MDD();
     MDD(const MDD& other);  // copy
 

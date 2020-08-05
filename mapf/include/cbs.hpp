@@ -24,6 +24,12 @@ protected:
     int soc;
     int f;   // for tie-break
     bool valid;
+
+    HighLevelNode() {}
+    HighLevelNode(int _id, Paths _paths, LibCBS::Constraints _c,
+                  int _m, int _soc, int _f, bool _valid)
+      : id(_id), paths(_paths), constraints(_c),
+        makespan(_m), soc(_soc), f(_f), valid(_valid) {}
   };
   using HighLevelNode_p = std::shared_ptr<HighLevelNode>;
   using HighLevelNodes = std::vector<HighLevelNode_p>;
