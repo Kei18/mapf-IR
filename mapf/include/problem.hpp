@@ -5,17 +5,17 @@
 
 class Problem {
 private:
-  std::string instance;
-  Graph* G;
-  std::mt19937* MT;
-  Config config_s;
-  Config config_g;
-  int num_agents;
-  int max_timestep;   // timestep
-  int max_comp_time;  // msec
+  std::string instance;  // instance name
+  Graph* G;              // graph
+  std::mt19937* MT;      // seed
+  Config config_s;       // initial configuration
+  Config config_g;       // goal configuration
+  int num_agents;        // number of agents
+  int max_timestep;      // timestep limit
+  int max_comp_time;     // comp_time limit, ms
 
+  // set starts and goals randomly
   void setRandomStartsGoals ();
-  void setScenStartsGoals(const std::string& scen_file);
 
 public:
   Problem(const std::string& _instance);
@@ -29,12 +29,14 @@ public:
   Graph* getG() { return G; }
   int getNum() { return num_agents; }
   std::mt19937* getMT() { return MT; }
-  Node* getStart(int i) const;
-  Node* getGoal(int i) const;
+  Node* getStart(int i) const;  // return start of a_i
+  Node* getGoal(int i) const;   // return  goal of a_i
   Config getConfigStart() const { return config_s; };
   Config getConfigGoal() const { return config_g; };
   int getMaxTimestep() { return max_timestep; };
   int getMaxCompTime() { return max_comp_time; };
   std::string getInstanceFileName() { return instance; };
+
+  // used when making new instance file
   void makeScenFile(const std::string& output_file);
 };

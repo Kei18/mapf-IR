@@ -11,11 +11,8 @@
 #include <cbs.hpp>
 #include <icbs.hpp>
 #include <ecbs.hpp>
-#include <pibt_icbs.hpp>
+#include <pibt_complete.hpp>
 #include <ir.hpp>
-#include <ir_configs.hpp>
-#include <ir_paths.hpp>
-#include <ir_tester.hpp>
 
 void printHelp();
 Solver* getSolver(const std::string solver_name,
@@ -24,13 +21,12 @@ Solver* getSolver(const std::string solver_name,
                   int argc,
                   char *argv[]);
 
-const std::string DEFAULT_SOLVER_NAME = "PIBT";
 
-
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   std::string instance_file = "";
   std::string output_file = DEFAULT_OUTPUT_FILE;
-  std::string solver_name = DEFAULT_SOLVER_NAME;
+  std::string solver_name;
   bool verbose = false;
   char *argv_copy[argc+1];
   for (int i = 0; i < argc; ++i) argv_copy[i] = argv[i];
@@ -129,16 +125,12 @@ Solver* getSolver(const std::string solver_name,
     solver = new CBS(P);
   } else if (solver_name == "ICBS") {
     solver = new ICBS(P);
+  } else if (solver_name == "PIBT_COMPLETE") {
+    solver = new PIBT_COMPLETE(P);
   } else if (solver_name == "ECBS") {
     solver = new ECBS(P);
-  } else if (solver_name == "IR_CONFIGS") {
-    solver = new IR_CONFIGS(P);
-  } else if (solver_name == "IR_PATHS") {
-    solver = new IR_PATHS(P);
-  } else if (solver_name == "IR_TESTER") {
-    solver = new IR_TESTER(P);
-  } else if (solver_name == "PIBT_ICBS") {
-    solver = new PIBT_ICBS(P);
+  } else if (solver_name == "IR") {
+    solver = new IR(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -151,12 +143,12 @@ Solver* getSolver(const std::string solver_name,
 void printHelp() {
   std::cout << "\nUsage: ./app [OPTIONS] [SOLVER-OPTIONS]\n"
             << "\n**instance file is necessary to run MAPF simulator**\n\n"
-            << "  -i --instance [INSTANCE-FILE] instance file path\n"
-            << "  -s --solver [SOLVER_NAME]     solver\n"
-            << "  -o --output [OUTPUT-FILE]     ouptut file path\n"
+            << "  -i --instance [FILE_PATH]     instance file path\n"
+            << "  -o --output [FILE_PATH]       ouptut file path\n"
             << "  -v --verbose                  print additional info\n"
             << "  -h --help                     help\n"
-            << "\nSolver Options:"
+            << "  -s --solver [SOLVER_NAME]     solver, choose from the below"
+            << "\n\nSolver Options:"
             << std::endl;
   // each solver
   PIBT::printHelp();
@@ -165,8 +157,6 @@ void printHelp() {
   CBS::printHelp();
   ECBS::printHelp();
   ICBS::printHelp();
-  PIBT_ICBS::printHelp();
+  PIBT_COMPLETE::printHelp();
   IR::printHelp();
-  IR_CONFIGS::printHelp();
-  IR_PATHS::printHelp();
 }

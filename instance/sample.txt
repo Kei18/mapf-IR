@@ -1,6 +1,6 @@
 ## ==== necessary ====
 ## .map file, use absolute path for visualizer
-map_file=../instance/map/arena.map
+map_file=arena.map
 
 ## number of agents
 agents=100
@@ -13,11 +13,7 @@ seed=1
 ## false -> use custom starts/goals
 random_problem=1
 
-## scen file, invalid when random_problem=0
-## follows MAPF benchmark style
-# scen_file=../instance/scen/ost003d-random-1.scen
-
-## timestep limit, sec
+## timestep limit
 max_timestep=1000
 
 ## computation time limit, ms

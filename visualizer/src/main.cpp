@@ -8,7 +8,7 @@
 #include "../include/mapfplan.hpp"
 
 void readSetResult(const std::string& result_file, MAPFPlan* plan);
-void readSetNode(const std::string& s, Config& config, Graph* G);
+void readSetNode(const std::string& s, Config& config, Grid* G);
 
 
 int main(int argc, char *argv[]) {
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-void readSetNode(const std::string& s, Config& config, Graph* G)
+void readSetNode(const std::string& s, Config& config, Grid* G)
 {
   if (G == nullptr) halt("graph is not read.");
   std::regex r_pos = std::regex(R"(\((\d+),(\d+)\),)");
@@ -35,7 +35,7 @@ void readSetNode(const std::string& s, Config& config, Graph* G)
     iter = m[0].second;
     int x = std::stoi(m[1].str());
     int y = std::stoi(m[2].str());
-    if (!G->nodeExist(x, y)) halt("node does not exist");
+    if (!G->existNode(x, y)) halt("node does not exist");
     config.push_back(G->getNode(x, y));
   }
 }

@@ -438,8 +438,7 @@ void LibCBS::MDD::deleteBackword(MDDNode* node)
 
 std::string LibCBS::MDD::getPureMDDName()
 {
-  return std::to_string(G->getID()) + "-"
-    + std::to_string(s->id) + "-"
+  return std::to_string(s->id) + "-"
     + std::to_string(g->id) + "-"
     + std::to_string(c) + "-"
     + std::to_string(i) + "-";

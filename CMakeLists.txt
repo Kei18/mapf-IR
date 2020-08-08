@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(mapf-refine CXX)
 add_subdirectory(./mapf)
-add_executable(app main.cpp)
+add_executable(app app.cpp)
 target_compile_features(app PUBLIC cxx_std_17)
 target_link_libraries(app lib-mapf)

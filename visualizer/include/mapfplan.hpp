@@ -4,7 +4,7 @@
 struct MAPFPlan {
   std::string scen_file;
   int num_agents;
-  Graph* G;
+  Grid* G;
   std::string solver;
   bool solved;
   int soc;

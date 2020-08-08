@@ -1,7 +1,9 @@
-Multi-agent Path Finding Simulator
+Multi-Agent Path Finding
 ===
 
-Tested on OSX 10.15
+A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "Iterative Refinement for Realtime MAPF".
+It is written in C++(17) and tested on OSX 10.15.
+The visualizer relies on [openFrameworks](https://openframeworks.cc).
 
 ## Demo
 ![MAPF](/material/mapf-example.gif)
@@ -55,7 +57,6 @@ cd build
 This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 
 ## Notes
-There is a [previous version](https://github.com/Kei18/pibt) of this simulator, however, the new one is simple and fast, e.g., PIBT is speedup almost 3 times.
+The map is from [MAPF benchmarks](https://movingai.com/benchmarks/mapf.html).
 
 ## Author
-[Keisuke Okumura](https://kei18.github.io) is a Ph.D. candidate at Tokyo Institute of Technology, working on multiple moving agents.

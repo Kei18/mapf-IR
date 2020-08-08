@@ -58,8 +58,6 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
     paths.insert(i, path);
     mdds.push_back(mdd);
   }
-  MDDTable[n->id] = mdds;
-
   n->id = 0;
   n->paths = paths;
   n->constraints = constraints;
@@ -67,6 +65,7 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   n->soc = paths.getSOC();
   n->f = paths.countConflict(sample);
   n->valid = true;  // valid
+  MDDTable[n->id] = mdds;
 }
 
 LibCBS::Constraints ICBS_REFINE::getPrioritizedConflict
