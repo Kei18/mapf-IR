@@ -17,8 +17,7 @@ void WHCA::run()
     paths.insert(i, { P->getStart(i) });
   }
 
-  // initial prioritization
-  // far agent is prioritized
+  // initial prioritization, far agent is prioritized
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
   if (!disable_dist_init) {
@@ -44,7 +43,7 @@ void WHCA::run()
       Node* s = *(paths.get(i).end() - 1);
       Node* g = P->getGoal(i);
       Path path = getPrioritizedPartialPath(i, s, g, partial_paths);
-      if (path.empty()) {
+      if (path.empty()) {  // failed
         invalid = true;
         break;
       }
@@ -161,9 +160,10 @@ void WHCA::setParams(int argc, char *argv[]) {
   }
 }
 
-void WHCA::printHelp() {
+void WHCA::printHelp()
+{
   std::cout << WHCA::SOLVER_NAME << "\n"
-            << "  -w --window [WINDOW]          "
+            << "  -w --window [INT]             "
             << "window size\n"
             << "  -d --disable-dist-init        "
             << "disable initialization of priorities "

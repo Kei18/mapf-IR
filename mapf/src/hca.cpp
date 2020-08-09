@@ -12,15 +12,13 @@ void HCA::run()
 {
   Paths paths(P->getNum());
 
-  // prioritization
-  // far agent is prioritized
+  // prioritization, far agent is prioritized
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
   if (!disable_dist_init) {
     std::sort(ids.begin(), ids.end(),
               [&] (int a, int b)
-              { return pathDist(P->getStart(a), P->getGoal(a))
-                  > pathDist(P->getStart(b), P->getGoal(b)); });
+              { return pathDist(a) > pathDist(b); });
   }
 
   // start planning
@@ -30,12 +28,18 @@ void HCA::run()
     info(" ",
          "elapsed:", getSolverElapsedTime(),
          ", agent-" + std::to_string(i),
-         "starts planning,", j+1, "/", P->getNum());
+         "starts planning,",
+         "init-dist:", pathDist(i),
+         ", progress:", j+1, "/", P->getNum());
+
+    // get path
     Nodes path = getPrioritizedPath(i, paths);
-    if (path.empty()) {
+    if (path.empty()) {  // failed
       invalid = true;
       break;
     }
+
+    // update reservation table
     paths.insert(i, path);
 
     // check limitation
@@ -59,6 +63,7 @@ Path HCA::getPrioritizedPath(int id, const Paths& paths)
 }
 
 // get single agent path
+// failed -> return {}
 Path HCA::getPrioritizedPath(int id,
                              Node* s,
                              Node* g,
@@ -67,7 +72,7 @@ Path HCA::getPrioritizedPath(int id,
   // pre processing
   Nodes config_s = P->getConfigStart();
   Nodes config_g = P->getConfigGoal();
-  int max_constraint_time = 0;
+  int max_constraint_time = 0;  // from when the agent stays its goal
   for (int i = 0; i < P->getNum(); ++i) {
     Path p = paths.get(i);
     if (p.empty()) continue;
@@ -82,6 +87,7 @@ Path HCA::getPrioritizedPath(int id,
   if (pathDist(id) > max_constraint_time) {
     fValue = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
   } else {
+    // when someone occupies its goal
     fValue = [&] (AstarNode* n) {
                return std::max(max_constraint_time + 1,
                                n->g + pathDist(n->v, g));
@@ -91,10 +97,10 @@ Path HCA::getPrioritizedPath(int id,
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
       if (a->f != b->f) return a->f > b->f;
-      // avoid goal locations of others
+      // tie-break, avoid goal locations of others
       if (a->v != g && inArray(a->v, config_g)) return true;
       if (b->v != g && inArray(b->v, config_g)) return false;
-      // avoid start locations
+      // tie-break, avoid start locations
       if (a->v != s && inArray(a->v, config_s)) return true;
       if (b->v != s && inArray(b->v, config_s)) return false;
       if (a->g != b->g) return a->g < b->g;
@@ -131,7 +137,8 @@ Path HCA::getPrioritizedPath(int id,
                       checkInvalidAstarNode);
 }
 
-void HCA::setParams(int argc, char *argv[]) {
+void HCA::setParams(int argc, char *argv[])
+{
   struct option longopts[] = {
     { "disable-dist-init", no_argument, 0, 'd' },
     { 0, 0, 0, 0 },
@@ -150,7 +157,8 @@ void HCA::setParams(int argc, char *argv[]) {
   }
 }
 
-void HCA::printHelp() {
+void HCA::printHelp()
+{
   std::cout << HCA::SOLVER_NAME << "\n"
             << "  -d --disable-dist-init"
             << "        "

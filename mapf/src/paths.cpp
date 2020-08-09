@@ -8,15 +8,9 @@ Paths::Paths(int num_agents)
   makespan = 0;
 }
 
-Paths::~Paths()
-{
-  for (auto p : paths) p.clear();
-  paths.clear();
-}
-
 Path Paths::get(int i) const
 {
-  if (!(0 <= i && i < paths.size())) halt("invalid index.");
+  if (!(0 <= i && i < paths.size())) halt("invalid index");
   return paths[i];
 }
 
@@ -37,13 +31,13 @@ bool Paths::empty() const
 
 void Paths::insert(int i, const Path& path)
 {
-  if (!(0 <= i && i < paths.size())) halt("invalid index.");
+  if (!(0 <= i && i < paths.size())) halt("invalid index");
   if (path.empty()) halt("path must not be empty");
   int old_len = paths[i].size();
   paths[i] = path;
   if (path.size()-1 == getMakespan()) return;
-  format();
-  if (paths[i].size() < old_len) shrink();
+  format();  // align each path size
+  if (paths[i].size() < old_len) shrink();  // cutoff additional configs
   makespan = getMaxLengthPaths();  // update makespan
 }
 
@@ -55,18 +49,21 @@ int Paths::size() const
 void Paths::operator+=(const Paths& other)
 {
   if (other.empty()) return;
-  if (paths.size() != other.paths.size()) halt("invalid operation.");
-  if (makespan == 0) {// empty
+  if (paths.size() != other.paths.size()) halt("invalid operation");
+  if (makespan == 0) {  // empty
     for (int i = 0; i < paths.size(); ++i) insert(i, other.get(i));
   } else {
     std::vector<Path> new_paths(paths.size());
     for (int i = 0; i < paths.size(); ++i) {
-      if (paths[i].empty()) halt("invalid operation");
-      if (*(paths[i].end()-1) != other.paths[i][0])
+      if (paths[i].empty() || *(paths[i].end()-1) != other.paths[i][0]) {
         halt("invalid operation");
+      }
       Path tmp;
-      for (int t = 0; t <= getMakespan(); ++t)
+      // former
+      for (int t = 0; t <= getMakespan(); ++t) {
         tmp.push_back(get(i, t));
+      }
+      // later
       for (int t = 1; t <= other.getMakespan(); ++t) {
         tmp.push_back(other.get(i, t));
       }
@@ -76,6 +73,7 @@ void Paths::operator+=(const Paths& other)
   }
 }
 
+// this func is used when updating makespan
 int Paths::getMaxLengthPaths() const
 {
   int max_val = 0;
@@ -137,6 +135,8 @@ void Paths::shrink()
       }
     }
     if (!shrinkable) break;
+
+    // remove additional configuration
     for (int i = 0; i < paths.size(); ++i) {
       paths[i].resize(paths[i].size()-1);
     }

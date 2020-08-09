@@ -15,34 +15,39 @@ public:
   static const std::string SOLVER_NAME;
 
 private:
+  // PIBT agent
   struct Agent {
     int id;
-    Node* v_now;
-    Node* v_next;
-    Node* g;
-    int elapsed;
-    int init_d;
-    float tie_breaker;
+    Node* v_now;   // current location
+    Node* v_next;  // next location
+    Node* g;       // goal
+    int elapsed;   // eta
+    int init_d;    // initial distance
+    float tie_breaker;  // epsilon, tie-breaker
   };
 
   // option
   bool disable_dist_init = false;
 
+  // result of priority inheritance: true -> valid, false -> invalid
   bool funcPIBT(Agent* ai,
                 std::unordered_map<int, Agent*>& occupied_now,
                 std::unordered_map<int, Agent*>& occupied_next);
+  // plan next node
   Node* planOneStep(Agent* a,
                     std::unordered_map<int, Agent*>& occupied_now,
                     std::unordered_map<int, Agent*>& occupied_next);
+  // chose one node from candidates, used in planOneStep
   Node* chooseNode(Agent* a,
                    std::unordered_map<int, Agent*>& occupied_now,
                    std::unordered_map<int, Agent*>& occupied_next);
 
+  // main
   void run();
 
 public:
   PIBT(Problem* _P);
-  ~PIBT();
+  ~PIBT() {}
 
   void setParams(int argc, char *argv[]);
   static void printHelp();
