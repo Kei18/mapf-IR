@@ -1,6 +1,8 @@
 #include "../include/lib_cbs.hpp"
 
+// cache
 std::unordered_map<std::string, LibCBS::MDD_p> LibCBS::MDD::PURE_MDD_TABLE;
+// used in find paths
 std::mt19937* LibCBS::MDD::MT;
 
 
@@ -18,6 +20,7 @@ void LibCBS::Constraint::println()
   }
 }
 
+// not found -> return {}
 LibCBS::Constraints LibCBS::getFirstConstraints(const Paths& paths)
 {
   Constraints constraints = {};
@@ -53,6 +56,8 @@ LibCBS::Constraints LibCBS::getFirstConstraints(const Paths& paths)
   return {};
 }
 
+// used for ICBS
+// detect prioritized constraints for paths[i][t] and paths[j][t]
 void LibCBS::getPrioritizedConflict
 (const int t,
  const int i,
@@ -93,7 +98,7 @@ void LibCBS::getPrioritizedConflict
   // swap conflict
   if (paths.get(i, t) == paths.get(j, t-1) &&
       paths.get(j, t) == paths.get(i, t-1)) {
-    Constraint_p constraint_i
+    constraint_p constraint_i
       = std::make_shared<Constraint>
       (i, t, paths.get(i, t), paths.get(i, t-1));
     Constraint_p constraint_j
@@ -124,6 +129,8 @@ void LibCBS::getPrioritizedConflict
   }
 }
 
+// used for ICBS
+// detect prioritized constraints
 LibCBS::Constraints LibCBS::getPrioritizedConflict(const Paths& paths,
                                                    const MDDs& mdds)
 {
@@ -151,6 +158,8 @@ LibCBS::Constraints LibCBS::getPrioritizedConflict(const Paths& paths,
   return {};
 }
 
+// used for ICBS as a refine-solver
+// detect prioritized conflicts only for a part of agents
 LibCBS::Constraints LibCBS::getPrioritizedConflict
 (const Paths& paths,
  const MDDs& mdds,
@@ -179,6 +188,7 @@ LibCBS::Constraints LibCBS::getPrioritizedConflict
   return {};
 }
 
+// used in ICBS as a refine-solver
 LibCBS::Constraints LibCBS::getConstraintsByFixedPaths
 (const Plan& plan, const std::vector<int>& fixed_agents)
 {
@@ -201,17 +211,8 @@ LibCBS::Constraints LibCBS::getConstraintsByFixedPaths
   return constraints;
 }
 
-LibCBS::MDDNode::MDDNode(int _t, Node* _v) : t(_t), v(_v)
+bool LibCBS::MDDNode::operator==(const MDDNode& other) const
 {
-}
-
-LibCBS::MDDNode::~MDDNode()
-{
-  next.clear();
-  prev.clear();
-}
-
-bool LibCBS::MDDNode::operator==(const MDDNode& other) const {
   return t == other.t && v == other.v;
 }
 
@@ -224,21 +225,27 @@ LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints,
                  int time_limit)
   : c(_c), i(_i), G(P->getG()), s(P->getStart(i)), g(P->getGoal(i))
 {
+  // for timeout
   auto t_s = Time::now();
 
+  // check possibility
   valid = G->pathDist(s, g) <= c;
+
+  // build MDD without constraints
   build(time_limit);
 
+  // check time limit
   if (time_limit > 0 && (int)getElapsedTime(t_s) > time_limit) {
     valid = false;
     return;
   }
 
+  // update MDD with constraints
   update(constraints);
 }
 
 LibCBS::MDD::MDD(int _c, int _i, Problem* P)
-  : LibCBS::MDD::MDD(_c, _i, P, {}, -1)
+  : LibCBS::MDD::MDD(_c, _i, P, {}, -1)  // -1: for timeout
 {
 }
 
@@ -246,9 +253,6 @@ LibCBS::MDD::MDD(int _c, int _i, Problem* P)
 LibCBS::MDD::~MDD()
 {
   for (MDDNode* node : GC) delete node;
-  for (auto nodes : body) nodes.clear();
-  body.clear();
-  GC.clear();
 }
 
 LibCBS::MDD::MDD(const MDD& other)
@@ -261,16 +265,19 @@ LibCBS::MDD::MDD(const MDD& other)
 LibCBS::MDDNode* LibCBS::MDD::createNewNode(int t, Node* v)
 {
   MDDNode* new_node = new MDDNode(t, v);
-  GC.push_back(new_node);
+  GC.push_back(new_node);  // garbage collection
   return new_node;
 }
 
 void LibCBS::MDD::copy(const MDD& other)
 {
   if (!valid) return;
-  // generate body
+
+  // initial node
   MDDNode* new_node = createNewNode(0, s);
   body.push_back({ new_node });
+
+  // generate body
   for (auto nodes : other.body) {
     MDDNodes new_nodes;
     if (!nodes.empty() && nodes[0]->t == 0) continue; // starts
@@ -278,6 +285,7 @@ void LibCBS::MDD::copy(const MDD& other)
     for (auto node : nodes) {
       new_node = createNewNode(node->t, node->v);
       new_nodes.push_back(new_node);
+      // create link
       for (auto prev_node : node->prev) {
         auto itr = std::find_if(new_prev_nodes.begin(),
                                 new_prev_nodes.end(),
@@ -324,6 +332,7 @@ void LibCBS::MDD::build(int time_limit)
       for (auto v : cands) {
         // valid
         if (G->pathDist(v, g) + t + 1 <= c) {
+          // already exists?
           MDDNode* next_node = nullptr;
           for (auto _node : nodes_at_t_next) {
             if (_node->v == v) {
@@ -332,9 +341,11 @@ void LibCBS::MDD::build(int time_limit)
             }
           }
           if (next_node == nullptr) {
+            // create a new MDD node
             next_node = createNewNode(t + 1, v);
             nodes_at_t_next.push_back(next_node);
           }
+          // create link
           node->next.push_back(next_node);
           next_node->prev.push_back(node);
         }
@@ -343,6 +354,7 @@ void LibCBS::MDD::build(int time_limit)
     body.push_back(nodes_at_t_next);
   }
 
+  // register a new MDD without conflicts
   PURE_MDD_TABLE[getPureMDDName()] = std::make_shared<MDD>(*this);
 }
 
@@ -353,7 +365,7 @@ void LibCBS::MDD::update(const Constraints& _constraints)
   Constraints constraints;
   for (auto constraint : _constraints) {
     if (constraint->id != i && constraint->id != -1) continue;
-    // vertex conflict, must increase cost
+    // vertex conflict at the goal, must increase cost
     if (constraint->t >= c && constraint->u == nullptr) {
       if (constraint-> v == g) {
         valid = false;
@@ -399,9 +411,11 @@ void LibCBS::MDD::update(const Constraints& _constraints)
     }
   }
 
+  // update validity
   if (body[0].empty() || body[c].empty()) valid = false;
 }
 
+// delete unreachable nodes recursively
 void LibCBS::MDD::deleteForward(MDDNode* node)
 {
   for (auto next_node : node->next) {
@@ -419,6 +433,7 @@ void LibCBS::MDD::deleteForward(MDDNode* node)
   if (itr != body[node->t].end()) body[node->t].erase(itr);
 }
 
+// delete unreachable nodes recursively
 void LibCBS::MDD::deleteBackword(MDDNode* node)
 {
   for (auto prev_node : node->prev) {
@@ -445,12 +460,14 @@ std::string LibCBS::MDD::getPureMDDName()
 }
 
 // make path using MDD
-// if MDD is valid the search must success
+// if MDD is valid, the search must success
+// invalid MDD -> return {}
 Path LibCBS::MDD::getPath() const
 {
   if (!valid) return {};
   if (body[0].empty() || body[c].empty()) halt("invalid MDD");
 
+  // forward search
   MDDNode* node = body[0][0];
   MDDNode* goal_node = body[c][0];
   Path path;
@@ -467,7 +484,9 @@ Path LibCBS::MDD::getPath(Constraint_p const constraint) const
 {
   if (!valid) return {};
   if (constraint == nullptr) return getPath();
+  // create a new MDD by copying itself
   MDD mdd = *this;
+  // incorporate new constraint
   mdd.update({ constraint });
   return mdd.getPath();
 }
@@ -475,7 +494,9 @@ Path LibCBS::MDD::getPath(Constraint_p const constraint) const
 Path LibCBS::MDD::getPath(const Constraints& _constraints) const
 {
   if (!valid) return {};
+  // create a new MDD by copying itself
   MDD mdd = *this;
+  // incorporate new constraint
   mdd.update(_constraints);
   return mdd.getPath();
 }

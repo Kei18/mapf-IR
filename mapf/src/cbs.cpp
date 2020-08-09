@@ -14,7 +14,7 @@ void CBS::run()
 
   // OPEN
   std::priority_queue<HighLevelNode_p,
-                      std::vector<HighLevelNode_p>,
+                      HighLevelNodes,
                       decltype(compare)> HighLevelTree(compare);
 
   HighLevelNode_p n = std::make_shared<HighLevelNode>();
@@ -22,6 +22,7 @@ void CBS::run()
   if (!n->valid) return;  // failed to plan initial paths
   HighLevelTree.push(n);
 
+  // start high-level search
   int h_node_num = 1;
   int iteration = 0;
   while (!HighLevelTree.empty()) {
@@ -32,6 +33,7 @@ void CBS::run()
       break;
     }
 
+    // pickup one node with minimal f-value
     n = HighLevelTree.top();
     HighLevelTree.pop();
 
@@ -55,14 +57,14 @@ void CBS::run()
     for (auto c : constraints) {
       LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNode_p m = std::make_shared<HighLevelNode>(
-          h_node_num,
-          n->paths,
-          new_constraints,
-          n->makespan,
-          n->soc,
-          n->f,  // # conflicts
-          true );
+      HighLevelNode_p m = std::make_shared<HighLevelNode>
+        (h_node_num,       // id
+         n->paths,         // (old) paths, updated by invoke
+         new_constraints,  // new constraints
+         n->makespan,      // (old) makespan
+         n->soc,           // (old) sum of costs
+         n->f,             // (old) #conflicts
+         true );
       invoke(m, c->id);
       if (!m->valid) continue;
       HighLevelTree.push(m);
@@ -87,6 +89,7 @@ CBS::CompareHighLevelNodes CBS::getObjective()
 
 void CBS::setInitialHighLevelNode(HighLevelNode_p n)
 {
+  // find initial paths
   if (n->paths.empty()) {
     Paths paths(P->getNum());
     for (int i = 0; i < P->getNum(); ++i) {
@@ -121,6 +124,7 @@ Path CBS::getInitialPath(int id)
     [&] (AstarNode* a, AstarNode* b) {
       if (a->f != b->f) return a->f > b->f;
       // IMPORTANT! Avoid goal locations of others.
+      // This makes low-level search faster
       if (a->v != g && inArray(a->v, config_g)) return true;
       if (b->v != g && inArray(b->v, config_g)) return false;
       if (a->g != b->g) return a->g < b->g;
@@ -148,6 +152,10 @@ void CBS::invoke(HighLevelNode_p h_node, int id)
   }
   Paths paths = h_node->paths;
   paths.insert(id, path);
+  /*
+   * update f-value (#conflicts)
+   * it takes too much time for compute without the previous value
+   */
   h_node->f = h_node->f
     - h_node->paths.countConflict(id, h_node->paths.get(id))
     + h_node->paths.countConflict(id, paths.get(id));
@@ -161,6 +169,7 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
 
+  // pre processing
   LibCBS::Constraints constraints;
   int max_constraint_time = 0;
   for (auto c : h_node->constraints) {
@@ -176,10 +185,10 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
   if (pathDist(id) > max_constraint_time) {
     fValue = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
   } else {
+    // when someone occupies the goal until a certain timestep
     fValue = [&] (AstarNode* n) {
                return std::max(max_constraint_time + 1,
-                               n->g + pathDist(n->v, g));
-             };
+                               n->g + pathDist(n->v, g)); };
   }
 
   CompareAstarNode compare =
