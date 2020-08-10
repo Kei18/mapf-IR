@@ -2,37 +2,42 @@
 
 CBS_REFINE::CBS_REFINE(Problem* _P,
                        const Plan& _old_plan,
-                       const std::vector<int>& _sample)
+                       const std::vector<int>& _modif_list)
   : CBS(_P),
     old_plan(_old_plan),
     old_paths(planToPaths(_old_plan)),
     ub_makespan(_old_plan.getMakespan()),
     ub_soc(_old_plan.getSOC()),
-    sample(_sample),
-    makespan_prioritized(true)
+    modif_list(_modif_list),
+    makespan_prioritized(false)
 {
-  if (!sample.empty()) {
+  // create fixed_agents set
+  if (!modif_list.empty()) {
     if (_old_plan.empty()) return;
     for (int i = 0; i < _old_plan.get(0).size(); ++i) {
-      if (!inArray(i, sample)) fixed_agents.push_back(i);
+      if (!inArray(i, modif_list)) fixed_agents.push_back(i);
     }
   }
 }
 
 void CBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
 {
-  if (!sample.empty()) {
+  if (!modif_list.empty()) {
+    // create paths only for agents in modif_list
     Paths paths(P->getNum());
     for (int i = 0; i < P->getNum(); ++i) {
-      if (inArray(i, sample)) {
+      if (inArray(i, modif_list)) {
+        // agents in modif_list
         Path path = CBS_REFINE::getInitialPath(i);
-        if (path.empty()) {
+        if (path.empty()) {  // failed
           n->valid = false;
           return;
         }
         paths.insert(i, path);
       } else {
-        paths.insert(i, old_paths.get(i));  // fixed agents
+        // for fixed agents
+        // use the old path
+        paths.insert(i, old_paths.get(i));
       }
     }
     n->paths = paths;
@@ -47,6 +52,7 @@ Path CBS_REFINE::getInitialPath(int id)
   Node* g = P->getGoal(id);
   Nodes config_g = P->getConfigGoal();
 
+  // pre processing
   int max_constraint_time = 0;
   for (auto i : fixed_agents) {
     for (int t = 1; t <= ub_makespan; ++t) {
@@ -62,14 +68,13 @@ Path CBS_REFINE::getInitialPath(int id)
   } else {
     fValue = [&] (AstarNode* n) {
                return std::max(max_constraint_time + 1,
-                               n->g + pathDist(n->v, g));
-             };
+                               n->g + pathDist(n->v, g)); };
   }
 
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
       if (a->f != b->f) return a->f > b->f;
-      // [IMPORTANT!] avoid goal locations of others
+      // IMPORTANT! avoid goal locations of others
       if (a->v != g && inArray(a->v, config_g)) return true;
       if (b->v != g && inArray(b->v, config_g)) return false;
       if (a->g != b->g) return a->g < b->g;
@@ -84,11 +89,12 @@ Path CBS_REFINE::getInitialPath(int id)
   CheckInvalidAstarNode checkInvalidAstarNode =
     [&] (AstarNode* m) {
       if (m->g > ub_makespan) {
+        // cut off low-level nodes
         if (makespan_prioritized) return true;
         if (inArray(m->v, config_g) && m->v != g) return true;
         return false;
       }
-      if (makespan_prioritized && m->g > ub_makespan) return true;
+      // see conflicts with fixed agents
       for (auto i : fixed_agents) {
         // vertex conflicts
         if (m->v == old_paths.get(i, m->g)) return true;
@@ -114,7 +120,7 @@ CBS::CompareHighLevelNodes CBS_REFINE::getObjective()
       if (makespan_prioritized && a->makespan != b->makespan)
         return a->makespan > b->makespan;
       if (a->soc != b->soc) return a->soc > b->soc;
-      if (a->f != b->f) return a->f > b->f;  // tie-breaker
+      if (a->f != b->f) return a->f > b->f;
       return false;
     };
   return compare;
@@ -125,6 +131,7 @@ Path CBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
 
+  // pre processing
   LibCBS::Constraints constraints;
   int max_constraint_time = 0;
   for (auto c : h_node->constraints) {
@@ -214,7 +221,7 @@ void CBS_REFINE::setParams(int argc, char *argv[])
                             longopts, &longindex)) != -1) {
     switch (opt) {
     case 'p':
-      makespan_prioritized = false;
+      makespan_prioritized = true;
       break;
     default:
       break;

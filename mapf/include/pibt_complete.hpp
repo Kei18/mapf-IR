@@ -1,3 +1,7 @@
+/*
+ * Implementation of PIBT-Complete
+ */
+
 #pragma once
 #include "solver.hpp"
 
