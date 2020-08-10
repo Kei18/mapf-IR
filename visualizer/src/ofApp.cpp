@@ -2,7 +2,8 @@
 #include "../include/params.hpp"
 
 
-ofApp::ofApp(MAPFPlan* _P): P(_P) {
+ofApp::ofApp(MAPFPlan* _P): P(_P)
+{
   flg_autoplay = true;
   flg_loop = true;
   flg_goal = true;
@@ -11,7 +12,9 @@ ofApp::ofApp(MAPFPlan* _P): P(_P) {
   flg_focus = false;
 }
 
-void ofApp::setup() {
+void ofApp::setup()
+{
+  // setup size
   int map_w = P->G->getWidth();
   int map_h = P->G->getHeight();
   int window_max_w = BufferSize::default_screen_width
@@ -36,6 +39,7 @@ void ofApp::setup() {
   font.load(font_name, font_size);
   font_info.load(font_name, 10);
 
+  // setup gui
   gui.setup();
   gui.add(timestep_slider.setup("time step", 0, 0, P->makespan));
   gui.add(speed_slider.setup("speed", 0.1, 0, 1));
@@ -44,9 +48,11 @@ void ofApp::setup() {
   printKeys();
 }
 
-void ofApp::update() {
+void ofApp::update()
+{
   if (!flg_autoplay) return;
 
+  // t <- t + speed
   float t;
   t = timestep_slider + speed_slider;
   if (t <= P->makespan) {
@@ -61,7 +67,8 @@ void ofApp::update() {
   }
 }
 
-void ofApp::draw() {
+void ofApp::draw()
+{
   // draw nodes
   ofSetLineWidth(1);
   ofFill();
@@ -168,6 +175,7 @@ void ofApp::keyPressed(int key) {
   if (key == 'l') flg_loop = !flg_loop;
   if (key == 'v') flg_line = !flg_line;
   if (key == 'a') flg_focus = !flg_focus;
+  if (key == 'g') flg_goal = !flg_goal;
   if (key == 'f') {
     flg_font = !flg_font;
     flg_font &= (scale - font_size > 6);
@@ -217,6 +225,7 @@ void ofApp::printKeys()
   std::cout << "- r : reset" << std::endl;
   std::cout << "- v : show virtual line to goals" << std::endl;
   std::cout << "- f : show agent & node id" << std::endl;
+  std::cout << "- g : show goals" << std::endl;
   std::cout << "- right : progress" << std::endl;
   std::cout << "- left  : back" << std::endl;
   std::cout << "- up    : speed up" << std::endl;

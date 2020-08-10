@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
     std::cout << "save result as " << output_file << std::endl;
   }
 
+  // for memory management
   delete solver;
   delete P->getG();
   delete P;
@@ -148,6 +149,7 @@ void printHelp() {
             << "  -v --verbose                  print additional info\n"
             << "  -h --help                     help\n"
             << "  -s --solver [SOLVER_NAME]     solver, choose from the below"
+            << "  -P --make-scen                make scenario file using random starts/goals"
             << "\n\nSolver Options:"
             << std::endl;
   // each solver
