@@ -8,8 +8,6 @@ ICBS::ICBS(Problem* _P) : CBS(_P)
   LAZY_EVAL_LB_SOC = -1;
 }
 
-ICBS::~ICBS() {}
-
 void ICBS::run()
 {
   // set objective function
@@ -17,9 +15,10 @@ void ICBS::run()
 
   // OPEN
   std::priority_queue<HighLevelNode_p,
-                      std::vector<HighLevelNode_p>,
+                      HighLevelNodes,
                       decltype(compare)> HighLevelTree(compare);
 
+  // set initial node
   HighLevelNode_p n = std::make_shared<HighLevelNode>();
   setInitialHighLevelNode(n);
   if (!n->valid) return;  // failed to plan initial paths
@@ -29,9 +28,11 @@ void ICBS::run()
   int iteration = 0;
   while (!HighLevelTree.empty()) {
     ++iteration;
+
     // check limitation
     if (overCompTime()) break;
 
+    // pickup one node
     n = HighLevelTree.top();
 
     info(" ",
@@ -50,7 +51,9 @@ void ICBS::run()
     }
 
     // find bypass
+    // here, the code does not distinguish three kinds of conflicts
     if (findBypass(n, constraints)) {
+      info("   ", "bypass found");
       --iteration;
       continue;
     }
@@ -110,7 +113,8 @@ LibCBS::Constraints ICBS::getPrioritizedConflict(HighLevelNode_p h_node)
                                         MDDTable[h_node->id]);
 }
 
-// using MDD
+// find path with MDD, not using A* based search
+// failed -> return {}
 Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
   LibCBS::MDD mdd = *(MDDTable[h_node->id][id]);
@@ -131,8 +135,7 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 
     int c = mdd.c;
 
-    const int THRESHOLD = 20;
-
+    constexpr int THRESHOLD = 20;
     while (true) {
       ++c;
       if (overCompTime()) break;
@@ -165,12 +168,10 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 
 void ICBS::registerLazyEval(const int LB_SOC, HighLevelNode_p h_node)
 {
-  info(" ", "LAZY_TABLE: HighLevelNode", h_node->id,
-       ", LB_SOC: ", LB_SOC);
   auto itr = LAZY_EVAL_TABLE.find(LB_SOC);
-  if (itr == LAZY_EVAL_TABLE.end()) {
+  if (itr == LAZY_EVAL_TABLE.end()) {  // first time
     LAZY_EVAL_TABLE[LB_SOC] = { h_node };
-  } else {
+  } else {  // already registered some nodes
     itr->second.push_back(h_node);
   }
 
@@ -182,13 +183,14 @@ void ICBS::registerLazyEval(const int LB_SOC, HighLevelNode_p h_node)
   }
 }
 
+// return high-level nodes using LAZY_EVAL_LB_SOC
 CBS::HighLevelNodes ICBS::lazyEval()
 {
-  info(" ", "lazy eval, soc=", LAZY_EVAL_LB_SOC);
   auto itr_lb = LAZY_EVAL_TABLE.find(LAZY_EVAL_LB_SOC);
   if (itr_lb == LAZY_EVAL_TABLE.end()) return {};
   HighLevelNodes h_nodes = itr_lb->second;
   for (auto h_node : h_nodes) {
+    // invoke
     LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
     int id = last_constraint->id;
     int c = last_constraint->t;
@@ -211,7 +213,11 @@ CBS::HighLevelNodes ICBS::lazyEval()
       }
     }
   }
+
+  // update table
   LAZY_EVAL_TABLE.erase(itr_lb);
+
+  // update threshold
   if (LAZY_EVAL_TABLE.empty()) {
     LAZY_EVAL_LB_SOC = -1;
   } else {
@@ -228,7 +234,7 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
                       const LibCBS::Constraints& constraints)
 {
   auto itr = MDDTable.find(h_node->id);
-  if (itr == MDDTable.end()) halt("MDD is not found.");
+  if (itr == MDDTable.end()) halt("MDD is not found");
   for (auto c : constraints) {
     Path path = itr->second[c->id]->getPath(c);
     if (path.empty()) continue;
@@ -236,8 +242,10 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
     while (path.size() - 1 < h_node->makespan) {
       path.push_back(*(path.end()-1));
     }
-    int cnum_old = h_node->paths.countConflict(c->id,
-                                               h_node->paths.get(c->id));
+    // number of conflicts
+    int cnum_old
+      = h_node->paths.countConflict(c->id,
+                                    h_node->paths.get(c->id));
     int cnum_new = h_node->paths.countConflict(c->id, path);
     if (cnum_old <= cnum_new) continue;
 
@@ -249,7 +257,8 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
   return false;
 }
 
-void ICBS::printHelp() {
+void ICBS::printHelp()
+{
   std::cout << ICBS::SOLVER_NAME << "\n"
             << "  (no option)"
             << std::endl;
