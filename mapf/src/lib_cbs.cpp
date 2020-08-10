@@ -98,7 +98,7 @@ void LibCBS::getPrioritizedConflict
   // swap conflict
   if (paths.get(i, t) == paths.get(j, t-1) &&
       paths.get(j, t) == paths.get(i, t-1)) {
-    constraint_p constraint_i
+    Constraint_p constraint_i
       = std::make_shared<Constraint>
       (i, t, paths.get(i, t), paths.get(i, t-1));
     Constraint_p constraint_j
