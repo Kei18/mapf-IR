@@ -5,6 +5,7 @@
 #pragma once
 #include <random>
 #include <chrono>
+#include <algorithm>
 
 // for computation time
 using Time = std::chrono::system_clock;
