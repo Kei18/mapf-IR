@@ -22,6 +22,8 @@ The gif shows a part of an MAPF plan.
 ## Building
 
 ```
+git clone https://github.com/Kei18/mapf
+cd mapf
 mkdir build
 cd build
 cmake ..
@@ -72,8 +74,6 @@ solution=
 ## Visualizer
 
 ### Building
-You need to install openFrameworks beforehand and export `OF_ROOT` of your environment.
-
 Build as follows.
 ```sh
 git submodule init
@@ -98,7 +98,7 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 - Maps in `maps/` are from [MAPF benchmarks](https://movingai.com/benchmarks/mapf.html).
   When you add a new map, please place it in the `maps/` directory.
 - The font in `visualizer/bin/data` is from [Google Fonts](https://fonts.google.com/).
-- Scripts for the experiments are in `test_scripts/`.
+- Scripts for the experiments are in `exp_scripts/`.
 
 ## Author
 anonymous

@@ -13,4 +13,3 @@ script:
   - ./app -i ../instances/sample.txt -s PIBT -o result.txt -v
   - cd ../visualizer
   - make build
-  - sh ../visualize.sh ../build/result.txt
