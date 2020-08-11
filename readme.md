@@ -1,5 +1,6 @@
 Multi-Agent Path Finding
 ===
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "Iterative Refinement for Realtime MAPF".
 It is written in C++(17) and tested on OSX 10.15.
@@ -10,12 +11,12 @@ The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], 
 ## Demo
 ![100 agents in arena](/material/arena_100agents.gif)
 
-100 agents in arena, planned by PIBT in 67ms
+100 agents in arena, planned by PIBT in 67ms.
 
 ![1000 agents in brc202d](/material/brc202d_1000agents.gif)
 
-1000 agents in brc202d, planned by PIBT-Complete in 84sec
-
+1000 agents in brc202d, planned by PIBT-Complete in 84sec.
+The gif shows a part of an MAPF plan.
 
 ## Building
 
@@ -43,6 +44,29 @@ You can find details and explanations for all parameters with:
 ```
 
 Please see `instances/sample.txt` for parameters of instances, e.g., filed, number of agents, time limit, etc.
+
+### Output File
+
+This is an example output of `../instances/sample.txt`.
+Note that coordination denotes `(x, y)`.
+`(0, 0)` is the left-top point.
+`(x, 0)` is the location at `x`-th column and 1st row.
+```
+instance= ../instances/sample.txt
+agents=100
+map_file=arena.map
+solver=PIBT
+solved=1
+soc=3403
+makespan=68
+comp_time=58
+starts=(32,21),(40,4),(20,22),(26,18), [...]
+goals=(10,16),(30,21),(11,42),(44,6), [...]
+solution=
+0:(32,21),(40,4),(20,22),(26,18), [...]
+1:(31,21),(40,5),(20,23),(27,18), [...]
+[...]
+```
 
 ## Visualizer
 

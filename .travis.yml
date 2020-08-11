@@ -1,0 +1,10 @@
+language: cpp
+
+before_script:
+  - mkdir build
+  - cd build
+  - cmake ..
+
+script:
+  - make
+  - ./app -i ../instances/sample.txt -s PIBT -o result.txt -v
