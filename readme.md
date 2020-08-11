@@ -1,5 +1,6 @@
 Multi-Agent Path Finding
 ===
+[![Build Status](https://travis-ci.com/Kei18/mapf.svg?token=NJ5EpN7k73FqKbLee887&branch=master)](https://travis-ci.com/Kei18/mapf)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "Iterative Refinement for Realtime MAPF".
@@ -72,12 +73,12 @@ solution=
 
 ### Building
 You need to install openFrameworks beforehand and export `OF_ROOT` of your environment.
-```sh
-export OF_ROOT={your openFrameworks directory}
-```
 
 Build as follows.
 ```sh
+git submodule init
+git submodule update
+sh ./openFrameworks/scripts/osx/download_libs.sh
 cd visualizer/
 make build
 cd ..

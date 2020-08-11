@@ -1,9 +1,6 @@
 #!/bin/make
-OF_INCLUDE = $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk
-
-ifdef OF_ROOT
-	include $(OF_INCLUDE)
-endif
+OF_INCLUDE = ../openFrameworks/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk
+include $(OF_INCLUDE)
 
 .PHONY: build
 build:

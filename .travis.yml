@@ -1,6 +1,11 @@
 language: cpp
 
+os: osx
+
 before_script:
+  - git submodule init
+  - git submodule update
+  - sh ./openFrameworks/scripts/osx/download_libs.sh
   - mkdir build
   - cd build
   - cmake ..
@@ -8,3 +13,6 @@ before_script:
 script:
   - make
   - ./app -i ../instances/sample.txt -s PIBT -o result.txt -v
+  - cd ../visualizer
+  - make build
+  - sh ../visualize.sh ../build/result.txt
