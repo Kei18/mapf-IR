@@ -10,22 +10,15 @@
 using Time = std::chrono::system_clock;
 
 
-static void halt(const std::string& msg,
-                 const char* caller=__builtin_FUNCTION(),
-                 const char* filename=__builtin_FILE())
+static void halt(const std::string& msg)
 {
-  std::cout << "error@" << caller
-            << " in " << filename
-            << ": ";
-  std::cout << msg << std::endl;
+  std::cout << "error: " << msg << std::endl;
   std::exit(1);
 }
 
-static void warn(const std::string& msg,
-                 const char* caller=__builtin_FUNCTION())
+static void warn(const std::string& msg)
 {
-  std::cout << "warn@" << caller << ": ";
-  std::cout << msg << std::endl;
+  std::cout << "warn: " << msg << std::endl;
 }
 
 // whether element 'a' is found in vector T
