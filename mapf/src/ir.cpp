@@ -1,12 +1,14 @@
 #include "../include/ir.hpp"
 #include <fstream>
+#include <set>
 
 
 const std::string IR::SOLVER_NAME = "IR";
 const IR::INIT_SOLVER_TYPE IR::DEFAULT_INIT_SOLVER =
-  IR::INIT_SOLVER_TYPE::PIBT;
+  IR::INIT_SOLVER_TYPE::PIBT_COMPLETE;
 const IR::OPTIMAL_SOLVER_TYPE IR::DEFAULT_REFINE_SOLVER =
   IR::OPTIMAL_SOLVER_TYPE::ICBS;
+const int IR::DEFAULT_MAX_ITERATION = 100;
 
 
 IR::IR(Problem* _P) : Solver(_P)
@@ -16,10 +18,12 @@ IR::IR(Problem* _P) : Solver(_P)
   output_file = DEFAULT_OUTPUT_FILE;
   init_solver = DEFAULT_INIT_SOLVER;
   refine_solver = DEFAULT_REFINE_SOLVER;
-
+  max_iteration = DEFAULT_MAX_ITERATION;
   verbose_underlying_solver = false;
   make_log_every_itr = false;
   timeout_refinement = max_comp_time;
+  HIST_GROUP_SIZE.push_back(0);
+  HIST_GAP.push_back(0);
 }
 
 IR::~IR()
@@ -28,19 +32,20 @@ IR::~IR()
 
 void IR::run()
 {
+  // get initial plan
   solution = getInitialPlan();
   solved = !solution.empty();
   if (!solved) return;  // failure
   Plan init_plan = solution;
-
   int last_soc = init_plan.getSOC();
+  HIST.push_back(std::make_tuple(getSolverElapsedTime(), solution));
 
   // start refinement
-  HIST.push_back(std::make_tuple(getSolverElapsedTime(), solution));
   while (true) {
     if (make_log_every_itr) makeLog(output_file);
     if (overCompTime()) break;
 
+    // print info
     int soc = solution.getSOC();
     info("  iter: ", HIST.size(),
          ", comp_time:", getSolverElapsedTime(),
@@ -49,6 +54,7 @@ void IR::run()
          ", makespan:", solution.getMakespan());
     last_soc = solution.getSOC();
 
+    // refine plan
     solution = refinePlan(P->getConfigStart(),
                           P->getConfigGoal(),
                           solution);
@@ -56,12 +62,14 @@ void IR::run()
     if (stopRefinement()) break;
   }
 
+  // print final info
   info("  refinement results, soc:", init_plan.getSOC(),
        "->", solution.getSOC(),
        ", makespan:", init_plan.getMakespan(),
        "->", solution.getMakespan());
 }
 
+// failed -> return empty plan
 Plan IR::getInitialPlan()
 {
   // set problem
@@ -83,15 +91,16 @@ Plan IR::getInitialPlan()
   case INIT_SOLVER_TYPE::ECBS:
     solver = new ECBS(_P);
     break;
-  case INIT_SOLVER_TYPE::PIBT_ICBS:
-    solver = new PIBT_ICBS(_P);
-    break;
   case INIT_SOLVER_TYPE::PIBT:
-  default:
     solver = new PIBT(_P);
+    break;
+  case INIT_SOLVER_TYPE::PIBT_COMPLETE:
+  default:
+    solver = new PIBT_COMPLETE(_P);
     break;
   }
 
+  // set solver options
   setSolverOption(solver, option_init_solver);
   solver->setVerbose(verbose_underlying_solver);
 
@@ -100,19 +109,96 @@ Plan IR::getInitialPlan()
 
   // success
   Plan plan;
-  if (solver->succeed()) {
-    plan = solver->getSolution();
-  }
+  if (solver->succeed()) plan = solver->getSolution();
 
+  // memory management
   delete solver;
   delete _P;
 
   return plan;
 }
 
+Plan IR::refinePlan(const Config& config_s,
+                    const Config& config_g,
+                    const Plan& current_plan)
+{
+  Paths current_paths = planToPaths(current_plan);
+  auto gap =
+    [&] (int i) {
+      return current_paths.costOfPath(i) - pathDist(i);
+    };
+
+  // find agent with largest gap
+  int id_largest_gap = -1;
+  int gap_largest = 0;
+  for (int i = 0; i < P->getNum(); ++i) {
+    if (inArray(i, CLOSE)) continue;
+    int gap_i = gap(i);
+    if (gap_i > gap_largest) {
+      id_largest_gap = i;
+      gap_largest = gap_i;
+    }
+  }
+
+  // failed to find the agent with largest gap
+  if (id_largest_gap == -1) {
+    CLOSE.clear();
+    HIST_GROUP_SIZE.push_back(0);
+    HIST_GAP.push_back(0);
+    return current_plan;
+  }
+
+  // find interacting agents
+  std::vector<int> sample  = getInteractingAgents(current_paths,
+                                                  id_largest_gap);
+  HIST_GROUP_SIZE.push_back(sample.size());
+  HIST_GAP.push_back(gap_largest);
+  info("   ", "id=", id_largest_gap,
+       ", gap=", gap_largest,
+       ", interacting size:", sample.size());
+
+  // create problem
+  int comp_time_limit
+    = std::min(max_comp_time - (int)getSolverElapsedTime(),
+               timeout_refinement);
+  if (comp_time_limit <= 0) return current_plan;  // timeout
+  Problem* _P = new Problem(P,
+                            config_s,
+                            config_g,
+                            comp_time_limit,
+                            max_timestep);
+
+  // solve
+  auto res = getOptimalPlan(_P, current_plan, sample);
+
+  Plan plan = std::get<1>(res);
+  if (!std::get<0>(res) || plan.getSOC() == current_plan.getSOC()) {
+    CLOSE.push_back(id_largest_gap);
+  }
+  delete _P;
+  return plan;
+}
+
+std::vector<int> IR::getInteractingAgents
+(const Paths& current_paths, const int id_largest_gap)
+{
+  int cost_largest_gap = current_paths.costOfPath(id_largest_gap);
+  int dist_largest_gap = pathDist(id_largest_gap);
+  std::set<int> sample = { id_largest_gap };
+  Node* g = P->getGoal(id_largest_gap);
+  for (int t = cost_largest_gap - 1; t >= dist_largest_gap; --t) {
+    for (int i = 0; i < P->getNum(); ++i) {
+      if (i == id_largest_gap) continue;
+      if (current_paths.get(i, t) == g) sample.insert(i);
+    }
+  }
+  std::vector<int> sample_vec(sample.begin(), sample.end());
+  return sample_vec;
+}
+
 std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P,
                                           const Plan& current_plan,
-                                          const Ints& sample={})
+                                          const std::vector<int>& sample)
 {
   // set solver
   Solver* solver;
@@ -131,6 +217,8 @@ std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P,
     solver = new ICBS_REFINE(_P, current_plan, sample);
     break;
   }
+
+  // set solver option
   setSolverOption(solver, option_optimal_solver);
   solver->setVerbose(verbose_underlying_solver);
 
@@ -150,13 +238,9 @@ std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P,
   return std::make_tuple(success, plan);
 }
 
-Ints IR::sampling(const Plan& current_plan)
+bool IR::stopRefinement()
 {
-  Ints sample;
-  for (int i = 0; i < P->getNum(); ++i) {
-    if (getRandomBoolean(MT)) sample.push_back(i);
-  }
-  return sample;
+  return HIST.size() >= max_iteration;
 }
 
 void IR::setParams(int argc, char *argv[])
@@ -169,13 +253,14 @@ void IR::setParams(int argc, char *argv[])
     { "option-init-solver", required_argument, 0, 'X' },
     { "option-optimal-solver", required_argument, 0, 'Y' },
     { "verbose-underlying", no_argument, 0, 'V' },
+    { "max-iteration", required_argument, 0, 'n' },
     { 0, 0, 0, 0 },
   };
   optind = 1;  // reset
   int opt, longindex;
   std::string s, s_tmp;
 
-  while ((opt = getopt_long(argc, argv, "o:lt:x:y:X:Y:V",
+  while ((opt = getopt_long(argc, argv, "o:lt:x:y:X:Y:Vn:",
                             longopts, &longindex)) != -1) {
     switch (opt) {
     case 'o':
@@ -201,8 +286,8 @@ void IR::setParams(int argc, char *argv[])
         init_solver = INIT_SOLVER_TYPE::WHCA;
       } else if (s == "ECBS") {
         init_solver = INIT_SOLVER_TYPE::ECBS;
-      } else if (s == "PIBT_ICBS") {
-        init_solver = INIT_SOLVER_TYPE::PIBT_ICBS;
+      } else if (s == "PIBT_COMPLETE") {
+        init_solver = INIT_SOLVER_TYPE::PIBT_COMPLETE;
       } else {
         warn("solver does not exists, use PIBT");
       }
@@ -248,6 +333,9 @@ void IR::setParams(int argc, char *argv[])
     case 'V':
       verbose_underlying_solver = true;
       break;
+    case 'n':
+      max_iteration = std::atoi(optarg);
+      break;
     default:
       break;
     }
@@ -267,7 +355,7 @@ void IR::printHelp()
 
             << "  -x --init-solver [SOLVER]"
             << "     "
-            << "init solver, { PIBT, HCA, WHCA }\n"
+            << "init solver: { PIBT, HCA, WHCA, PIBT_COMPLETE }, default: PIBT_COMPLETE\n"
 
             << "  -X --option-init-solver [\"OPTION\"]\n"
             << "                                "
@@ -275,11 +363,15 @@ void IR::printHelp()
 
             << "  -y --refine-solver [SOLVER]"
             << "   "
-            << "refine solver, { CBS, CBS_USUAL }\n"
+            << "refine solver: { CBS, CBS_USUAL, ICBS, ICBS_USUAL }, default: ICBS\n"
 
             << "  -Y --option-refine-solver [\"OPTION\"]\n"
             << "                                "
             << "option for refine-solver"
+
+            << "  -n --max-iteration [INT]"
+            << "      "
+            << "max iteration\n"
 
             << std::endl;
 }
@@ -288,43 +380,20 @@ void IR::makeLog(const std::string& logfile)
 {
   std::ofstream log;
   log.open(logfile, std::ios::out);
-  log << "instance= " << P->getInstanceFileName() << "\n";
-  log << "agents=" << P->getNum() << "\n";
-  log << "map_file=" << P->getG()->getMapFileName() << "\n";
-  log << "solver=" << solver_name << "\n";
-  log << "solved=" << solved << "\n";
-  log << "soc=" << solution.getSOC() << "\n";
-  log << "makespan=" << solution.getMakespan() << "\n";
-  log << "comp_time=" << comp_time << "\n";
+  makeLogBasicInfo(log);
 
-  // print hist
+  // record the data of each iteration
   for (int t = 0; t < HIST.size(); ++t) {
     Plan plan = std::get<1>(HIST[t]);
     log << "iter=" << t << ","
         << "comp_time=" << std::get<0>(HIST[t]) << ","
         << "soc=" << plan.getSOC() << ","
-        << "makespan=" << plan.getMakespan() << "\n";
+        << "makespan=" << plan.getMakespan() << ","
+        << "group=" << HIST_GROUP_SIZE[t] << ","
+        << "gap=" << HIST_GAP[t]
+        << "\n";
   }
 
-  log << "starts=";
-  for (int i = 0; i < P->getNum(); ++i) {
-    Node* v = P->getStart(i);
-    log << "(" << v->pos.x << "," << v->pos.y << "),";
-  }
-  log << "\ngoals=";
-  for (int i = 0; i < P->getNum(); ++i) {
-    Node* v = P->getGoal(i);
-    log << "(" << v->pos.x << "," << v->pos.y << "),";
-  }
-  log << "\n";
-  log << "solution=\n";
-  for (int t = 0; t <= solution.getMakespan(); ++t) {
-    log << t << ":";
-    auto c = solution.get(t);
-    for (auto v : c) {
-      log << "(" << v->pos.x << "," << v->pos.y << "),";
-    }
-    log << "\n";
-  }
+  makeLogSolution(log);
   log.close();
 }

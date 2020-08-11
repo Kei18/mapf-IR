@@ -36,27 +36,43 @@ void ECBS::run()
   int iteration = 0;
   while (!OPEN.empty()) {
     ++iteration;
+
     // check limitation
     if (overCompTime()) break;
 
-    // update focal list
+    /*
+     *  update focal list
+     */
+    // pop out invalid nodes
     while (!OPEN.empty() && !OPEN.top()->valid) OPEN.pop();
-    if (OPEN.empty()) break;  // failed
+    // failure
+    if (OPEN.empty()) break;
+    // when lower bound is updated
     if (LB_min != OPEN.top()->LB) {
+      // new lower bound
       LB_min = OPEN.top()->LB;
+      // admissible f-value in open list
       float LB_bound = LB_min * sub_optimality;
+      // for escape
       std::vector<HighLevelNode_p> tmp;
+      // clear focal list
       FocalList EMPTY(compareFOCAL);
       FOCAL = EMPTY;
+      // insert nodes to focal list
       while (!OPEN.empty()) {
         HighLevelNode_p top = OPEN.top();
         OPEN.pop();
-        if (!top->valid) continue;  // already searched
-        tmp.push_back(top);  // escape
-        if ((float)top->LB > LB_bound) break;  // higher than LB_bound
-        FOCAL.push(top);  // lower than LB_bound
+        // already searched
+        if (!top->valid) continue;
+        // escape
+        tmp.push_back(top);
+        // higher than LB_bound
+        if ((float)top->LB > LB_bound) break;
+        // lower than LB_bound
+        FOCAL.push(top);
       }
-      for (auto ele: tmp) OPEN.push(ele);   // back
+      // back
+      for (auto ele: tmp) OPEN.push(ele);
     }
 
     // pickup one node
@@ -105,7 +121,8 @@ void ECBS::run()
   if (solved) solution = pathsToPlan(n->paths);
 }
 
-ECBS::CompareHighLevelNode ECBS::getMainObjective() {
+ECBS::CompareHighLevelNode ECBS::getMainObjective()
+{
   CompareHighLevelNode compare =
     [&] (HighLevelNode_p a, HighLevelNode_p b) {
       if (a->LB != b->LB) return a->LB > b->LB;
@@ -114,7 +131,8 @@ ECBS::CompareHighLevelNode ECBS::getMainObjective() {
   return compare;
 }
 
-ECBS::CompareHighLevelNode ECBS::getFocalObjective() {
+ECBS::CompareHighLevelNode ECBS::getFocalObjective()
+{
   CompareHighLevelNode compare =
     [&] (HighLevelNode_p a, HighLevelNode_p b) {
       if (a->f != b->f) return a->f > b->f;
@@ -127,20 +145,20 @@ ECBS::CompareHighLevelNode ECBS::getFocalObjective() {
 void ECBS::setInitialHighLevelNode(HighLevelNode_p n)
 {
   Paths paths(P->getNum());
-  std::vector<int> f_mins;
+  std::vector<int> f_mins;  // vector of costs for respective paths
   for (int i = 0; i < P->getNum(); ++i) {
     Path path = getInitialPath(i);
     paths.insert(i, path);
     f_mins.push_back(path.size()-1);
   }
   n->paths = paths;
-  n->constraints = {};  // constraints
+  n->constraints = {};
   n->makespan = paths.getMakespan();
   n->soc = paths.getSOC();
   n->f = paths.countConflict();
-  n->valid = true;  // valid
+  n->valid = true;
   n->f_mins = f_mins;
-  n->LB = n->soc;
+  n->LB = n->soc;  // initial lower bound
 }
 
 Path ECBS::getInitialPath(int id)
@@ -155,7 +173,7 @@ Path ECBS::getInitialPath(int id)
   CompareAstarNode compare =
     [&] (AstarNode* a, AstarNode* b) {
       if (a->f != b->f) return a->f > b->f;
-      // [IMPORTANT!] avoid goal locations of others
+      // IMPORTANT! avoid goal locations of others
       if (a->v != g && inArray(a->v, config_g)) return true;
       if (b->v != g && inArray(b->v, config_g)) return false;
       if (a->g != b->g) return a->g < b->g;
@@ -178,20 +196,24 @@ void ECBS::invoke(HighLevelNode_p h_node, int id)
 {
   auto res = getFocalPath(h_node, id);
   Path path = std::get<0>(res);
-  int f_min = std::get<1>(res); // lower bound
+  int f_min = std::get<1>(res);  // lower bound
 
+  // failed to find path
   if (path.empty()) {
     h_node->valid = false;
     return;
   }
+
   Paths paths = h_node->paths;
   paths.insert(id, path);
+  // it is efficient to reuse past data
   h_node->f = h_node->f
     - h_node->paths.countConflict(id, h_node->paths.get(id))
     + h_node->paths.countConflict(id, paths.get(id));
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();
+  // update lower bound and f_min
   h_node->LB = h_node->LB - h_node->f_mins[id] + f_min;
   h_node->f_mins[id] = f_min;
 }
@@ -201,6 +223,7 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
 
+  // pre processing
   LibCBS::Constraints constraints;
   int max_constraint_time = 0;
   for (auto c : h_node->constraints) {
@@ -212,16 +235,17 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
     }
   }
 
+  // f-value for online list
   FocalHeuristics f1Value;
   if (pathDist(id) > max_constraint_time) {
     f1Value = [&] (FocalNode* n) { return n->g + pathDist(n->v, g); };
   } else {
     f1Value = [&] (FocalNode* n) {
                 return std::max(max_constraint_time + 1,
-                                n->g + pathDist(n->v, g));
-              };
+                                n->g + pathDist(n->v, g)); };
   }
 
+  // f-value for focal list
   FocalHeuristics f2Value =
     [&] (FocalNode* n) {
       return h_node->paths.countConflict(id, getPathFromFocalNode(n));
@@ -256,6 +280,7 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
       }
       return false;
     };
+
   return getTimedPathByFocalSearch(s,
                                    g,
                                    sub_optimality,
@@ -283,7 +308,7 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
                      { return std::to_string(n->v->id)
                          + "-" + std::to_string(n->g); };
 
-  std::vector<FocalNode*> GC;  // for memory management
+  std::vector<FocalNode*> GC;  // garbage collection
   auto createNewNode =
     [&] (Node* v, int g, int f1, int f2, FocalNode* p)
     {
@@ -317,7 +342,10 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
     // check time limit
     if (overCompTime()) break;
 
-    // update FOCAL list
+    /*
+     * update FOCAL list
+     * see the high-level search
+     */
     while (!OPEN.empty()
            && CLOSE.find(getNodeName(OPEN.top())) != CLOSE.end())
       OPEN.pop();
@@ -382,7 +410,9 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
   return ret;
 }
 
-Path ECBS::getPathFromFocalNode(FocalNode* _n) {
+// reconstruct a path from focal node in the low-level node
+Path ECBS::getPathFromFocalNode(FocalNode* _n)
+{
   Path path;
   FocalNode* n = _n;
   while (n != nullptr) {
@@ -393,7 +423,8 @@ Path ECBS::getPathFromFocalNode(FocalNode* _n) {
   return path;
 }
 
-void ECBS::setParams(int argc, char *argv[]) {
+void ECBS::setParams(int argc, char *argv[])
+{
   struct option longopts[] = {
     { "sub-optimality", required_argument, 0, 'w' },
     { 0, 0, 0, 0 },
@@ -415,7 +446,8 @@ void ECBS::setParams(int argc, char *argv[]) {
   }
 }
 
-void ECBS::printHelp() {
+void ECBS::printHelp()
+{
   std::cout << ECBS::SOLVER_NAME << "\n"
             << "  -w --sub-optimality [NUMBER]"
             << "  "

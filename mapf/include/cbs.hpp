@@ -16,13 +16,14 @@ public:
   static const std::string SOLVER_NAME;
 
 protected:
+  // for high-level search
   struct HighLevelNode {
-    int id;  // high level node id
+    int id;        // id
     Paths paths;
     LibCBS::Constraints constraints;
-    int makespan;
-    int soc;
-    int f;   // for tie-break
+    int makespan;  // makespan
+    int soc;       // sum of cost
+    int f;         // for tie-break
     bool valid;
 
     HighLevelNode() {}
@@ -36,12 +37,23 @@ protected:
   using CompareHighLevelNodes = std::function<bool(HighLevelNode_p,
                                                    HighLevelNode_p)>;
 
-  virtual void run();
+  // get single-agent path for the initial node
   Path getInitialPath(int id);
+
+  // set initial high-level node
   virtual void setInitialHighLevelNode(HighLevelNode_p n);
+
+  // find new paths subject to constraints
   virtual void invoke(HighLevelNode_p h_node, int id);
+
+  // get single-agent path subject to constraints
   virtual Path getConstrainedPath(HighLevelNode_p h_node, int id);
+
+  // objective function: sum of cost
   virtual CompareHighLevelNodes getObjective();
+
+  // main
+  virtual void run();
 
 public:
   CBS(Problem* _P);

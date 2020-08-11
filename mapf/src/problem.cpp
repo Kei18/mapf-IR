@@ -6,6 +6,7 @@
 
 Problem::Problem(const std::string& _instance) : instance(_instance)
 {
+  // read instance file
   std::ifstream file(instance);
   if (!file) halt("file " + instance + " is not found.");
 
@@ -16,7 +17,6 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
   std::regex r_agents = std::regex(R"(agents=(\d+))");
   std::regex r_seed = std::regex(R"(seed=(\d+))");
   std::regex r_random_problem = std::regex(R"(random_problem=(\d+))");
-  std::regex r_scen = std::regex(R"(scen_file=(.+))");
   std::regex r_max_timestep = std::regex(R"(max_timestep=(\d+))");
   std::regex r_max_comp_time = std::regex(R"(max_comp_time=(\d+))");
   std::regex r_sg = std::regex(R"((\d+),(\d+),(\d+),(\d+))");
@@ -51,12 +51,6 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
       }
       continue;
     }
-    if (std::regex_match(line, results, r_scen)
-        && read_scen && num_agents > 0) {
-      setScenStartsGoals(results[1].str());
-      read_scen = false;
-      continue;
-    }
     // set max timestep
     if (std::regex_match(line, results, r_max_timestep)) {
       max_timestep = std::stoi(results[1].str());
@@ -74,15 +68,15 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
       int y_s = std::stoi(results[2].str());
       int x_g = std::stoi(results[3].str());
       int y_g = std::stoi(results[4].str());
-      if (!G->nodeExist(x_s, y_s)) {
+      if (!G->existNode(x_s, y_s)) {
         halt("start node ("
              + std::to_string(x_s) + ", " + std::to_string(y_s)
-             + ") does not exist, invalid scenario file.");
+             + ") does not exist, invalid scenario");
       }
-      if (!G->nodeExist(x_g, y_g)) {
+      if (!G->existNode(x_g, y_g)) {
         halt("goal node ("
              + std::to_string(x_g) + ", " + std::to_string(y_g)
-             + ") does not exist, invalid scenario file.");
+             + ") does not exist, invalid scenario");
       }
 
       Node* s = G->getNode(x_s, y_s);
@@ -92,7 +86,7 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
     }
   }
 
-  // set default value
+  // set default value not identified params
   if (MT == nullptr) MT = new std::mt19937(DEFAULT_SEED);
   if (max_timestep == 0) max_timestep = DEFAULT_MAX_TIMESTEP;
   if (max_comp_time == 0) max_comp_time = DEFAULT_MAX_COMP_TIME;
@@ -106,6 +100,7 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
     setRandomStartsGoals();
   }
 
+  // trimming
   config_s.resize(num_agents);
   config_g.resize(num_agents);
 }
@@ -130,47 +125,55 @@ Problem::~Problem() {
   config_g.clear();
 }
 
-Node* Problem::getStart(int i) const {
+Node* Problem::getStart(int i) const
+{
   if (!(0 <= i && i < config_s.size())) halt("invalid index");
   return config_s[i];
 }
 
-Node* Problem::getGoal(int i) const {
+Node* Problem::getGoal(int i) const
+{
   if (!(0 <= i && i < config_g.size())) halt("invalid index");
   return config_g[i];
 }
 
-void Problem::setRandomStartsGoals () {
+void Problem::setRandomStartsGoals ()
+{
+  // initialize
   config_s.clear();
   config_g.clear();
-  int n = G->getWidth() * G->getHeight();
+
+  // get grid size
+  Grid* grid = reinterpret_cast<Grid*>(G);
+  const int N = grid->getWidth() * grid->getHeight();
 
   // set starts
-  std::vector<int> starts(n);
+  std::vector<int> starts(N);
   std::iota(starts.begin(), starts.end(), 0);
   std::shuffle(starts.begin(), starts.end(), *MT);
   int i = 0;
   while (true) {
     while (G->getNode(starts[i]) == nullptr) {
       ++i;
-      if (i >= n) halt("number of agents is too large.");
+      if (i >= N) halt("number of agents is too large.");
     }
     config_s.push_back(G->getNode(starts[i]));
     if (config_s.size() == num_agents) break;
     ++i;
   }
 
-  std::vector<int> goals(n);
+  // set goals
+  std::vector<int> goals(N);
   std::iota(goals.begin(), goals.end(), 0);
   std::shuffle(goals.begin(), goals.end(), *MT);
   int j = 0;
   while (true) {
     while (G->getNode(goals[j]) == nullptr) {
       ++j;
-      if (j >= n) halt("number of agents is too large.");
+      if (j >= N) halt("number of agents is too large.");
     }
+    // retry
     if (G->getNode(goals[j]) == config_s[config_g.size()]) {
-      // retry
       config_g.clear();
       std::shuffle(goals.begin(), goals.end(), *MT);
       continue;
@@ -181,41 +184,12 @@ void Problem::setRandomStartsGoals () {
   }
 }
 
-void Problem::setScenStartsGoals(const std::string& scen_file)
-{
-  std::ifstream file(scen_file);
-  if (!file) halt("file " + scen_file + " is not found.");
-  config_s.clear();
-  config_g.clear();
-
-  std::regex r_locs = std::regex(R"(\d+\t.+?\t\d+\t\d+\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t.+)");
-  std::string line;
-  std::smatch results;
-  int x_s, y_s, x_g, y_g;
-
-  // read files
-  while (getline(file, line)) {
-    if (std::regex_match(line, results, r_locs)) {
-      x_s = std::stoi(results[1].str());
-      y_s = std::stoi(results[2].str());
-      x_g = std::stoi(results[3].str());
-      y_g = std::stoi(results[4].str());
-      if (!G->nodeExist(x_s, y_s) || !G->nodeExist(x_s, y_s)) {
-        halt("invalid scenario file.");
-      }
-      Node* s = G->getNode(x_s, y_s);
-      Node* g = G->getNode(x_g, y_g);
-      config_s.push_back(s);
-      config_g.push_back(g);
-    }
-  }
-}
-
 void Problem::makeScenFile(const std::string& output_file)
 {
+  Grid* grid = reinterpret_cast<Grid*>(G);
   std::ofstream log;
   log.open(output_file, std::ios::out);
-  log << "map_file=" << G->getMapFileName() << "\n";
+  log << "map_file=" << grid->getMapFileName() << "\n";
   log << "agents=" << num_agents << "\n";
   log << "seed=0\n";
   log << "random_problem=0\n";

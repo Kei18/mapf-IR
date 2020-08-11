@@ -3,11 +3,9 @@
 #include <fstream>
 #include <regex>
 
-int Graph::UUID = 0;
-
-Graph::~Graph() {
+Graph::~Graph()
+{
   for (auto v : V) delete v;
-  V.clear();
 }
 
 Path Graph::getPath(Node* const s, Node* const g)
@@ -19,8 +17,12 @@ Path Graph::getPath(Node* const s, Node* const g)
   auto itr = PATH_TABLE.find(key);
   if (itr != PATH_TABLE.end()) return itr->second;
 
+  // failed -> use A* search
   Path path = AstarSearchWithCache(s, g);
+
+  // register new path to the cache
   registerPath(path);
+
   return path;
 }
 
@@ -33,11 +35,20 @@ int Graph::pathDist(Node* const s, Node* const g)
   auto itr = PATH_TABLE.find(key);
   if (itr != PATH_TABLE.end()) return itr->second.size() - 1;
 
+  // failed -> use A* search
   Path path = AstarSearchWithCache(s, g);
+
+  // register new path to the cache
   registerPath(path);
+
   return path.size() - 1;
 }
 
+/*
+ * Given a path < v_1, ..., v_k >,
+ * < v_1, ..., v_k >, < v_2, ..., v_k >, ..., < v_{k-1}, ..., v_k >
+ * are registered.
+ */
 void Graph::registerPath(const Path& path)
 {
   if (path.empty()) return;
@@ -51,8 +62,11 @@ void Graph::registerPath(const Path& path)
   } while (tmp.size() > 2);
 }
 
-// A* search but using cache as much as possible
-// I tried smart pointer but it was slow...
+/*
+ * A* search using cache (already known paths) as much as possible.
+ *
+ * Note: I tried smart pointer but it was slow.
+ */
 Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
 {
   struct AstarNode {
@@ -61,13 +75,14 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
     int f;
     AstarNode* p;  // parent
   };
+  using AstarNodes = std::vector<AstarNode*>;
 
   auto compare = [&] (AstarNode* a, AstarNode* b) {
                    if (a->f != b->f) return a->f > b->f;
                    if (a->g != b->g) return a->g < b->g;
                    return false; };
 
-  std::vector<AstarNode*> GC;  // for memory management
+  AstarNodes GC;  // garbage collection
   auto createNewNode =
     [&] (Node* v, int g, int f, AstarNode* p)
     {
@@ -77,22 +92,24 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
     };
 
   // OPEN and CLOSE
-  std::priority_queue<AstarNode*,
-                      std::vector<AstarNode*>,
-                      decltype(compare)> OPEN(compare);
+  std::priority_queue<AstarNode*, AstarNodes, decltype(compare)> OPEN(compare);
   std::unordered_map<int, bool> CLOSE;
 
   // initial node
   AstarNode* n = createNewNode(s, 0, dist(s, g), nullptr);
   OPEN.push(n);
 
+  // search start
   bool invalid = true;
   while (!OPEN.empty()) {
+    // pop a node with the minimum f-value
     n = OPEN.top();
     OPEN.pop();
 
     // check CLOSE list
     if (CLOSE.find(n->v->id) != CLOSE.end()) continue;
+
+    // update CLOSE list
     CLOSE[n->v->id] = true;
 
     // check goal condition
@@ -101,12 +118,13 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
       break;
     }
 
-    // use cache
+    // check whether the remained path has already known
     auto itr = PATH_TABLE.find(getPathTableKey(n->v, g));
     if (itr != PATH_TABLE.end()) {
+      // if found then complement the rest
       Path path = itr->second;
-      for (int t = 1; t < path.size(); ++t) {
-        n = createNewNode(path[t], 0, 0, n);
+      for (auto k = path.begin()+1; k != path.end(); ++k) {
+        n = createNewNode(*k, 0, 0, n);
       }
       invalid = false;
       break;
@@ -130,8 +148,10 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
     }
   }
 
+  // detect unreachable nodes
   if (invalid) halt("graph contains unreachable nodes.");
 
+  // reconstruct path
   Path path;
   while (n != nullptr) {
     path.push_back(n->v);
@@ -145,13 +165,20 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
   return path;
 }
 
-std::string Graph::getPathTableKey(Node* const s, Node* const g) {
+std::string Graph::getPathTableKey(Node* const s, Node* const g)
+{
   return std::to_string(s->id) + "-" + std::to_string(g->id);
 }
 
-Grid::Grid(const std::string& _map_file): Graph(_map_file)
+Grid::Grid(const std::string& _map_file): Graph(), map_file(_map_file)
 {
+  // read map file
+#ifdef _MAPDIR_
+  std::ifstream file(_MAPDIR_ + map_file);
+#else
   std::ifstream file(map_file);
+#endif
+
   if (!file) halt("file " + map_file + " is not found.");
 
   std::string line;
@@ -160,7 +187,7 @@ Grid::Grid(const std::string& _map_file): Graph(_map_file)
   std::regex r_width = std::regex(R"(width\s(\d+))");
   std::regex r_map = std::regex(R"(map)");
 
-  // read fundamental graph params
+  // fundamental graph params
   while (getline(file, line)) {
     if (std::regex_match(line, results, r_height)) {
       height = std::stoi(results[1].str());
@@ -175,16 +202,13 @@ Grid::Grid(const std::string& _map_file): Graph(_map_file)
   // create nodes
   int y = 0;
   V = Nodes(width*height, nullptr);
-  std::vector<std::string> mapstr;
   while (getline(file, line)) {
-    mapstr.push_back(line);
     if (line.size() != width) halt("map format is invalid");
     for (int x = 0; x < width; ++x) {
       char s = line[x];
       if (s == 'T' or s == '@') continue;  // object
       int id = width*y+x;
-      Pos pos = { x, y };
-      Node* v = new Node { id , {}, pos };
+      Node* v = new Node(id, x, y);
       V[id] = v;
     }
     ++y;
@@ -195,35 +219,38 @@ Grid::Grid(const std::string& _map_file): Graph(_map_file)
   // create edges
   for (int y = 0; y < height; ++y) {
     for (int x = 0; x < width; ++x) {
-      char s = mapstr[y][x];
-      if (s == 'T' || s == '@') continue;
+      if (!existNode(x, y)) continue;
       Node* v = getNode(x, y);
       // left
-      if (nodeExist(x-1, y)) v->neighbor.push_back(getNode(x-1, y));
+      if (existNode(x-1, y)) v->neighbor.push_back(getNode(x-1, y));
       // right
-      if (nodeExist(x+1, y)) v->neighbor.push_back(getNode(x+1, y));
+      if (existNode(x+1, y)) v->neighbor.push_back(getNode(x+1, y));
       // up
-      if (nodeExist(x, y-1)) v->neighbor.push_back(getNode(x, y-1));
+      if (existNode(x, y-1)) v->neighbor.push_back(getNode(x, y-1));
       // down
-      if (nodeExist(x, y+1)) v->neighbor.push_back(getNode(x, y+1));
+      if (existNode(x, y+1)) v->neighbor.push_back(getNode(x, y+1));
     }
   }
 }
 
-bool Grid::nodeExist(int x, int y) const
+bool Grid::existNode(int id) const
 {
-  int id = y * width + x;
-  return  0 <= x && x < width
-       && 0 <= y && y < height
-       && V[id] != nullptr;
+  return 0 <= id && id < width * height && V[id] != nullptr;
 }
 
-Node* Grid::getNode(int x, int y) const
+bool Grid::existNode(int x, int y) const
 {
-  return V[y*width+x];
+  return  0 <= x && x < width
+       && 0 <= y && y < height
+       && existNode(y * width + x);
 }
 
 Node* Grid::getNode(int id) const
 {
   return V[id];
+}
+
+Node* Grid::getNode(int x, int y) const
+{
+  return getNode(y * width + x);
 }

@@ -19,14 +19,15 @@ public:
   static const std::string SOLVER_NAME;
 
 protected:
+  // high-level node, see CBS for details
   struct HighLevelNode {
     Paths paths;
     LibCBS::Constraints constraints;
     int makespan;
     int soc;
     int f;
-    int LB;  // lower bound
-    std::vector<int> f_mins;
+    int LB;                    // lower bound
+    std::vector<int> f_mins;   // f_mins value in the low-level search
     bool valid;
 
     HighLevelNode() {}
@@ -42,11 +43,12 @@ protected:
   using CompareHighLevelNode = std::function<bool(HighLevelNode_p,
                                                   HighLevelNode_p)>;
 
+  // used in the low-level search
   struct FocalNode {
-    Node* v;
-    int g;  // in getTimedPath, g represents t
-    int f1;
-    int f2;
+    Node* v;       // location
+    int g;         // in getTimedPath, g represents t
+    int f1;        // used in open list
+    int f2;        // used in focal list
     FocalNode* p;  // parent
   };
   using CompareFocalNode = std::function<bool(FocalNode*, FocalNode*)>;
@@ -54,14 +56,21 @@ protected:
   using CheckInvalidFocalNode = std::function<bool(FocalNode*)>;
   using FocalHeuristics = std::function<int(FocalNode*)>;
 
+  // sub optimality
   float sub_optimality;
   static const float DEFAULT_SUB_OPTIMALITY;
+
   void setInitialHighLevelNode(HighLevelNode_p n);
   Path getInitialPath(int id);
 
+  // objective for open list
   CompareHighLevelNode getMainObjective();
+  // objective for focal list
   CompareHighLevelNode getFocalObjective();
+
   void invoke(HighLevelNode_p h_node, int id);
+
+  // return path and f-min value
   std::tuple<Path, int> getFocalPath(HighLevelNode_p h_node, int id);
   std::tuple<Path, int> getTimedPathByFocalSearch
   (Node* const s, Node* const g, float w,  // sub-optimality
@@ -72,7 +81,10 @@ protected:
    CheckFocalFin& checkFocalFin,
    CheckInvalidFocalNode& checkInvalidFocalNode);
 
+  // make path from focal node
   Path getPathFromFocalNode(FocalNode* _n);
+
+  // main
   void run();
 
 public:

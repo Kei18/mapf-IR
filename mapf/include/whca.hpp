@@ -16,7 +16,7 @@ public:
   static const std::string SOLVER_NAME;
 
 private:
-  int window;
+  int window;  // window size
   static const int DEFAULT_WINDOW;
 
   // option

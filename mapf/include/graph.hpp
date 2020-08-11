@@ -7,10 +7,18 @@
 #include <queue>
 #include "util.hpp"
 
+struct Node;
+using Nodes   = std::vector<Node*>;
+using Path    = std::vector<Node*>;  // < loc_i[0], loc_i[1], ... >
+using Config  = std::vector<Node*>;  // < loc_0[t], loc_1[t], ... >
+using Configs = std::vector<Config>;
 
+// locations of node
 struct Pos {
   int x;
   int y;
+
+  Pos(int _x, int _y): x(_x), y(_y) {}
 
   void print() {
     std::cout << "("
@@ -59,22 +67,20 @@ struct Pos {
 
 struct Node {
   int id;
-  std::vector<Node*> neighbor;
+  Nodes neighbor;
   Pos pos;
 
-  ~Node() {
-    neighbor.clear();
+  Node(int _id, int x, int y) : id(_id), pos(Pos(x, y)) {}
+
+  int getDegree() const {
+    return neighbor.size();
   }
-
-  int getDegree() const { return neighbor.size(); }
-
   float manhattanDist(const Node& node) const {
     return pos.manhattanDist(node.pos);
   }
   float manhattanDist(Node* const node) const {
     return pos.manhattanDist(node->pos);
   }
-
   float euclideanDist(const Node& node) const {
     return pos.euclideanDist(node.pos);
   }
@@ -105,11 +111,7 @@ struct Node {
   bool operator!=(Node* const v) { return v->id != id; };
 };
 
-using Nodes   = std::vector<Node*>;
-using Path    = std::vector<Node*>;  // < loc_i[0], loc_i[1], ... >
-using Config  = std::vector<Node*>;  // < loc_0[t], loc_1[t], ... >
-using Configs = std::vector<Config>;
-
+// check two configurations are same or not
 static bool sameConfig(const Config& config_i, const Config& config_j)
 {
   if (config_i.size() != config_j.size()) return false;
@@ -119,62 +121,67 @@ static bool sameConfig(const Config& config_i, const Config& config_j)
   return true;
 }
 
-static std::string getConfigName(const Config& c)
-{
-  std::string key;
-  for (int i = 0; i < c.size(); ++i) {
-    if (i != 0) key += "-";
-    key += std::to_string(c[i]->id);
-  }
-  return key;
-}
-
+// Pure graph. Base class of Grid class.
 class Graph {
 private:
-  // name
-  static int UUID;
-  const int id;
-
-  // cache
+  // cache for finding a path between two nodes
   std::unordered_map<std::string, Path> PATH_TABLE;
-  void registerPath(const Path& path);
-  Path AstarSearchWithCache(Node* const s, Node* const g);
+
+  // get key name for cache
   static std::string getPathTableKey(Node* const s, Node* const g);
 
+  // register already searched path to cache
+  void registerPath(const Path& path);
+
+  // find a path using cache, if failed then return empty
+  Path AstarSearchWithCache(Node* const s, Node* const g);
+
 protected:
+  // in grid, V[y * width + x] = Node with position (x, y)
+  // if (x, y) is occupied then V[y * width + x] = nullptr
   Nodes V;
+
+public:
+  Graph() {};
+  ~Graph();
+
+  // in grid, id = y * width + x
+  virtual bool existNode(int id) const { return false; };
+  virtual bool existNode(int x, int y) const { return false; };
+
+  // in grid, id = y * width + x
+  virtual Node* getNode(int x, int y) const { return nullptr; };
+  virtual Node* getNode(int id) const { return nullptr; };
+
+  // in grid, Manhattan distance
+  virtual int dist(Node* const v, Node* const u) { return 0; }
+
+  // get path between two nodes
+  Path getPath(Node* const s, Node* const g);
+
+  // get path length between two nodes
+  int pathDist(Node* const s, Node* const g);
+};
+
+class Grid : public Graph {
+private:
   std::string map_file;
   int width;
   int height;
 
 public:
-  Graph() : id(UUID++) {};
-  Graph(const std::string& _map_file) : id(UUID++), map_file(_map_file) {};
-  ~Graph();
-
-  virtual bool nodeExist(int x, int y) const { return false; };
-  virtual Node* getNode(int x, int y) const { return nullptr; };
-  virtual Node* getNode(int id) const { return nullptr; };
-  virtual int dist(Node* const v, Node* const u) { return 0; }
-
-  std::string getMapFileName() { return map_file; };
-  int getWidth() { return width; }
-  int getHeight() { return height; }
-  int getID() { return id; }
-
-  Path getPath(Node* const s, Node* const g);
-  int pathDist(Node* const s, Node* const g);
-};
-
-
-class Grid : public Graph {
-public:
   Grid() {};
   Grid(const std::string& _map_file);
   ~Grid() {};
 
-  bool nodeExist(int x, int y) const;
-  Node* getNode(int x, int y) const;
+  bool existNode(int id) const;
+  bool existNode(int x, int y) const;
   Node* getNode(int id) const;
+  Node* getNode(int x, int y) const;
+
   int dist(Node* const v, Node* const u) { return v->manhattanDist(u); }
+
+  std::string getMapFileName() { return map_file; };
+  int getWidth() { return width; }
+  int getHeight() { return height; }
 };

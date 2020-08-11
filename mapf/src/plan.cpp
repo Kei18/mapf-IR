@@ -1,11 +1,5 @@
 #include "../include/plan.hpp"
 
-Plan::~Plan()
-{
-  for (auto c : configs) c.clear();
-  configs.clear();
-}
-
 Config Plan::get(int t) const
 {
   if (!(0 <= t && t < configs.size())) halt("invalid timestep");
@@ -22,6 +16,7 @@ Node* Plan::get(int t, int i) const
 
 Config Plan::last() const
 {
+  if (empty()) halt("invalid operation");
   return configs[configs.size()-1];
 }
 
@@ -94,47 +89,15 @@ void Plan::operator+=(const Plan& other)
   for (int t = 1; t < other.size(); ++t) add(other.get(t));
 }
 
-int Plan::getTimestep(const Config& c) const
-{
-  for (int t = 0; t <= getMakespan(); ++t) {
-    if (sameConfig(c, get(t))) return t;
-  }
-  warn("Plan does not have such config");
-  return -1;
-}
-
-Plan Plan::getPartialPlan(const Config& config_i,
-                          const Config& config_j) const
-{
-  int t_s = 0;
-  while (!sameConfig(get(t_s), config_i)) {
-    ++t_s;
-    if (t_s > getMakespan()) halt("invalid operation");
-  }
-
-  Plan partial_plan;
-  for (int t = t_s; t <= getMakespan(); ++t) {
-    partial_plan.add(get(t));
-    if (sameConfig(get(t), config_j)) break;
-    if (t == getMakespan()) halt("invalid operation");
-  }
-  return partial_plan;
-}
-
-Plan Plan::getPartialPlan(int i, int j) const
-{
-  if (!(0 <= i && i <= j && j <= getMakespan())) halt("invalid index.");
-  Plan new_plan;
-  for (int t = i; t <= j; ++t) new_plan.add(get(t));
-  return new_plan;
-}
-
 bool Plan::validate(Problem* P) const
 {
   if (configs.empty()) return false;
+
   // start and goal
   if (!sameConfig(P->getConfigStart(), get(0))) return false;
   if (!sameConfig(P->getConfigGoal(), get(getMakespan()))) return false;
+
+  // check conflicts and continuity
   int num_agents = get(0).size();
   for (int t = 1; t < getMakespan(); ++t) {
     if (get(t).size() != num_agents) return false;
@@ -143,7 +106,8 @@ bool Plan::validate(Problem* P) const
       Node* v_i_t_1 = get(t-1, i);
       Nodes cands = v_i_t_1->neighbor;
       cands.push_back(v_i_t_1);
-      if (!inArray(v_i_t, cands)) return false;
+      if (!inArray(v_i_t, cands)) return false;  // invalid move
+      // see conflicts
       for (int j = i+1; j < num_agents; ++j) {
         Node* v_j_t = get(t, j);
         Node* v_j_t_1 = get(t-1, j);

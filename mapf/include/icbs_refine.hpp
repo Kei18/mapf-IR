@@ -1,6 +1,6 @@
 /*
- * Implementation of Improved Conflict-based Search (ICBS)
- * for Iterative Refinement
+ * Implementation of ICBS for Iterative Refinement
+ * Do not use this directly
  */
 
 #pragma once
@@ -16,6 +16,6 @@ private:
 public:
   ICBS_REFINE(Problem* _P,
               const Plan& _old_plan,
-              const std::vector<int>& _sample);
+              const std::vector<int>& _modif_list);
   ~ICBS_REFINE() {};
 };

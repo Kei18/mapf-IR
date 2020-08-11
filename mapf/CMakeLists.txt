@@ -13,14 +13,12 @@ add_library(lib-mapf STATIC
   ./src/cbs.cpp
   ./src/ecbs.cpp
   ./src/ir.cpp
-  ./src/ir_configs.cpp
-  ./src/ir_paths.cpp
   ./src/icbs.cpp
   ./src/cbs_refine.cpp
   ./src/icbs_refine.cpp
-  ./src/pibt_icbs.cpp
-  ./src/ir_tester.cpp
+  ./src/pibt_complete.cpp
   )
+add_definitions(-D_MAPDIR_="${CMAKE_CURRENT_LIST_DIR}/../map/")
 target_compile_options(lib-mapf PUBLIC -O3 -Wall -mtune=native -march=native)
 target_compile_features(lib-mapf PUBLIC cxx_std_17)
 target_include_directories(lib-mapf INTERFACE ./include)

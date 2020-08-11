@@ -1,6 +1,6 @@
 /*
- * Implementation of Conflict-based Search (CBS)
- * for Iterative Refinement
+ * Implementation of CBS for Iterative Refinement
+ * This cannot be used directly
  */
 
 #pragma once
@@ -8,13 +8,15 @@
 
 class CBS_REFINE : public virtual CBS {
 protected:
-  const Plan old_plan;
-  const Paths old_paths;
-  const int ub_makespan;
-  const int ub_soc;
-  const std::vector<int> sample;
-  std::vector<int> fixed_agents;
+  const Plan old_plan;    // old plan, equivalent to old_paths
+  const Paths old_paths;  // old paths, equivalent to old_plan
+  const int ub_makespan;  // makespan in the old plan
+  const int ub_soc;       // sum of costs in the old plan
+  const std::vector<int> modif_list;  // a modification list M
+  std::vector<int> fixed_agents;  // A \ modif_list
 
+  // true -> makespan optimization, default: false
+  // notice: SOC and makespan are Pareto structure.
   bool makespan_prioritized;
 
   virtual void setInitialHighLevelNode(HighLevelNode_p n);
@@ -25,7 +27,7 @@ protected:
 public:
   CBS_REFINE(Problem* _P,
              const Plan& _old_plan,
-             const std::vector<int>& _sample);
+             const std::vector<int>& _modif_list);
   ~CBS_REFINE() {};
 
   void setParams(int argc, char *argv[]);

@@ -1,0 +1,15 @@
+language: cpp
+
+os: osx
+
+before_script:
+  - sh ./openFrameworks/scripts/osx/download_libs.sh
+  - mkdir build
+  - cd build
+  - cmake ..
+
+script:
+  - make
+  - ./app -i ../instances/sample.txt -s PIBT -o result.txt -v
+  - cd ../visualizer
+  - make build

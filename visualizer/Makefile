@@ -1,9 +1,11 @@
 #!/bin/make
-OF_INCLUDE = $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk
+OF_ROOT=${CURDIR}/../openFrameworks
+OF_INCLUDE =$(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk
+include $(OF_INCLUDE)
 
-ifdef OF_ROOT
-	include $(OF_INCLUDE)
-endif
+.PHONY: build
+build:
+	$(MAKE) PLATFORM_CFLAGS=-D_MAPDIR_='\"${CURDIR}/../map/\"'
 
 .PHONY: ofrun
 ofrun:

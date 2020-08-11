@@ -13,7 +13,7 @@ Solver::Solver(Problem* _P)
   solved = false;
   verbose = false;
 
-  // for mdd
+  // for solvers using MDD
   LibCBS::MDD::MT = MT;
 }
 
@@ -24,7 +24,14 @@ void Solver::solve()
   end();
 }
 
-// pure A* search
+/*
+ * Template of Space-Time A*.
+ * See the following reference.
+ *
+ * Cooperative Pathﬁnding.
+ * D. Silver.
+ * AI Game Programming Wisdom 3, pages 99–111, 2006.
+ */
 Path Solver::getTimedPath(Node* const s,
                           Node* const g,
                           AstarHeuristics& fValue,
@@ -36,7 +43,7 @@ Path Solver::getTimedPath(Node* const s,
                      { return std::to_string(n->v->id)
                          + "-" + std::to_string(n->g); };
 
-  std::vector<AstarNode*> GC;  // for memory management
+  std::vector<AstarNode*> GC;  // garbage collection
   auto createNewNode =
     [&] (Node* v, int g, int f, AstarNode* p)
     {
@@ -45,7 +52,7 @@ Path Solver::getTimedPath(Node* const s,
       return new_node;
     };
 
-  // OPEN and CLOSE
+  // OPEN and CLOSE list
   std::priority_queue<AstarNode*,
                       std::vector<AstarNode*>,
                       CompareAstarNode> OPEN(compare);
@@ -107,26 +114,31 @@ Path Solver::getTimedPath(Node* const s,
   return path;
 }
 
-void Solver::start() {
+void Solver::start()
+{
   info("  start solving MAPF by", solver_name);
   t_start = std::chrono::system_clock::now();
 }
 
-void Solver::end() {
+// failed & solution is empty -> add solution the initial configuration
+void Solver::end()
+{
   comp_time = getSolverElapsedTime();
   info("  finish, elapsed=", comp_time);
-  // format
   if (!solved && solution.empty()) solution.add(P->getConfigStart());
 }
 
-double Solver::getSolverElapsedTime() const {
+double Solver::getSolverElapsedTime() const
+{
   return getElapsedTime(t_start);
 }
 
-bool Solver::overCompTime() const {
+bool Solver::overCompTime() const
+{
   return getSolverElapsedTime() >= max_comp_time;
 }
 
+// convert Plan to Paths
 Paths Solver::planToPaths(const Plan& plan)
 {
   if (plan.empty()) halt("invalid operation.");
@@ -143,6 +155,7 @@ Paths Solver::planToPaths(const Plan& plan)
   return paths;
 }
 
+// convert Paths to Plan
 Plan Solver::pathsToPlan(const Paths& paths)
 {
   Plan plan;
@@ -184,17 +197,30 @@ void Solver::printResult() {
             << std::endl;
 }
 
-void Solver::makeLog(const std::string& logfile) {
+void Solver::makeLog(const std::string& logfile)
+{
   std::ofstream log;
   log.open(logfile, std::ios::out);
+  makeLogBasicInfo(log);
+  makeLogSolution(log);
+  log.close();
+}
+
+void Solver::makeLogBasicInfo(std::ofstream& log)
+{
+  Grid* grid = reinterpret_cast<Grid*>(P->getG());
   log << "instance= " << P->getInstanceFileName() << "\n";
   log << "agents=" << P->getNum() << "\n";
-  log << "map_file=" << P->getG()->getMapFileName() << "\n";
+  log << "map_file=" << grid->getMapFileName() << "\n";
   log << "solver=" << solver_name << "\n";
   log << "solved=" << solved << "\n";
   log << "soc=" << solution.getSOC() << "\n";
   log << "makespan=" << solution.getMakespan() << "\n";
   log << "comp_time=" << comp_time << "\n";
+}
+
+void Solver::makeLogSolution(std::ofstream& log)
+{
   log << "starts=";
   for (int i = 0; i < P->getNum(); ++i) {
     Node* v = P->getStart(i);
@@ -215,5 +241,4 @@ void Solver::makeLog(const std::string& logfile) {
     }
     log << "\n";
   }
-  log.close();
 }

@@ -1,5 +1,11 @@
+/*
+ * This mainly contains utilities of CBS-based solvers, e.g., MDD.
+ */
+
 #pragma once
 #include "solver.hpp"
+#include <memory>
+
 
 namespace LibCBS {
   // ======================================
@@ -45,10 +51,13 @@ namespace LibCBS {
    Constraints& non_cardinal_constraints);
   Constraints getPrioritizedConflict(const Paths& paths,
                                      const MDDs& mdds);
+  // for limited agents, used in refine-solvers
   Constraints getPrioritizedConflict(const Paths& paths,
                                      const MDDs& mdds,
                                      const std::vector<int>& sample);
 
+  // used in refine-solvers
+  // create constraints by fixed paths for CBS-style solvers
   Constraints getConstraintsByFixedPaths
   (const Plan& plan, const std::vector<int>& fixed_agents);
 
@@ -56,50 +65,67 @@ namespace LibCBS {
   // ======================================
   // MDD
   struct MDDNode {
-    int t;
-    Node* v;
-    MDDNodes next;
-    MDDNodes prev;
+    int t;          // timestep
+    Node* v;        // location
+    MDDNodes next;  // available nodes at t+1
+    MDDNodes prev;  // available nodes at t-1
 
-    MDDNode(int _t, Node* _v);
-    ~MDDNode();
+    MDDNode(int _t, Node* _v) : t(_t), v(_v) {}
+    ~MDDNode() {}
     bool operator==(const MDDNode& other) const;
   };
 
   struct MDD {
-    int c;  // cost
-    int i;  // agent
-    Graph* G;  // original graph
-    Node* s;  // start
-    Node* g;  // goal;
+    int c;      // cost
+    int i;      // agent
+    Graph* G;   // original graph
+    Node* s;    // start
+    Node* g;    // goal;
     std::vector<MDDNodes> body;  // t: 0...c
-    bool valid;  // false -> no path from s to g
+    bool valid;   // false -> no path from s to g
     MDDNodes GC;  // for memory management
 
-    // MDD without any constraints
+    // cache, MDD without any constraints
     static std::unordered_map<std::string, MDD_p> PURE_MDD_TABLE;
 
-    // for finding paths
+    // used in finding paths
     static std::mt19937* MT;
 
     MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid);
+    // time_limit: for situations taking long time to construct one MDD
     MDD(int _c, int _i, Problem* P, Constraints constraints,
         int time_limit=-1);
     MDD(int _c, int _i, Problem* P);
     ~MDD();
-    MDD(const MDD& other);  // copy
 
-    MDDNode* createNewNode(int t, Node* v);
+    MDD(const MDD& other);  // copy
     void copy(const MDD& other);
-    std::string getPureMDDName();
+
+    // used
+    MDDNode* createNewNode(int t, Node* v);
+
+    // create new MDD
     void build(int time_limit=-1);
+
+    // update MDD with new constraints
     void update(const Constraints& _constraints);
+
+    // sub-procedures used in update
     void deleteForward(MDDNode* node);
     void deleteBackword(MDDNode* node);
+
+    // get one path from MDD
     Path getPath() const;
     Path getPath(Constraint_p const constraint) const;
     Path getPath(const Constraints& _constraints) const;
+
+    // get MDD width at the timestep
     int getWidth(int t) const;
+
+    // print info
     void println() const;
+
+    // used for cache
+    std::string getPureMDDName();
   };
 };

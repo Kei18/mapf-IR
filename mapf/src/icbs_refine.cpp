@@ -2,15 +2,15 @@
 
 ICBS_REFINE::ICBS_REFINE(Problem* _P,
                          const Plan& _old_plan,
-                         const std::vector<int>& _sample)
+                         const std::vector<int>& _modif_list)
   : CBS(_P), ICBS(_P),
-    CBS_REFINE(_P, _old_plan, _sample)
+    CBS_REFINE(_P, _old_plan, _modif_list)
 {
 }
 
 void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
 {
-  if (sample.empty()) {
+  if (modif_list.empty()) {
     ICBS::setInitialHighLevelNode(n);
     return;
   }
@@ -33,7 +33,8 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
     }
     Path path;
     LibCBS::MDD_p mdd;
-    if (inArray(i, sample)) {
+    if (inArray(i, modif_list)) {
+      // find path using A* search
       path = CBS_REFINE::getInitialPath(i);
       if (path.empty()) {
         n->valid = false;
@@ -45,6 +46,7 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
         n->valid = false;
         return;
       }
+      // create mdd
       mdd = std::make_shared<LibCBS::MDD>
         (LibCBS::MDD(path.size()-1, i, P, constraints, time_limit));
       if (!mdd->valid) {
@@ -58,27 +60,26 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
     paths.insert(i, path);
     mdds.push_back(mdd);
   }
-  MDDTable[n->id] = mdds;
-
   n->id = 0;
   n->paths = paths;
   n->constraints = constraints;
   n->makespan = paths.getMakespan();
   n->soc = paths.getSOC();
-  n->f = paths.countConflict(sample);
+  n->f = paths.countConflict(modif_list);
   n->valid = true;  // valid
+  MDDTable[n->id] = mdds;
 }
 
 LibCBS::Constraints ICBS_REFINE::getPrioritizedConflict
 (HighLevelNode_p h_node)
 {
-  if (sample.empty()) {
+  if (modif_list.empty()) {
     return LibCBS::getPrioritizedConflict(h_node->paths,
                                           MDDTable[h_node->id]);
   }
   return LibCBS::getPrioritizedConflict(h_node->paths,
                                         MDDTable[h_node->id],
-                                        sample);
+                                        modif_list);
 }
 
 // using MDD
