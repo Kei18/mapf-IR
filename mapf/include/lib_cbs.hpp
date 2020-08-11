@@ -4,6 +4,8 @@
 
 #pragma once
 #include "solver.hpp"
+#include <memory>
+
 
 namespace LibCBS {
   // ======================================
