@@ -51,7 +51,7 @@ Please see `instances/sample.txt` for parameters of instances, e.g., filed, numb
 ### Output File
 
 This is an example output of `../instances/sample.txt`.
-Note that coordination denotes `(x, y)`.
+Note that `(x, y)` denotes location.
 `(0, 0)` is the left-top point.
 `(x, 0)` is the location at `x`-th column and 1st row.
 ```
@@ -74,7 +74,7 @@ solution=
 ## Visualizer
 
 ### Building
-Build as follows.
+It takes around 10 minutes.
 ```sh
 git submodule init
 git submodule update
