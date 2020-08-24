@@ -22,8 +22,6 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   LibCBS::Constraints constraints
     = LibCBS::getConstraintsByFixedPaths(old_plan, fixed_agents);
 
-  auto t_s = Time::now();
-
   // find paths
   for (int i = 0; i < P->getNum(); ++i) {
     // check time limit

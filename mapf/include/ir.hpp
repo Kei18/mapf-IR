@@ -76,18 +76,3 @@ public:
   void setParams(int argc, char *argv[]);
   static void printHelp();
 };
-
-
-
-static void setSolverOption(Solver* solver,
-                            const std::vector<std::string>& option)
-{
-  if (option.empty()) return;
-  int argc = option.size() + 1;
-  char *argv[argc+1];
-  for (int i = 0; i < argc; ++i) {
-    char *tmp = const_cast<char*>(option[i].c_str());
-    argv[i+1] = tmp;
-  }
-  solver->setParams(argc, argv);
-}

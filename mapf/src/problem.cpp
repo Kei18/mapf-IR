@@ -112,11 +112,11 @@ Problem::Problem(Problem* P,
                  int _max_timestep)
   : G(P->getG()),
     MT(P->getMT()),
-    num_agents(P->getNum()),
     config_s(_config_s),
     config_g(_config_g),
-    max_comp_time(_max_comp_time),
-    max_timestep(_max_timestep)
+    num_agents(P->getNum()),
+    max_timestep(_max_timestep),
+    max_comp_time(_max_comp_time)
 {
 }
 

@@ -25,6 +25,7 @@ class ofApp : public ofBaseApp {
   bool flg_font;
   bool flg_line;
   bool flg_focus;
+  bool flg_logo_gen;
 
   // visual
   ofTrueTypeFont font;

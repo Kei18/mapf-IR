@@ -10,6 +10,7 @@ ofApp::ofApp(MAPFPlan* _P): P(_P)
   flg_font = false;
   flg_line = true;
   flg_focus = false;
+  flg_logo_gen = false;
 }
 
 void ofApp::setup()
@@ -80,7 +81,11 @@ void ofApp::draw()
         + BufferSize::window_x_buffer + scale/2;
       int y_draw = y*scale-scale/2+0.5
         + BufferSize::window_y_top_buffer + scale/2;
-      ofDrawRectangle(x_draw, y_draw, scale-0.5, scale-0.5);
+      if (!flg_logo_gen) {  // default
+        ofDrawRectangle(x_draw, y_draw, scale-0.5, scale-0.5);
+      } else {
+        ofDrawRectangle(x_draw, y_draw, scale, scale);
+      }
       if (flg_font) {
         ofSetColor(Color::font);
         font.drawString(std::to_string(y*P->G->getWidth()+x),
@@ -125,7 +130,12 @@ void ofApp::draw()
     x += BufferSize::window_x_buffer + scale/2;
     y += BufferSize::window_y_top_buffer + scale/2;
 
-    ofDrawCircle(x, y, agent_rad);
+    if (!flg_logo_gen) { // default
+      ofDrawCircle(x, y, agent_rad);
+    } else {
+      ofSetColor(Color::bg);
+      ofDrawRectangle(x-scale/2,y-scale/2,scale,scale);
+    }
 
     // goal
     if (flg_line) {
@@ -135,7 +145,7 @@ void ofApp::draw()
     }
 
     // agent at goal
-    if (v == P->config_g[i]) {
+    if (v == P->config_g[i] && !flg_logo_gen) {
       ofSetColor(255,255,255);
       ofDrawCircle(x, y, agent_rad-2);
     }
@@ -179,6 +189,19 @@ void ofApp::keyPressed(int key) {
   if (key == 'f') {
     flg_font = !flg_font;
     flg_font &= (scale - font_size > 6);
+  }
+  if (key == 'i') {
+    if (!flg_logo_gen) {
+      flg_logo_gen = true;
+      flg_line = false;
+      flg_focus = false;
+      flg_goal = false;
+      flg_font = false;
+    } else {
+      flg_logo_gen = false;
+      flg_line = true;
+      flg_goal = true;
+    }
   }
 
   float t;
@@ -233,4 +256,5 @@ void ofApp::printKeys()
   std::cout << "- a : show single agent" << std::endl;
   std::cout << "- + : increment single agent id" << std::endl;
   std::cout << "- - : decrement single agent id" << std::endl;
+  std::cout << "- esc : terminate" << std::endl;
 }

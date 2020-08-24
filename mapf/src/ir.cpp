@@ -11,6 +11,21 @@ const IR::OPTIMAL_SOLVER_TYPE IR::DEFAULT_REFINE_SOLVER =
 const int IR::DEFAULT_MAX_ITERATION = 100;
 
 
+// used for set underlying solver options
+static void setSolverOption(Solver* solver,
+                            const std::vector<std::string>& option)
+{
+  if (option.empty()) return;
+  int argc = option.size() + 1;
+  char *argv[argc+1];
+  for (int i = 0; i < argc; ++i) {
+    char *tmp = const_cast<char*>(option[i].c_str());
+    argv[i+1] = tmp;
+  }
+  solver->setParams(argc, argv);
+}
+
+
 IR::IR(Problem* _P) : Solver(_P)
 {
   solver_name = IR::SOLVER_NAME;

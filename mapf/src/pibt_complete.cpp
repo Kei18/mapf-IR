@@ -74,8 +74,6 @@ void PIBT_COMPLETE::printHelp()
 
 void PIBT_COMPLETE::makeLog(const std::string& logfile)
 {
-  Grid* grid = reinterpret_cast<Grid*>(P->getG());
-
   std::ofstream log;
   log.open(logfile, std::ios::out);
   makeLogBasicInfo(log);

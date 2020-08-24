@@ -112,6 +112,7 @@ struct Node {
 };
 
 // check two configurations are same or not
+[[maybe_unused]]
 static bool sameConfig(const Config& config_i, const Config& config_j)
 {
   if (config_i.size() != config_j.size()) return false;
@@ -143,7 +144,7 @@ protected:
 
 public:
   Graph() {};
-  ~Graph();
+  virtual ~Graph();
 
   // in grid, id = y * width + x
   virtual bool existNode(int id) const { return false; };
