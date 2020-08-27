@@ -91,6 +91,8 @@ cd build
 ../visualize.sh result.txt
 ```
 
+You can manipulate it via your keyboard. See printed info.
+
 ## Licence
 This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 
@@ -101,7 +103,7 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 - Scripts for the experiments are in `exp_scripts/`.
 
 ## Author
-anonymous
+[Keisuke Okumura](https://kei18.github.io) is a Ph.D. candidate at Tokyo Institute of Technology, working on multiple moving agents.
 
 ## Reference
 1. Silver, D. (2005).

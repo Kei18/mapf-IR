@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
   ofSetupOpenGL(100, 100, OF_WINDOW);
   ofRunApp(new ofApp(solution));
 
+  delete solution;
   return 0;
 }
 
@@ -45,7 +46,6 @@ void readSetResult(const std::string& result_file, MAPFPlan* plan)
   std::ifstream file(result_file);
   if (!file) halt("file " + result_file + " is not found.");
 
-  std::regex r_scen      = std::regex(R"(scen_file=(.+))");
   std::regex r_map       = std::regex(R"(map_file=(.+))");
   std::regex r_agents    = std::regex(R"(agents=(.+))");
   std::regex r_solver    = std::regex(R"(solver=(.+))");

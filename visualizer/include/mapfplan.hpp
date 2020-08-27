@@ -1,8 +1,7 @@
 #pragma once
-#include "../include/graph.hpp"
+#include "graph.hpp"
 
 struct MAPFPlan {
-  std::string scen_file;  // scenario file name
   int num_agents;         // number of agents
   Grid* G;                // grid
   std::string solver;     // solver name
