@@ -30,9 +30,12 @@ namespace LibCBS {
     int t;    // at t
     Node* v;  // at t
     Node* u;  // used only for swap conflict, at t-1
+    bool stay;  // stay forever from t
 
     Constraint(int _id, int _t, Node* _v, Node* _u)
-      : id(_id), t(_t), v(_v), u(_u) {};
+      : id(_id), t(_t), v(_v), u(_u), stay(false) {};
+    Constraint(int _id, int _t, Node* _v, bool _stay)
+      : id(_id), t(_t), v(_v), u(nullptr), stay(_stay) {};
     void println();
   };
 

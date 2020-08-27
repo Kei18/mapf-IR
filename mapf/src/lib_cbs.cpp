@@ -194,9 +194,7 @@ LibCBS::Constraints LibCBS::getConstraintsByFixedPaths
 {
   Constraints constraints;
   int makespan = plan.getMakespan();
-  int num_agents = plan.get(0).size();
-  for (int i = 0; i < num_agents; ++i) {
-    if (!inArray(i, fixed_agents)) continue;
+  for (auto i : fixed_agents) {
     for (int t = 1; t <= makespan; ++t) {
       Constraint_p c_vertex
         = std::make_shared<Constraint>(-1, t, plan.get(t, i), nullptr);
@@ -207,6 +205,11 @@ LibCBS::Constraints LibCBS::getConstraintsByFixedPaths
         (-1, t, plan.get(t-1, i), plan.get(t, i));
       constraints.push_back(c_swap);
     }
+    // constraints at goal
+    Node* g = plan.get(makespan, i);
+    Constraint_p c_last
+      = std::make_shared<Constraint>(-1, makespan, g, true);
+    constraints.push_back(c_last);
   }
   return constraints;
 }
@@ -383,6 +386,21 @@ void LibCBS::MDD::update(const Constraints& _constraints)
 
   // delete nodes
   for (auto constraint : constraints) {
+
+    if (constraint->stay) {  // check goal
+      for (int t = constraint->t; t <= c; ++t) {
+        auto itr_v = std::find_if(body[t].begin(),
+                                  body[t].end(),
+                                  [constraint] (MDDNode* node)
+                                  { return node->v == constraint->v; });
+        if (itr_v == body[t].end()) continue;
+        MDDNode* node_v = *itr_v;
+        deleteForward(node_v);
+        deleteBackword(node_v);
+      }
+      continue;
+    }
+
     auto itr_v = std::find_if(body[constraint->t].begin(),
                               body[constraint->t].end(),
                               [constraint] (MDDNode* node)
