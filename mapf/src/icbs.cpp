@@ -85,6 +85,7 @@ void ICBS::run()
         (LAZY_EVAL_LB_SOC > 0 &&
          HighLevelTree.top()->soc >= LAZY_EVAL_LB_SOC)) {
       auto nodes = lazyEval();
+      if (overCompTime()) break;
       for (auto node : nodes) HighLevelTree.push(node);
     }
   }
@@ -190,12 +191,14 @@ CBS::HighLevelNodes ICBS::lazyEval()
   if (itr_lb == LAZY_EVAL_TABLE.end()) return {};
   HighLevelNodes h_nodes = itr_lb->second;
   for (auto h_node : h_nodes) {
+    if (overCompTime()) break;
     // invoke
     LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
     int id = last_constraint->id;
     int c = last_constraint->t;
     while (true) {
       ++c;
+      if (overCompTime()) break;
       LibCBS::MDD_p new_mdd
         = std::make_shared<LibCBS::MDD>(c, id, P, h_node->constraints);
       if (new_mdd->valid) {
