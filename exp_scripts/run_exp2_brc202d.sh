@@ -23,17 +23,17 @@ run () {
 }
 
 # ECBS
-SOLVER="-s IR -x ECBS -X \"-w 1.01\" -y ICBS -n 1000000 -t 3000"
+SOLVER="-s IR -x ECBS -X \"-w 1.01\" -y ICBS -n 1000000 -t 10000"
 run $field "100" "$SOLVER" ECBS
-SOLVER="-s IR -x ECBS -X \"-w 1.10\" -y ICBS -n 1000000 -t 3000"
+SOLVER="-s IR -x ECBS -X \"-w 1.10\" -y ICBS -n 1000000 -t 10000"
 run $field "300" "$SOLVER" ECBS
-SOLVER="-s IR -x ECBS -X \"-w 1.10\" -y ICBS -n 1000000 -t 3000"
+SOLVER="-s IR -x ECBS -X \"-w 1.10\" -y ICBS -n 1000000 -t 10000"
 run $field "500" "$SOLVER" ECBS
 
 # HCA
-SOLVER="-s IR -x HCA -y ICBS -n 1000000 -t 3000"
+SOLVER="-s IR -x HCA -y ICBS -n 1000000 -t 10000"
 run $field "100 300 500" "$SOLVER" HCA
 
 # PIBT_COMPLETE
-SOLVER="-s IR -x PIBT_COMPLETE -y ICBS -n 1000000 -t 3000"
+SOLVER="-s IR -x PIBT_COMPLETE -y ICBS -n 1000000 -t 10000"
 run $field "100 300 500" "$SOLVER" PIBTC
