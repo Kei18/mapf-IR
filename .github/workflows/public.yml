@@ -21,7 +21,7 @@ jobs:
         run: |
           git config user.name Kei18
           git config user.email keisuke.oku18@gmail.com
-          git merge public
+          git merge origin/public
           zip -r docs/code.zip ./
           git add docs/code.zip
           git commit -m "update public code"
