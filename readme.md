@@ -23,8 +23,6 @@ The gif shows a part of an MAPF plan.
 ## Building
 
 ```
-git clone https://github.com/Kei18/mapf-IR
-cd mapf
 mkdir build
 cd build
 cmake ..
@@ -95,7 +93,6 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 - Maps in `maps/` are from [MAPF benchmarks](https://movingai.com/benchmarks/mapf.html).
   When you add a new map, please place it in the `maps/` directory.
 - The font in `visualizer/bin/data` is from [Google Fonts](https://fonts.google.com/).
-- Scripts for the experiments are in `exp_scripts/`.
 
 ## Author
 [Keisuke Okumura](https://kei18.github.io) is a Ph.D. candidate at Tokyo Institute of Technology, working on multiple moving agents.
