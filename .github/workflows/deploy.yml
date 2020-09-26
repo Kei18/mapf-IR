@@ -14,9 +14,8 @@ jobs:
       
       - name: add zip file
         run: |
-          mkdir deploy
+          cp -r docs deploy
           zip -r deploy/code.zip ./
-          cp -r docs/ deploy
 
       - name: deploy
         uses: peaceiris/actions-gh-pages@v3
