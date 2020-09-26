@@ -20,7 +20,7 @@ jobs:
         with:
           type: now
           target_branch: public
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.GITHUB_TOKENn }}
 
       - name: add zip file
         env:
