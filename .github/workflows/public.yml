@@ -20,6 +20,7 @@ jobs:
         with:
           type: now
           target_branch: public
+          head_to_merge: ${{ github.ref }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: add zip file
