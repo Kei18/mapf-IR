@@ -1,23 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
+file(GLOB SRCS "./src/*.cpp")
 project(lib-mapf)
-add_library(lib-mapf STATIC
-  ./src/graph.cpp
-  ./src/problem.cpp
-  ./src/paths.cpp
-  ./src/plan.cpp
-  ./src/solver.cpp
-  ./src/pibt.cpp
-  ./src/hca.cpp
-  ./src/whca.cpp
-  ./src/lib_cbs.cpp
-  ./src/cbs.cpp
-  ./src/ecbs.cpp
-  ./src/ir.cpp
-  ./src/icbs.cpp
-  ./src/cbs_refine.cpp
-  ./src/icbs_refine.cpp
-  ./src/pibt_complete.cpp
-  )
+add_library(lib-mapf STATIC ${SRCS})
 add_definitions(-D_MAPDIR_="${CMAKE_CURRENT_LIST_DIR}/../map/")
 target_compile_options(lib-mapf PUBLIC -O3 -Wall -mtune=native -march=native)
 target_compile_features(lib-mapf PUBLIC cxx_std_17)
