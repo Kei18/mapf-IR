@@ -22,4 +22,5 @@ jobs:
           zip -r docs/code.zip ./
           git add docs/code.zip
           git commit -m "update public code"
+          git push --set-upstream origin gh-pages
           git push
