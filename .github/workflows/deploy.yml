@@ -1,0 +1,22 @@
+name: public
+
+on:
+  push:
+    branches:
+      - public
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: add zip file
+        run: zip -r docs/code.zip ./ -x *.git*
+
+      - name: deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
