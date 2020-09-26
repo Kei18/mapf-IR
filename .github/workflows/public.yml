@@ -19,7 +19,8 @@ jobs:
           git checkout -b gh-pages
           git config user.name Kei18
           git config user.email keisuke.oku18@gmail.com
+          git remote set-url origin https://Kei18:${{ secrets.GITHUB_PASS }}@github.com/ykhirao/write-code-everyday-bot-fork
           zip -r docs/code.zip ./
           git add docs/code.zip
-          git commit -a -m "update public code"
-          git push origin gh-pages
+          git commit -m "update public code"
+          git push
