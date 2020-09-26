@@ -13,12 +13,10 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: add zip file
-        run: |
-          cp -r docs deploy
-          zip -r deploy/code.zip ./
+        run: zip -r docs/code.zip ./ -x \*/.git/\*
 
       - name: deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./deploy
+          publish_dir: ./docs
