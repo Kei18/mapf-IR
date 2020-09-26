@@ -23,6 +23,8 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
 
   bool read_scen = true;
   while (getline(file, line)) {
+    // for CRLF coding
+    if (*(line.end()-1) == 0x0d) line.pop_back();
     // comment
     if (std::regex_match(line, results, r_comment)) {
       continue;

@@ -189,6 +189,7 @@ Grid::Grid(const std::string& _map_file): Graph(), map_file(_map_file)
 
   // fundamental graph params
   while (getline(file, line)) {
+    if (*(line.end()-1) == 0x0d) line.pop_back();  // for CRLF coding
     if (std::regex_match(line, results, r_height)) {
       height = std::stoi(results[1].str());
     }
@@ -203,6 +204,7 @@ Grid::Grid(const std::string& _map_file): Graph(), map_file(_map_file)
   int y = 0;
   V = Nodes(width*height, nullptr);
   while (getline(file, line)) {
+    if (*(line.end()-1) == 0x0d) line.pop_back();  // for CRLF coding
     if (line.size() != width) halt("map format is invalid");
     for (int x = 0; x < width; ++x) {
       char s = line[x];
