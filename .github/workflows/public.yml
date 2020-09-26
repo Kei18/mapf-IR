@@ -10,15 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout gh-pages branch
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
 
-      - name: checkout new branch
+      - name: merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git checkout -b gh-pages
           git config user.name Kei18
           git config user.email keisuke.oku18@gmail.com
+          git merge origin/public
           zip -r docs/code.zip ./
           git add docs/code.zip
           git commit -m "update public code"
