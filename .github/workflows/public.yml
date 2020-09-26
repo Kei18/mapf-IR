@@ -10,15 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout public
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: checkout new branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git checkout -b gh-pages
+          git config user.name Kei18
+          git config user.email keisuke.oku18@gmail.com
           zip -r docs/code.zip ./
           git add docs/code.zip
           git commit -m "update public code"
-          git push origin gh-pages
+          git push
