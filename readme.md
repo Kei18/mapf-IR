@@ -3,11 +3,12 @@ Multi-Agent Path Finding
 [![Build Status](https://travis-ci.com/Kei18/mapf-IR.svg?token=NJ5EpN7k73FqKbLee887&branch=master)](https://travis-ci.com/Kei18/mapf-IR)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
-A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "Iterative Refinement for Realtime MAPF".
+A personal simulator and visualizer of Multi-Agent Path Finding (MAPF).
 It is written in C++(17) with [CMake](https://cmake.org/) build and tested on OSX 10.15.
 The visualizer uses [openFrameworks](https://openframeworks.cc).
+There was a [previous version](https://github.com/Kei18/pibt) to assess PIBT, however, the new one is much cleaner (I hope).
 
-The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], PIBT-Complete, and IR.
+The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5].
 
 ## Demo
 ![100 agents in arena](/material/arena_100agents.gif)
@@ -16,7 +17,7 @@ The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], 
 
 ![1000 agents in brc202d](/material/brc202d_1000agents.gif)
 
-1000 agents in brc202d, planned by PIBT-Complete in 84sec.
+1000 agents in brc202d, planned by PIBT in 84sec.
 The gif shows a part of an MAPF plan.
 
 ## Building
@@ -34,11 +35,6 @@ make
 PIBT
 ```sh
 ./app -i ../instances/sample.txt -s PIBT -o result.txt -v
-```
-
-IR (the result is saved in `result.txt`)
-```sh
-./app -i ../instances/random-32-32-20_70agents_1.txt -s IR -n 50 -t 3000 -v
 ```
 
 You can find details and explanations for all parameters with:
@@ -76,8 +72,7 @@ solution=
 ### Building
 It takes around 10 minutes.
 ```sh
-git submodule init
-git submodule update
+git clone https://github.com/openframeworks/openFrameworks.git
 sh ./openFrameworks/scripts/osx/download_libs.sh
 cd visualizer/
 make build

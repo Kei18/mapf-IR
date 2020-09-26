@@ -11,8 +11,6 @@
 #include <cbs.hpp>
 #include <icbs.hpp>
 #include <ecbs.hpp>
-#include <pibt_complete.hpp>
-#include <ir.hpp>
 
 void printHelp();
 Solver* getSolver(const std::string solver_name,
@@ -126,12 +124,8 @@ Solver* getSolver(const std::string solver_name,
     solver = new CBS(P);
   } else if (solver_name == "ICBS") {
     solver = new ICBS(P);
-  } else if (solver_name == "PIBT_COMPLETE") {
-    solver = new PIBT_COMPLETE(P);
   } else if (solver_name == "ECBS") {
     solver = new ECBS(P);
-  } else if (solver_name == "IR") {
-    solver = new IR(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = new PIBT(P);
@@ -141,7 +135,8 @@ Solver* getSolver(const std::string solver_name,
   return solver;
 }
 
-void printHelp() {
+void printHelp()
+{
   std::cout << "\nUsage: ./app [OPTIONS] [SOLVER-OPTIONS]\n"
             << "\n**instance file is necessary to run MAPF simulator**\n\n"
             << "  -i --instance [FILE_PATH]     instance file path\n"
@@ -159,6 +154,4 @@ void printHelp() {
   CBS::printHelp();
   ECBS::printHelp();
   ICBS::printHelp();
-  PIBT_COMPLETE::printHelp();
-  IR::printHelp();
 }
