@@ -170,12 +170,13 @@ void Problem::setRandomStartsGoals ()
   while (true) {
     while (G->getNode(goals[j]) == nullptr) {
       ++j;
-      if (j >= N) halt("number of agents is too large.");
+      if (j >= N) halt("set goal, number of agents is too large.");
     }
     // retry
     if (G->getNode(goals[j]) == config_s[config_g.size()]) {
       config_g.clear();
       std::shuffle(goals.begin(), goals.end(), *MT);
+      j = 0;
       continue;
     }
     config_g.push_back(G->getNode(goals[j]));
