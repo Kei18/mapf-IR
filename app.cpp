@@ -143,7 +143,7 @@ void printHelp()
             << "  -o --output [FILE_PATH]       ouptut file path\n"
             << "  -v --verbose                  print additional info\n"
             << "  -h --help                     help\n"
-            << "  -s --solver [SOLVER_NAME]     solver, choose from the below"
+            << "  -s --solver [SOLVER_NAME]     solver, choose from the below\n"
             << "  -P --make-scen                make scenario file using random starts/goals"
             << "\n\nSolver Options:"
             << std::endl;
