@@ -11,9 +11,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: add zip file
-        run: zip -r docs/code.zip ./ -x *.git*
+        run: |
+          python docs/generator.py
+          zip -r docs/code.zip ./ -x *.git*
 
       - name: deploy
         uses: peaceiris/actions-gh-pages@v3
