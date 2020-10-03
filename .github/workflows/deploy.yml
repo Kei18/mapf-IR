@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
       - name: add zip file
         run: |
           python docs/generator.py
