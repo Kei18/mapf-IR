@@ -5,8 +5,8 @@
 #pragma once
 #include "solver.hpp"
 
-
-class PIBT_COMPLETE : public Solver {
+class PIBT_COMPLETE : public Solver
+{
 private:
   // time required to complement plan, default zero
   double comp_time_complement;

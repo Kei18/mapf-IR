@@ -1,8 +1,9 @@
 #include "../include/problem.hpp"
+
 #include <fstream>
 #include <regex>
-#include "../include/util.hpp"
 
+#include "../include/util.hpp"
 
 Problem::Problem(const std::string& _instance) : instance(_instance)
 {
@@ -62,21 +63,19 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
       continue;
     }
     // read initial/goal nodes
-    if (std::regex_match(line, results, r_sg) && read_scen
-        && config_s.size() < num_agents) {
+    if (std::regex_match(line, results, r_sg) && read_scen &&
+        config_s.size() < num_agents) {
       int x_s = std::stoi(results[1].str());
       int y_s = std::stoi(results[2].str());
       int x_g = std::stoi(results[3].str());
       int y_g = std::stoi(results[4].str());
       if (!G->existNode(x_s, y_s)) {
-        halt("start node ("
-             + std::to_string(x_s) + ", " + std::to_string(y_s)
-             + ") does not exist, invalid scenario");
+        halt("start node (" + std::to_string(x_s) + ", " + std::to_string(y_s) +
+             ") does not exist, invalid scenario");
       }
       if (!G->existNode(x_g, y_g)) {
-        halt("goal node ("
-             + std::to_string(x_g) + ", " + std::to_string(y_g)
-             + ") does not exist, invalid scenario");
+        halt("goal node (" + std::to_string(x_g) + ", " + std::to_string(y_g) +
+             ") does not exist, invalid scenario");
       }
 
       Node* s = G->getNode(x_s, y_s);
@@ -105,22 +104,20 @@ Problem::Problem(const std::string& _instance) : instance(_instance)
   config_g.resize(num_agents);
 }
 
-Problem::Problem(Problem* P,
-                 Config _config_s,
-                 Config _config_g,
-                 int _max_comp_time,
-                 int _max_timestep)
-  : G(P->getG()),
-    MT(P->getMT()),
-    config_s(_config_s),
-    config_g(_config_g),
-    num_agents(P->getNum()),
-    max_timestep(_max_timestep),
-    max_comp_time(_max_comp_time)
+Problem::Problem(Problem* P, Config _config_s, Config _config_g,
+                 int _max_comp_time, int _max_timestep)
+    : G(P->getG()),
+      MT(P->getMT()),
+      config_s(_config_s),
+      config_g(_config_g),
+      num_agents(P->getNum()),
+      max_timestep(_max_timestep),
+      max_comp_time(_max_comp_time)
 {
 }
 
-Problem::~Problem() {
+Problem::~Problem()
+{
   config_s.clear();
   config_g.clear();
 }
@@ -137,7 +134,7 @@ Node* Problem::getGoal(int i) const
   return config_g[i];
 }
 
-void Problem::setRandomStartsGoals ()
+void Problem::setRandomStartsGoals()
 {
   // initialize
   config_s.clear();
@@ -197,10 +194,8 @@ void Problem::makeScenFile(const std::string& output_file)
   log << "max_timestep=" << max_timestep << "\n";
   log << "max_comp_time=" << max_comp_time << "\n";
   for (int i = 0; i < num_agents; ++i) {
-    log << config_s[i]->pos.x << ","
-        << config_s[i]->pos.y << ","
-        << config_g[i]->pos.x << ","
-        << config_g[i]->pos.y << "\n";
+    log << config_s[i]->pos.x << "," << config_s[i]->pos.y << ","
+        << config_g[i]->pos.x << "," << config_g[i]->pos.y << "\n";
   }
   log.close();
 }

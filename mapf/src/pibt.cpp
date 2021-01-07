@@ -2,29 +2,23 @@
 
 const std::string PIBT::SOLVER_NAME = "PIBT";
 
-PIBT::PIBT(Problem* _P) : Solver(_P)
-{
-  solver_name = PIBT::SOLVER_NAME;
-}
+PIBT::PIBT(Problem* _P) : Solver(_P) { solver_name = PIBT::SOLVER_NAME; }
 
 void PIBT::run()
 {
   Plan plan;  // will be solution
 
   // compare priority of agents
-  auto compare = [] (Agent* a, const Agent* b) {
-                   if (a->elapsed != b->elapsed)
-                     return a->elapsed < b->elapsed;
-                   // use initial distance
-                   if (a->init_d != b->init_d)
-                     return a->init_d < b->init_d;
-                   return a->tie_breaker < b->tie_breaker;
-                 };
+  auto compare = [](Agent* a, const Agent* b) {
+    if (a->elapsed != b->elapsed) return a->elapsed < b->elapsed;
+    // use initial distance
+    if (a->init_d != b->init_d) return a->init_d < b->init_d;
+    return a->tie_breaker < b->tie_breaker;
+  };
 
   // agents have not decided their next locations
-  std::priority_queue<Agent*,
-                      std::vector<Agent*>,
-                      decltype(compare)> undecided(compare);
+  std::priority_queue<Agent*, std::vector<Agent*>, decltype(compare)> undecided(
+      compare);
   // agents have already decided their next locations
   std::vector<Agent*> decided;
 
@@ -38,13 +32,13 @@ void PIBT::run()
     Node* s = P->getStart(i);
     Node* g = P->getGoal(i);
     int d = disable_dist_init ? 0 : pathDist(s, g);
-    Agent* a = new Agent { i,        // id
-                           s,        // current location
-                           nullptr,  // next location
-                           g,        // goal
-                           0,        // elapsed
-                           d,        // dist from s -> g
-                           getRandomFloat(0, 1, MT) };  // tie-breaker
+    Agent* a = new Agent{i,                          // id
+                         s,                          // current location
+                         nullptr,                    // next location
+                         g,                          // goal
+                         0,                          // elapsed
+                         d,                          // dist from s -> g
+                         getRandomFloat(0, 1, MT)};  // tie-breaker
     undecided.push(a);
     occupied_now[s->id] = a;
   }
@@ -53,9 +47,7 @@ void PIBT::run()
   // main loop
   int timestep = 0;
   while (true) {
-    info(" ",
-         "elapsed:", getSolverElapsedTime(),
-         ", timestep:", timestep);
+    info(" ", "elapsed:", getSolverElapsedTime(), ", timestep:", timestep);
 
     // planning
     while (!undecided.empty()) {
@@ -120,8 +112,7 @@ void PIBT::run()
   solution = plan;
 }
 
-bool PIBT::funcPIBT(Agent* ai,
-                    std::unordered_map<int, Agent*>& occupied_now,
+bool PIBT::funcPIBT(Agent* ai, std::unordered_map<int, Agent*>& occupied_now,
                     std::unordered_map<int, Agent*>& occupied_next)
 {
   // decide next node
@@ -152,8 +143,7 @@ bool PIBT::funcPIBT(Agent* ai,
 /*
  * no candidate node -> return nullptr
  */
-Node* PIBT::planOneStep(Agent* a,
-                        std::unordered_map<int, Agent*>& occupied_now,
+Node* PIBT::planOneStep(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
                         std::unordered_map<int, Agent*>& occupied_next)
 {
   Node* v = chooseNode(a, occupied_now, occupied_next);
@@ -166,11 +156,10 @@ Node* PIBT::planOneStep(Agent* a,
 }
 
 // no candidate node -> return nullptr
-Node* PIBT::chooseNode(Agent* a,
-                       std::unordered_map<int, Agent*>& occupied_now,
+Node* PIBT::chooseNode(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
                        std::unordered_map<int, Agent*>& occupied_next)
 {
-  Nodes C;  // candidates
+  Nodes C;                           // candidates
   Nodes C_pre = a->v_now->neighbor;  // all possible node
   C_pre.push_back(a->v_now);
 
@@ -179,7 +168,8 @@ Node* PIBT::chooseNode(Agent* a,
     if (occupied_next.find(v->id) != occupied_next.end()) continue;
     // avoid swap conflict
     if (occupied_now.find(v->id) != occupied_now.end() &&
-        occupied_now[v->id]->v_next == a->v_now) continue;
+        occupied_now[v->id]->v_next == a->v_now)
+      continue;
     C.push_back(v);
   }
 
@@ -193,60 +183,57 @@ Node* PIBT::chooseNode(Agent* a,
   std::shuffle(C.begin(), C.end(), *MT);
 
   // pickup one node
-  Node* v = *std::min_element(C.begin(), C.end(),
-                              [&] (Node* v, Node* u) {
-                                // path distance
-                                int c_v = pathDist(v, a->g);
-                                int c_u = pathDist(u, a->g);
-                                if (c_v != c_u) return c_v < c_u;
-                                // occupancy
-                                int o_v = (int)(occupied_now.find(v->id)
-                                                != occupied_now.end());
-                                int o_u = (int)(occupied_now.find(u->id)
-                                                != occupied_now.end());
-                                if (o_v != o_u) return o_v < o_u;
-                                // degree
-                                int d_v = v->getDegree();
-                                int d_u = u->getDegree();
-                                if (d_v != d_u) return d_v > d_u;
-                                // Manhattan dist
-                                int m_v = v->manhattanDist(a->g);
-                                int m_u = u->manhattanDist(a->g);
-                                if (m_v != m_u) return m_v < m_u;
-                                // Euclidean dist
-                                float e_v = v->euclideanDist(a->g);
-                                float e_u = u->euclideanDist(a->g);
-                                if (e_v != e_u) return e_v < e_u;
-                                // random
-                                return getRandomBoolean(MT);
-                              });
+  Node* v = *std::min_element(C.begin(), C.end(), [&](Node* v, Node* u) {
+    // path distance
+    int c_v = pathDist(v, a->g);
+    int c_u = pathDist(u, a->g);
+    if (c_v != c_u) return c_v < c_u;
+    // occupancy
+    int o_v = (int)(occupied_now.find(v->id) != occupied_now.end());
+    int o_u = (int)(occupied_now.find(u->id) != occupied_now.end());
+    if (o_v != o_u) return o_v < o_u;
+    // degree
+    int d_v = v->getDegree();
+    int d_u = u->getDegree();
+    if (d_v != d_u) return d_v > d_u;
+    // Manhattan dist
+    int m_v = v->manhattanDist(a->g);
+    int m_u = u->manhattanDist(a->g);
+    if (m_v != m_u) return m_v < m_u;
+    // Euclidean dist
+    float e_v = v->euclideanDist(a->g);
+    float e_u = u->euclideanDist(a->g);
+    if (e_v != e_u) return e_v < e_u;
+    // random
+    return getRandomBoolean(MT);
+  });
   return v;
 }
 
-void PIBT::setParams(int argc, char *argv[]) {
+void PIBT::setParams(int argc, char* argv[])
+{
   struct option longopts[] = {
-    { "disable-dist-init", no_argument, 0, 'd' },
-    { 0, 0, 0, 0 },
+      {"disable-dist-init", no_argument, 0, 'd'},
+      {0, 0, 0, 0},
   };
   optind = 1;  // reset
   int opt, longindex;
-  while ((opt = getopt_long(argc, argv, "d",
-                            longopts, &longindex)) != -1) {
+  while ((opt = getopt_long(argc, argv, "d", longopts, &longindex)) != -1) {
     switch (opt) {
-    case 'd':
-      disable_dist_init = true;
-      break;
-    default:
-      break;
+      case 'd':
+        disable_dist_init = true;
+        break;
+      default:
+        break;
     }
   }
 }
 
-void PIBT::printHelp() {
+void PIBT::printHelp()
+{
   std::cout << PIBT::SOLVER_NAME << "\n"
             << "  -d --disable-dist-init"
             << "        "
             << "disable initialization of priorities "
-            << "using distance from starts to goals"
-            << std::endl;
+            << "using distance from starts to goals" << std::endl;
 }

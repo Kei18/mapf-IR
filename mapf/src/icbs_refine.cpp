@@ -1,10 +1,8 @@
 #include "../include/icbs_refine.hpp"
 
-ICBS_REFINE::ICBS_REFINE(Problem* _P,
-                         const Plan& _old_plan,
+ICBS_REFINE::ICBS_REFINE(Problem* _P, const Plan& _old_plan,
                          const std::vector<int>& _modif_list)
-  : CBS(_P), ICBS(_P),
-    CBS_REFINE(_P, _old_plan, _modif_list)
+    : CBS(_P), ICBS(_P), CBS_REFINE(_P, _old_plan, _modif_list)
 {
 }
 
@@ -19,8 +17,8 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   LibCBS::MDDs mdds;
 
   // constraints by fixed agents
-  LibCBS::Constraints constraints
-    = LibCBS::getConstraintsByFixedPaths(old_plan, fixed_agents);
+  LibCBS::Constraints constraints =
+      LibCBS::getConstraintsByFixedPaths(old_plan, fixed_agents);
 
   // find paths
   for (int i = 0; i < P->getNum(); ++i) {
@@ -45,13 +43,13 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
         return;
       }
       // create mdd
-      mdd = std::make_shared<LibCBS::MDD>
-        (LibCBS::MDD(path.size()-1, i, P, constraints, time_limit));
+      mdd = std::make_shared<LibCBS::MDD>(
+          LibCBS::MDD(path.size() - 1, i, P, constraints, time_limit));
       if (!mdd->valid) {
         n->valid = false;
         return;
       }
-    } else {  // fixed agents
+    } else {                    // fixed agents
       path = old_paths.get(i);  // fixed agents
       // mdd is not required
     }
@@ -68,15 +66,12 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
   MDDTable[n->id] = mdds;
 }
 
-LibCBS::Constraints ICBS_REFINE::getPrioritizedConflict
-(HighLevelNode_p h_node)
+LibCBS::Constraints ICBS_REFINE::getPrioritizedConflict(HighLevelNode_p h_node)
 {
   if (modif_list.empty()) {
-    return LibCBS::getPrioritizedConflict(h_node->paths,
-                                          MDDTable[h_node->id]);
+    return LibCBS::getPrioritizedConflict(h_node->paths, MDDTable[h_node->id]);
   }
-  return LibCBS::getPrioritizedConflict(h_node->paths,
-                                        MDDTable[h_node->id],
+  return LibCBS::getPrioritizedConflict(h_node->paths, MDDTable[h_node->id],
                                         modif_list);
 }
 

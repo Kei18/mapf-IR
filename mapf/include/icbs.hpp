@@ -2,17 +2,18 @@
  * Implementation of Improved Conflict-based Search (ICBS)
  *
  * - ref
- * Boyarski, E., Felner, A., Stern, R., Sharon, G., Tolpin, D., Betzalel, O., & Shimony, E. (2015, June).
- * ICBS: improved conflict-based search algorithm for multi-agent pathfinding.
- * In Twenty-Fourth International Joint Conference on Artificial Intelligence.
+ * Boyarski, E., Felner, A., Stern, R., Sharon, G., Tolpin, D., Betzalel, O., &
+ * Shimony, E. (2015, June). ICBS: improved conflict-based search algorithm for
+ * multi-agent pathfinding. In Twenty-Fourth International Joint Conference on
+ * Artificial Intelligence.
  */
 
 #pragma once
-#include "solver.hpp"
 #include "cbs.hpp"
+#include "solver.hpp"
 
-
-class ICBS : public virtual CBS {
+class ICBS : public virtual CBS
+{
 public:
   static const std::string SOLVER_NAME;
 

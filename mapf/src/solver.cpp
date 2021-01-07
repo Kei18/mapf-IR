@@ -1,14 +1,15 @@
 #include "../include/solver.hpp"
+
 #include <fstream>
+
 #include "../include/lib_cbs.hpp"
 
-
 Solver::Solver(Problem* _P)
-  : P(_P),
-    G(_P->getG()),
-    MT(_P->getMT()),
-    max_timestep(P->getMaxTimestep()),
-    max_comp_time(P->getMaxCompTime())
+    : P(_P),
+      G(_P->getG()),
+      MT(_P->getMT()),
+      max_timestep(P->getMaxTimestep()),
+      max_comp_time(P->getMaxCompTime())
 {
   solved = false;
   verbose = false;
@@ -32,30 +33,25 @@ void Solver::solve()
  * D. Silver.
  * AI Game Programming Wisdom 3, pages 99–111, 2006.
  */
-Path Solver::getTimedPath(Node* const s,
-                          Node* const g,
-                          AstarHeuristics& fValue,
+Path Solver::getTimedPath(Node* const s, Node* const g, AstarHeuristics& fValue,
                           CompareAstarNode& compare,
                           CheckAstarFin& checkAstarFin,
                           CheckInvalidAstarNode& checkInvalidAstarNode)
 {
-  auto getNodeName = [] (AstarNode* n)
-                     { return std::to_string(n->v->id)
-                         + "-" + std::to_string(n->g); };
+  auto getNodeName = [](AstarNode* n) {
+    return std::to_string(n->v->id) + "-" + std::to_string(n->g);
+  };
 
   std::vector<AstarNode*> GC;  // garbage collection
-  auto createNewNode =
-    [&] (Node* v, int g, int f, AstarNode* p)
-    {
-      AstarNode* new_node = new AstarNode{ v, g, f, p };
-      GC.push_back(new_node);
-      return new_node;
-    };
+  auto createNewNode = [&](Node* v, int g, int f, AstarNode* p) {
+    AstarNode* new_node = new AstarNode{v, g, f, p};
+    GC.push_back(new_node);
+    return new_node;
+  };
 
   // OPEN and CLOSE list
-  std::priority_queue<AstarNode*,
-                      std::vector<AstarNode*>,
-                      CompareAstarNode> OPEN(compare);
+  std::priority_queue<AstarNode*, std::vector<AstarNode*>, CompareAstarNode>
+      OPEN(compare);
   std::unordered_map<std::string, bool> CLOSE;
 
   // initial node
@@ -66,7 +62,6 @@ Path Solver::getTimedPath(Node* const s,
   // main loop
   bool invalid = true;
   while (!OPEN.empty()) {
-
     // check time limit
     if (overCompTime()) break;
 
@@ -88,7 +83,7 @@ Path Solver::getTimedPath(Node* const s,
     Nodes C = n->v->neighbor;
     C.push_back(n->v);
     for (auto u : C) {
-      int g_cost = n->g+1;
+      int g_cost = n->g + 1;
       AstarNode* m = createNewNode(u, g_cost, 0, n);
       m->f = fValue(m);
       // already searched?
@@ -128,10 +123,7 @@ void Solver::end()
   if (!solved && solution.empty()) solution.add(P->getConfigStart());
 }
 
-double Solver::getSolverElapsedTime() const
-{
-  return getElapsedTime(t_start);
-}
+double Solver::getSolverElapsedTime() const { return getElapsedTime(t_start); }
 
 bool Solver::overCompTime() const
 {
@@ -172,7 +164,8 @@ Plan Solver::pathsToPlan(const Paths& paths)
   return plan;
 }
 
-void Solver::printResult() {
+void Solver::printResult()
+{
   int LB_soc = 0;
   int LB_makespan = 0;
   for (int i = 0; i < P->getNum(); ++i) {
@@ -181,20 +174,14 @@ void Solver::printResult() {
     if (d > LB_makespan) LB_makespan = d;
   }
 
-  std::cout << "solved=" << solved
-            << ", solver=" << std::right << std::setw(8)
-            << solver_name
-            << ", comp_time(ms)=" << std::right << std::setw(8)
-            << comp_time
-            << ", soc=" << std::right << std::setw(6)
-            << solution.getSOC()
-            << " (LB=" << std::right << std::setw(6)
+  std::cout << "solved=" << solved << ", solver=" << std::right << std::setw(8)
+            << solver_name << ", comp_time(ms)=" << std::right << std::setw(8)
+            << comp_time << ", soc=" << std::right << std::setw(6)
+            << solution.getSOC() << " (LB=" << std::right << std::setw(6)
             << LB_soc << ")"
             << ", makespan=" << std::right << std::setw(4)
-            << solution.getMakespan()
-            << " (LB=" << std::right << std::setw(6)
-            << LB_makespan << ")"
-            << std::endl;
+            << solution.getMakespan() << " (LB=" << std::right << std::setw(6)
+            << LB_makespan << ")" << std::endl;
 }
 
 void Solver::makeLog(const std::string& logfile)

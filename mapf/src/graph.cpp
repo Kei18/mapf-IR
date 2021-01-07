@@ -1,6 +1,7 @@
 #include "../include/graph.hpp"
-#include <iostream>
+
 #include <fstream>
+#include <iostream>
 #include <regex>
 
 Graph::~Graph()
@@ -213,7 +214,7 @@ std::string Graph::getPathTableKey(Node* const s, Node* const g)
   return std::to_string(s->id) + "-" + std::to_string(g->id);
 }
 
-Grid::Grid(const std::string& _map_file): Graph(), map_file(_map_file)
+Grid::Grid(const std::string& _map_file) : Graph(), map_file(_map_file)
 {
   // read map file
 #ifdef _MAPDIR_
@@ -244,13 +245,13 @@ Grid::Grid(const std::string& _map_file): Graph(), map_file(_map_file)
 
   // create nodes
   int y = 0;
-  V = Nodes(width*height, nullptr);
+  V = Nodes(width * height, nullptr);
   while (getline(file, line)) {
     if (line.size() != width) halt("map format is invalid");
     for (int x = 0; x < width; ++x) {
       char s = line[x];
       if (s == 'T' or s == '@') continue;  // object
-      int id = width*y+x;
+      int id = width * y + x;
       Node* v = new Node(id, x, y);
       V[id] = v;
     }
@@ -265,13 +266,13 @@ Grid::Grid(const std::string& _map_file): Graph(), map_file(_map_file)
       if (!existNode(x, y)) continue;
       Node* v = getNode(x, y);
       // left
-      if (existNode(x-1, y)) v->neighbor.push_back(getNode(x-1, y));
+      if (existNode(x - 1, y)) v->neighbor.push_back(getNode(x - 1, y));
       // right
-      if (existNode(x+1, y)) v->neighbor.push_back(getNode(x+1, y));
+      if (existNode(x + 1, y)) v->neighbor.push_back(getNode(x + 1, y));
       // up
-      if (existNode(x, y-1)) v->neighbor.push_back(getNode(x, y-1));
+      if (existNode(x, y - 1)) v->neighbor.push_back(getNode(x, y - 1));
       // down
-      if (existNode(x, y+1)) v->neighbor.push_back(getNode(x, y+1));
+      if (existNode(x, y + 1)) v->neighbor.push_back(getNode(x, y + 1));
     }
   }
 }
@@ -283,17 +284,10 @@ bool Grid::existNode(int id) const
 
 bool Grid::existNode(int x, int y) const
 {
-  return  0 <= x && x < width
-       && 0 <= y && y < height
-       && existNode(y * width + x);
+  return 0 <= x && x < width && 0 <= y && y < height &&
+         existNode(y * width + x);
 }
 
-Node* Grid::getNode(int id) const
-{
-  return V[id];
-}
+Node* Grid::getNode(int id) const { return V[id]; }
 
-Node* Grid::getNode(int x, int y) const
-{
-  return getNode(y * width + x);
-}
+Node* Grid::getNode(int x, int y) const { return getNode(y * width + x); }

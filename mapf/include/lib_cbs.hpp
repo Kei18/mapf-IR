@@ -3,11 +3,12 @@
  */
 
 #pragma once
-#include "solver.hpp"
 #include <memory>
 
+#include "solver.hpp"
 
-namespace LibCBS {
+namespace LibCBS
+{
   // ======================================
   // conflict
   struct Constraint;
@@ -22,20 +23,19 @@ namespace LibCBS {
   using MDD_p = std::shared_ptr<MDD>;
   using MDDs = std::vector<MDD_p>;
 
-
   // ======================================
   // conflict
   struct Constraint {
-    int id;   // agent id, -1 -> for all agetnts
-    int t;    // at t
-    Node* v;  // at t
-    Node* u;  // used only for swap conflict, at t-1
+    int id;     // agent id, -1 -> for all agetnts
+    int t;      // at t
+    Node* v;    // at t
+    Node* u;    // used only for swap conflict, at t-1
     bool stay;  // stay forever from t
 
     Constraint(int _id, int _t, Node* _v, Node* _u)
-      : id(_id), t(_t), v(_v), u(_u), stay(false) {};
+        : id(_id), t(_t), v(_v), u(_u), stay(false){};
     Constraint(int _id, int _t, Node* _v, bool _stay)
-      : id(_id), t(_t), v(_v), u(nullptr), stay(_stay) {};
+        : id(_id), t(_t), v(_v), u(nullptr), stay(_stay){};
     void println();
   };
 
@@ -43,27 +43,20 @@ namespace LibCBS {
   Constraints getFirstConstraints(const Paths& paths);
 
   // for ICBS
-  void getPrioritizedConflict
-  (const int t,
-   const int i,
-   const int j,
-   const Paths& paths,
-   const MDDs& mdds,
-   Constraints& cardinal_conflicts,
-   Constraints& semi_cardinal_constraints,
-   Constraints& non_cardinal_constraints);
-  Constraints getPrioritizedConflict(const Paths& paths,
-                                     const MDDs& mdds);
+  void getPrioritizedConflict(const int t, const int i, const int j,
+                              const Paths& paths, const MDDs& mdds,
+                              Constraints& cardinal_conflicts,
+                              Constraints& semi_cardinal_constraints,
+                              Constraints& non_cardinal_constraints);
+  Constraints getPrioritizedConflict(const Paths& paths, const MDDs& mdds);
   // for limited agents, used in refine-solvers
-  Constraints getPrioritizedConflict(const Paths& paths,
-                                     const MDDs& mdds,
+  Constraints getPrioritizedConflict(const Paths& paths, const MDDs& mdds,
                                      const std::vector<int>& sample);
 
   // used in refine-solvers
   // create constraints by fixed paths for CBS-style solvers
-  Constraints getConstraintsByFixedPaths
-  (const Plan& plan, const std::vector<int>& fixed_agents);
-
+  Constraints getConstraintsByFixedPaths(const Plan& plan,
+                                         const std::vector<int>& fixed_agents);
 
   // ======================================
   // MDD
@@ -79,14 +72,14 @@ namespace LibCBS {
   };
 
   struct MDD {
-    int c;      // cost
-    int i;      // agent
-    Graph* G;   // original graph
-    Node* s;    // start
-    Node* g;    // goal;
+    int c;                       // cost
+    int i;                       // agent
+    Graph* G;                    // original graph
+    Node* s;                     // start
+    Node* g;                     // goal;
     std::vector<MDDNodes> body;  // t: 0...c
-    bool valid;   // false -> no path from s to g
-    MDDNodes GC;  // for memory management
+    bool valid;                  // false -> no path from s to g
+    MDDNodes GC;                 // for memory management
 
     // cache, MDD without any constraints
     static std::unordered_map<std::string, MDD_p> PURE_MDD_TABLE;
@@ -97,7 +90,7 @@ namespace LibCBS {
     MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid);
     // time_limit: for situations taking long time to construct one MDD
     MDD(int _c, int _i, Problem* P, Constraints constraints,
-        int time_limit=-1);
+        int time_limit = -1);
     MDD(int _c, int _i, Problem* P);
     ~MDD();
 
@@ -108,7 +101,7 @@ namespace LibCBS {
     MDDNode* createNewNode(int t, Node* v);
 
     // create new MDD
-    void build(int time_limit=-1);
+    void build(int time_limit = -1);
 
     // update MDD with new constraints
     void update(const Constraints& _constraints);
@@ -131,4 +124,4 @@ namespace LibCBS {
     // used for cache
     std::string getPureMDDName();
   };
-};
+};  // namespace LibCBS

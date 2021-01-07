@@ -1,17 +1,20 @@
 #pragma once
-#include "graph.hpp"
-#include "problem.hpp"
+#include <getopt.h>
+
+#include <chrono>
+#include <functional>
+#include <queue>
+#include <unordered_map>
+
 #include "default_params.hpp"
-#include "util.hpp"
+#include "graph.hpp"
 #include "paths.hpp"
 #include "plan.hpp"
-#include <unordered_map>
-#include <queue>
-#include <getopt.h>
-#include <chrono>
-#include<functional>
+#include "problem.hpp"
+#include "util.hpp"
 
-class Solver {
+class Solver
+{
 protected:
   std::string solver_name;
 
@@ -50,8 +53,7 @@ protected:
   // space-time A*
   Path getTimedPath(Node* const s,  // start
                     Node* const g,  // goal
-                    AstarHeuristics& fValue,
-                    CompareAstarNode& compare,
+                    AstarHeuristics& fValue, CompareAstarNode& compare,
                     CheckAstarFin& checkAstarFin,
                     CheckInvalidAstarNode& checkInvalidAstarNode);
 
@@ -62,9 +64,13 @@ protected:
   static Plan pathsToPlan(const Paths& paths);
 
   // print debug info (only when verbose=true)
-  void info() const { if (verbose) std::cout << std::endl; }
+  void info() const
+  {
+    if (verbose) std::cout << std::endl;
+  }
   template <class Head, class... Tail>
-  void info(Head&& head, Tail&&... tail) const {
+  void info(Head&& head, Tail&&... tail) const
+  {
     if (!verbose) return;
     std::cout << head << " ";
     info(std::forward<Tail>(tail)...);
@@ -83,7 +89,7 @@ private:
 
 public:
   Solver(Problem* _P);
-  virtual ~Solver() {};
+  virtual ~Solver(){};
 
   // call start -> run -> end
   void solve();
@@ -94,12 +100,12 @@ public:
   std::string getSolverName() { return solver_name; };
 
   // for parameters
-  virtual void setParams(int argc, char *argv[]) {};
+  virtual void setParams(int argc, char* argv[]){};
   void setVerbose(bool _verbose) { verbose = _verbose; }
 
   // show result
   void printResult();
 
   // for log
-  virtual void makeLog(const std::string& logfile="./result.txt");
+  virtual void makeLog(const std::string& logfile = "./result.txt");
 };

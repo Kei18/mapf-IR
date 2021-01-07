@@ -17,7 +17,7 @@ Node* Plan::get(int t, int i) const
 Config Plan::last() const
 {
   if (empty()) halt("invalid operation");
-  return configs[configs.size()-1];
+  return configs[configs.size() - 1];
 }
 
 void Plan::add(const Config& c)
@@ -28,20 +28,11 @@ void Plan::add(const Config& c)
   configs.push_back(c);
 }
 
-bool Plan::empty() const
-{
-  return configs.empty();
-}
+bool Plan::empty() const { return configs.empty(); }
 
-int Plan::size() const
-{
-  return configs.size();
-}
+int Plan::size() const { return configs.size(); }
 
-int Plan::getMakespan() const
-{
-  return configs.size() - 1;
-}
+int Plan::getMakespan() const { return configs.size() - 1; }
 
 int Plan::getSOC() const
 {
@@ -52,7 +43,7 @@ int Plan::getSOC() const
   for (int i = 0; i < num_agents; ++i) {
     int c = makespan;
     Node* g = configs[makespan][i];
-    while (configs[c-1][i] == g) {
+    while (configs[c - 1][i] == g) {
       --c;
       if (c <= 0) break;
     }
@@ -103,14 +94,14 @@ bool Plan::validate(Problem* P) const
     if (get(t).size() != num_agents) return false;
     for (int i = 0; i < num_agents; ++i) {
       Node* v_i_t = get(t, i);
-      Node* v_i_t_1 = get(t-1, i);
+      Node* v_i_t_1 = get(t - 1, i);
       Nodes cands = v_i_t_1->neighbor;
       cands.push_back(v_i_t_1);
       if (!inArray(v_i_t, cands)) return false;  // invalid move
       // see conflicts
-      for (int j = i+1; j < num_agents; ++j) {
+      for (int j = i + 1; j < num_agents; ++j) {
         Node* v_j_t = get(t, j);
-        Node* v_j_t_1 = get(t-1, j);
+        Node* v_j_t_1 = get(t - 1, j);
         if (v_i_t == v_j_t) return false;
         if (v_i_t == v_j_t_1 && v_i_t_1 == v_j_t) return false;
       }

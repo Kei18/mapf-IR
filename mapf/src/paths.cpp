@@ -1,6 +1,5 @@
 #include "../include/paths.hpp"
 
-
 Paths::Paths(int num_agents)
 {
   std::vector<Path> tmp(num_agents, Path(0));
@@ -16,18 +15,13 @@ Path Paths::get(int i) const
 
 Node* Paths::get(int i, int t) const
 {
-  if (!(0 <= i && i < paths.size()) ||
-      !(0 <= t && t <= makespan)) {
-    halt("invalid index, i=" + std::to_string(i)
-         + ", t=" + std::to_string(t));
+  if (!(0 <= i && i < paths.size()) || !(0 <= t && t <= makespan)) {
+    halt("invalid index, i=" + std::to_string(i) + ", t=" + std::to_string(t));
   }
   return paths[i][t];
 }
 
-bool Paths::empty() const
-{
-  return paths.empty();
-}
+bool Paths::empty() const { return paths.empty(); }
 
 void Paths::insert(int i, const Path& path)
 {
@@ -35,16 +29,13 @@ void Paths::insert(int i, const Path& path)
   if (path.empty()) halt("path must not be empty");
   int old_len = paths[i].size();
   paths[i] = path;
-  if (path.size()-1 == getMakespan()) return;
-  format();  // align each path size
+  if (path.size() - 1 == getMakespan()) return;
+  format();                                 // align each path size
   if (paths[i].size() < old_len) shrink();  // cutoff additional configs
-  makespan = getMaxLengthPaths();  // update makespan
+  makespan = getMaxLengthPaths();           // update makespan
 }
 
-int Paths::size() const
-{
-  return paths.size();
-}
+int Paths::size() const { return paths.size(); }
 
 void Paths::operator+=(const Paths& other)
 {
@@ -55,7 +46,7 @@ void Paths::operator+=(const Paths& other)
   } else {
     std::vector<Path> new_paths(paths.size());
     for (int i = 0; i < paths.size(); ++i) {
-      if (paths[i].empty() || *(paths[i].end()-1) != other.paths[i][0]) {
+      if (paths[i].empty() || *(paths[i].end() - 1) != other.paths[i][0]) {
         halt("invalid operation");
       }
       Path tmp;
@@ -84,10 +75,7 @@ int Paths::getMaxLengthPaths() const
   return max_val;
 }
 
-int Paths::getMakespan() const
-{
-  return makespan;
-}
+int Paths::getMakespan() const { return makespan; }
 
 int Paths::costOfPath(int i) const
 {
@@ -118,8 +106,8 @@ void Paths::format()
   int len = getMaxLengthPaths();
   for (int i = 0; i < paths.size(); ++i) {
     if (paths[i].empty()) continue;
-    while (paths[i].size()-1 != len) {
-      paths[i].push_back(*(paths[i].end()-1));
+    while (paths[i].size() - 1 != len) {
+      paths[i].push_back(*(paths[i].end() - 1));
     }
   }
 }
@@ -128,8 +116,8 @@ void Paths::shrink()
 {
   while (true) {
     bool shrinkable = true;
-    for (auto p: paths) {
-      if (p.size() <= 1 || *(p.end()-1) != *(p.end()-2)) {
+    for (auto p : paths) {
+      if (p.size() <= 1 || *(p.end() - 1) != *(p.end() - 2)) {
         shrinkable = false;
         break;
       }
@@ -138,7 +126,7 @@ void Paths::shrink()
 
     // remove additional configuration
     for (int i = 0; i < paths.size(); ++i) {
-      paths[i].resize(paths[i].size()-1);
+      paths[i].resize(paths[i].size() - 1);
     }
   }
 }
@@ -148,7 +136,7 @@ bool Paths::conflicted(int i, int j, int t) const
   // vertex conflict
   if (get(i, t) == get(j, t)) return true;
   // swap conflict
-  if (get(i, t) == get(j, t-1) && get(j, t) == get(i, t-1)) return true;
+  if (get(i, t) == get(j, t - 1) && get(j, t) == get(i, t - 1)) return true;
   return false;
 }
 
@@ -202,7 +190,7 @@ int Paths::countConflict(int id, const Path& path) const
         continue;
       }
       // swap conflict
-      if (get(i, t) == path[t-1] && get(i, t-1) == path[t]) ++cnt;
+      if (get(i, t) == path[t - 1] && get(i, t - 1) == path[t]) ++cnt;
     }
   }
   return cnt;

@@ -1,9 +1,11 @@
 #pragma once
-#include "graph.hpp"
-#include "default_params.hpp"
 #include <random>
 
-class Problem {
+#include "default_params.hpp"
+#include "graph.hpp"
+
+class Problem
+{
 private:
   std::string instance;  // instance name
   Graph* G;              // graph
@@ -15,14 +17,11 @@ private:
   int max_comp_time;     // comp_time limit, ms
 
   // set starts and goals randomly
-  void setRandomStartsGoals ();
+  void setRandomStartsGoals();
 
 public:
   Problem(const std::string& _instance);
-  Problem(Problem* P,
-          Config _config_s,
-          Config _config_g,
-          int _max_comp_time,
+  Problem(Problem* P, Config _config_s, Config _config_g, int _max_comp_time,
           int _max_timestep);
   ~Problem();
 

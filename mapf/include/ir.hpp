@@ -3,30 +3,28 @@
  */
 
 #pragma once
-#include "solver.hpp"
-#include "../include/pibt.hpp"
-#include "../include/hca.hpp"
-#include "../include/whca.hpp"
 #include "../include/cbs_refine.hpp"
 #include "../include/ecbs.hpp"
+#include "../include/hca.hpp"
 #include "../include/icbs_refine.hpp"
+#include "../include/pibt.hpp"
 #include "../include/pibt_complete.hpp"
+#include "../include/whca.hpp"
+#include "solver.hpp"
 
-
-class IR : public Solver {
+class IR : public Solver
+{
 public:
   static const std::string SOLVER_NAME;
 
 private:
   // init-solver
-  enum struct INIT_SOLVER_TYPE
-    { PIBT, HCA, WHCA, ECBS, PIBT_COMPLETE };
+  enum struct INIT_SOLVER_TYPE { PIBT, HCA, WHCA, ECBS, PIBT_COMPLETE };
   INIT_SOLVER_TYPE init_solver;
   std::vector<std::string> option_init_solver;
 
   // refine-solver
-  enum struct OPTIMAL_SOLVER_TYPE
-    { CBS, CBS_NORMAL, ICBS, ICBS_NORMAL };
+  enum struct OPTIMAL_SOLVER_TYPE { CBS, CBS_NORMAL, ICBS, ICBS_NORMAL };
   OPTIMAL_SOLVER_TYPE refine_solver;
   std::vector<std::string> option_optimal_solver;
 
@@ -56,14 +54,12 @@ private:
   void run();
   Plan getInitialPlan();
   // success?, solution
-  std::tuple<bool, Plan> getOptimalPlan(Problem* _P,
-                                        const Plan& current_plan,
+  std::tuple<bool, Plan> getOptimalPlan(Problem* _P, const Plan& current_plan,
                                         const std::vector<int>& sample);
 
   // should be defined
   bool stopRefinement();
-  Plan refinePlan(const Config& config_s,
-                  const Config& config_g,
+  Plan refinePlan(const Config& config_s, const Config& config_g,
                   const Plan& current_plan);
   std::vector<int> getInteractingAgents(const Paths& current_paths,
                                         const int id_largest_gap);
@@ -73,6 +69,6 @@ public:
   ~IR();
 
   void makeLog(const std::string& logfile);
-  void setParams(int argc, char *argv[]);
+  void setParams(int argc, char* argv[]);
   static void printHelp();
 };

@@ -5,18 +5,14 @@ std::unordered_map<std::string, LibCBS::MDD_p> LibCBS::MDD::PURE_MDD_TABLE;
 // used in find paths
 std::mt19937* LibCBS::MDD::MT;
 
-
 void LibCBS::Constraint::println()
 {
   if (u == nullptr) {
-    std::cout << "vertex constraint: <id="
-              << id << ", t=" << t << ", v=" << v->id
-              << ">" << std::endl;
+    std::cout << "vertex constraint: <id=" << id << ", t=" << t
+              << ", v=" << v->id << ">" << std::endl;
   } else {
-    std::cout << "edge constraint: <id="
-              << id << ", t=" << t << ", v:"
-              << u->id << "->" << v->id
-              << ">" << std::endl;
+    std::cout << "edge constraint: <id=" << id << ", t=" << t << ", v:" << u->id
+              << "->" << v->id << ">" << std::endl;
   }
 }
 
@@ -31,23 +27,21 @@ LibCBS::Constraints LibCBS::getFirstConstraints(const Paths& paths)
       for (int j = i + 1; j < num_agents; ++j) {
         // vertex conflict
         if (paths.get(i, t) == paths.get(j, t)) {
-          Constraint_p c_i
-            = std::make_shared<Constraint>(i, t, paths.get(i, t), nullptr);
-          Constraint_p c_j
-            = std::make_shared<Constraint>(j, t, paths.get(j, t), nullptr);
-          Constraints constraints = { c_i, c_j };
+          Constraint_p c_i =
+              std::make_shared<Constraint>(i, t, paths.get(i, t), nullptr);
+          Constraint_p c_j =
+              std::make_shared<Constraint>(j, t, paths.get(j, t), nullptr);
+          Constraints constraints = {c_i, c_j};
           return constraints;
         }
         // swap conflict
-        if (paths.get(i, t) == paths.get(j, t-1) &&
-            paths.get(j, t) == paths.get(i, t-1)) {
-          Constraint_p c_i
-            = std::make_shared<Constraint>
-            ( i, t, paths.get(i, t), paths.get(i, t-1) );
-          Constraint_p c_j
-            = std::make_shared<Constraint>
-            ( j, t, paths.get(j, t), paths.get(j, t-1) );
-          Constraints constraints = { c_i, c_j };
+        if (paths.get(i, t) == paths.get(j, t - 1) &&
+            paths.get(j, t) == paths.get(i, t - 1)) {
+          Constraint_p c_i = std::make_shared<Constraint>(i, t, paths.get(i, t),
+                                                          paths.get(i, t - 1));
+          Constraint_p c_j = std::make_shared<Constraint>(j, t, paths.get(j, t),
+                                                          paths.get(j, t - 1));
+          Constraints constraints = {c_i, c_j};
           return constraints;
         }
       }
@@ -58,15 +52,11 @@ LibCBS::Constraints LibCBS::getFirstConstraints(const Paths& paths)
 
 // used for ICBS
 // detect prioritized constraints for paths[i][t] and paths[j][t]
-void LibCBS::getPrioritizedConflict
-(const int t,
- const int i,
- const int j,
- const Paths& paths,
- const MDDs& mdds,
- Constraints& cardinal_conflicts,
- Constraints& semi_cardinal_constraints,
- Constraints& non_cardinal_constraints)
+void LibCBS::getPrioritizedConflict(const int t, const int i, const int j,
+                                    const Paths& paths, const MDDs& mdds,
+                                    Constraints& cardinal_conflicts,
+                                    Constraints& semi_cardinal_constraints,
+                                    Constraints& non_cardinal_constraints)
 {
   int c_i = mdds[i]->c;
   int c_j = mdds[j]->c;
@@ -74,10 +64,10 @@ void LibCBS::getPrioritizedConflict
   int w_j = (t <= c_j) ? mdds[j]->getWidth(t) : 0;
   // vertex conflict
   if (paths.get(i, t) == paths.get(j, t)) {
-    Constraint_p constraint_i
-      = std::make_shared<Constraint>(i, t, paths.get(i, t), nullptr);
-    Constraint_p constraint_j
-      = std::make_shared<Constraint>(j, t, paths.get(j, t), nullptr);
+    Constraint_p constraint_i =
+        std::make_shared<Constraint>(i, t, paths.get(i, t), nullptr);
+    Constraint_p constraint_j =
+        std::make_shared<Constraint>(j, t, paths.get(j, t), nullptr);
     // cardinal conflicts
     if ((t <= c_i && w_i == 1 && t <= c_j && w_j == 1) ||
         (t > c_i && w_j == 1) || (t > c_j && w_i == 1)) {
@@ -96,19 +86,15 @@ void LibCBS::getPrioritizedConflict
     }
   }
   // swap conflict
-  if (paths.get(i, t) == paths.get(j, t-1) &&
-      paths.get(j, t) == paths.get(i, t-1)) {
-    Constraint_p constraint_i
-      = std::make_shared<Constraint>
-      (i, t, paths.get(i, t), paths.get(i, t-1));
-    Constraint_p constraint_j
-      = std::make_shared<Constraint>
-      (j, t, paths.get(j, t), paths.get(j, t-1));
+  if (paths.get(i, t) == paths.get(j, t - 1) &&
+      paths.get(j, t) == paths.get(i, t - 1)) {
+    Constraint_p constraint_i = std::make_shared<Constraint>(
+        i, t, paths.get(i, t), paths.get(i, t - 1));
+    Constraint_p constraint_j = std::make_shared<Constraint>(
+        j, t, paths.get(j, t), paths.get(j, t - 1));
     // cardinal conflicts
-    if ((t <= c_i && w_i == 1 &&
-         mdds[i]->body[t][0]->prev.size() == 1) &&
-        (t <= c_j && w_j == 1 &&
-         mdds[j]->body[t][0]->prev.size() == 1)) {
+    if ((t <= c_i && w_i == 1 && mdds[i]->body[t][0]->prev.size() == 1) &&
+        (t <= c_j && w_j == 1 && mdds[j]->body[t][0]->prev.size() == 1)) {
       cardinal_conflicts.push_back(constraint_i);
       cardinal_conflicts.push_back(constraint_j);
       return;
@@ -116,10 +102,8 @@ void LibCBS::getPrioritizedConflict
     // semi-cardinal conflicts
     if (semi_cardinal_constraints.empty() &&
         (t > c_i || t > c_j ||
-         (w_i == 1 &&
-          mdds[i]->body[t][0]->prev.size() == 1) ||
-         (w_j == 1 &&
-          mdds[j]->body[t][0]->prev.size() == 1))) {
+         (w_i == 1 && mdds[i]->body[t][0]->prev.size() == 1) ||
+         (w_j == 1 && mdds[j]->body[t][0]->prev.size() == 1))) {
       semi_cardinal_constraints.push_back(constraint_i);
       semi_cardinal_constraints.push_back(constraint_j);
     } else if (non_cardinal_constraints.empty()) {
@@ -141,9 +125,7 @@ LibCBS::Constraints LibCBS::getPrioritizedConflict(const Paths& paths,
   for (int t = 1; t <= paths.getMakespan(); ++t) {
     for (int i = 0; i < num_agents; ++i) {
       for (int j = i + 1; j < num_agents; ++j) {
-        getPrioritizedConflict(t, i, j,
-                               paths, mdds,
-                               cardinal_constraints,
+        getPrioritizedConflict(t, i, j, paths, mdds, cardinal_constraints,
                                semi_cardinal_constraints,
                                non_cardinal_constraints);
         if (!cardinal_constraints.empty()) return cardinal_constraints;
@@ -160,10 +142,8 @@ LibCBS::Constraints LibCBS::getPrioritizedConflict(const Paths& paths,
 
 // used for ICBS as a refine-solver
 // detect prioritized conflicts only for a part of agents
-LibCBS::Constraints LibCBS::getPrioritizedConflict
-(const Paths& paths,
- const MDDs& mdds,
- const std::vector<int>& sample)
+LibCBS::Constraints LibCBS::getPrioritizedConflict(
+    const Paths& paths, const MDDs& mdds, const std::vector<int>& sample)
 {
   Constraints cardinal_constraints = {};
   Constraints semi_cardinal_constraints = {};
@@ -171,10 +151,8 @@ LibCBS::Constraints LibCBS::getPrioritizedConflict
   for (int t = 1; t <= paths.getMakespan(); ++t) {
     for (int i = 0; i < sample.size(); ++i) {
       for (int j = i + 1; j < sample.size(); ++j) {
-        getPrioritizedConflict(t, sample[i], sample[j],
-                               paths, mdds,
-                               cardinal_constraints,
-                               semi_cardinal_constraints,
+        getPrioritizedConflict(t, sample[i], sample[j], paths, mdds,
+                               cardinal_constraints, semi_cardinal_constraints,
                                non_cardinal_constraints);
         if (!cardinal_constraints.empty()) return cardinal_constraints;
       }
@@ -189,26 +167,24 @@ LibCBS::Constraints LibCBS::getPrioritizedConflict
 }
 
 // used in ICBS as a refine-solver
-LibCBS::Constraints LibCBS::getConstraintsByFixedPaths
-(const Plan& plan, const std::vector<int>& fixed_agents)
+LibCBS::Constraints LibCBS::getConstraintsByFixedPaths(
+    const Plan& plan, const std::vector<int>& fixed_agents)
 {
   Constraints constraints;
   int makespan = plan.getMakespan();
   for (auto i : fixed_agents) {
     for (int t = 1; t <= makespan; ++t) {
-      Constraint_p c_vertex
-        = std::make_shared<Constraint>(-1, t, plan.get(t, i), nullptr);
+      Constraint_p c_vertex =
+          std::make_shared<Constraint>(-1, t, plan.get(t, i), nullptr);
       constraints.push_back(c_vertex);
       // notice! be careful to set swap constraints
-      Constraint_p c_swap
-        = std::make_shared<Constraint>
-        (-1, t, plan.get(t-1, i), plan.get(t, i));
+      Constraint_p c_swap = std::make_shared<Constraint>(
+          -1, t, plan.get(t - 1, i), plan.get(t, i));
       constraints.push_back(c_swap);
     }
     // constraints at goal
     Node* g = plan.get(makespan, i);
-    Constraint_p c_last
-      = std::make_shared<Constraint>(-1, makespan, g, true);
+    Constraint_p c_last = std::make_shared<Constraint>(-1, makespan, g, true);
     constraints.push_back(c_last);
   }
   return constraints;
@@ -220,13 +196,13 @@ bool LibCBS::MDDNode::operator==(const MDDNode& other) const
 }
 
 LibCBS::MDD::MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid)
-  : c(_c), i(_i), G(_G), s(_s), g(_g), valid(_valid)
+    : c(_c), i(_i), G(_G), s(_s), g(_g), valid(_valid)
 {
 }
 
 LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints,
                  int time_limit)
-  : c(_c), i(_i), G(P->getG()), s(P->getStart(i)), g(P->getGoal(i))
+    : c(_c), i(_i), G(P->getG()), s(P->getStart(i)), g(P->getGoal(i))
 {
   // for timeout
   auto t_s = Time::now();
@@ -248,10 +224,9 @@ LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints,
 }
 
 LibCBS::MDD::MDD(int _c, int _i, Problem* P)
-  : LibCBS::MDD::MDD(_c, _i, P, {}, -1)  // -1: for timeout
+    : LibCBS::MDD::MDD(_c, _i, P, {}, -1)  // -1: for timeout
 {
 }
-
 
 LibCBS::MDD::~MDD()
 {
@@ -259,8 +234,12 @@ LibCBS::MDD::~MDD()
 }
 
 LibCBS::MDD::MDD(const MDD& other)
-  : c(other.c),i(other.i), G(other.G),
-    s(other.s), g(other.g), valid(other.valid)
+    : c(other.c),
+      i(other.i),
+      G(other.G),
+      s(other.s),
+      g(other.g),
+      valid(other.valid)
 {
   copy(other);
 }
@@ -278,23 +257,23 @@ void LibCBS::MDD::copy(const MDD& other)
 
   // initial node
   MDDNode* new_node = createNewNode(0, s);
-  body.push_back({ new_node });
+  body.push_back({new_node});
 
   // generate body
   for (auto nodes : other.body) {
     MDDNodes new_nodes;
-    if (!nodes.empty() && nodes[0]->t == 0) continue; // starts
-    MDDNodes new_prev_nodes = body[body.size()-1];
+    if (!nodes.empty() && nodes[0]->t == 0) continue;  // starts
+    MDDNodes new_prev_nodes = body[body.size() - 1];
     for (auto node : nodes) {
       new_node = createNewNode(node->t, node->v);
       new_nodes.push_back(new_node);
       // create link
       for (auto prev_node : node->prev) {
-        auto itr = std::find_if(new_prev_nodes.begin(),
-                                new_prev_nodes.end(),
-                                [prev_node] (MDDNode* _node)
-                                { return _node->t == prev_node->t &&
-                                    _node->v == prev_node->v; });
+        auto itr = std::find_if(new_prev_nodes.begin(), new_prev_nodes.end(),
+                                [prev_node](MDDNode* _node) {
+                                  return _node->t == prev_node->t &&
+                                         _node->v == prev_node->v;
+                                });
         MDDNode* new_prev_node = *itr;
         new_prev_node->next.push_back(new_node);
         new_node->prev.push_back(new_prev_node);
@@ -318,7 +297,7 @@ void LibCBS::MDD::build(int time_limit)
   }
 
   // add start node
-  body.push_back({ createNewNode(0, s) });
+  body.push_back({createNewNode(0, s)});
   // build
   for (int t = 0; t < c; ++t) {
     MDDNodes nodes_at_t = body[t];
@@ -370,7 +349,7 @@ void LibCBS::MDD::update(const Constraints& _constraints)
     if (constraint->id != i && constraint->id != -1) continue;
     // vertex conflict at the goal, must increase cost
     if (constraint->t >= c && constraint->u == nullptr) {
-      if (constraint-> v == g) {
+      if (constraint->v == g) {
         valid = false;
         return;
       } else {
@@ -386,13 +365,11 @@ void LibCBS::MDD::update(const Constraints& _constraints)
 
   // delete nodes
   for (auto constraint : constraints) {
-
     if (constraint->stay) {  // check goal
       for (int t = constraint->t; t <= c; ++t) {
-        auto itr_v = std::find_if(body[t].begin(),
-                                  body[t].end(),
-                                  [constraint] (MDDNode* node)
-                                  { return node->v == constraint->v; });
+        auto itr_v = std::find_if(
+            body[t].begin(), body[t].end(),
+            [constraint](MDDNode* node) { return node->v == constraint->v; });
         if (itr_v == body[t].end()) continue;
         MDDNode* node_v = *itr_v;
         deleteForward(node_v);
@@ -401,26 +378,23 @@ void LibCBS::MDD::update(const Constraints& _constraints)
       continue;
     }
 
-    auto itr_v = std::find_if(body[constraint->t].begin(),
-                              body[constraint->t].end(),
-                              [constraint] (MDDNode* node)
-                              { return node->v == constraint->v; });
+    auto itr_v = std::find_if(
+        body[constraint->t].begin(), body[constraint->t].end(),
+        [constraint](MDDNode* node) { return node->v == constraint->v; });
     if (itr_v == body[constraint->t].end()) continue;
     MDDNode* node_v = *itr_v;
     if (constraint->u == nullptr) {  // vertex constraints, v
       deleteForward(node_v);
       deleteBackword(node_v);
     } else {  // swap conflict, u->v
-      auto itr_vu = std::find_if(node_v->prev.begin(),
-                                 node_v->prev.end(),
-                                 [constraint] (MDDNode* node)
-                                 { return node->v == constraint->u; });
+      auto itr_vu = std::find_if(
+          node_v->prev.begin(), node_v->prev.end(),
+          [constraint](MDDNode* node) { return node->v == constraint->u; });
       MDDNode* node_u = *itr_vu;
       if (itr_vu != node_v->prev.end()) {
-        auto itr_uv = std::find_if(node_u->next.begin(),
-                                   node_u->next.end(),
-                                   [node_v] (MDDNode* node)
-                                   { return node->v == node_v->v; });
+        auto itr_uv = std::find_if(
+            node_u->next.begin(), node_u->next.end(),
+            [node_v](MDDNode* node) { return node->v == node_v->v; });
         node_v->prev.erase(itr_vu);
         node_u->next.erase(itr_uv);
         if (node_v->prev.empty()) deleteForward(node_v);
@@ -437,17 +411,15 @@ void LibCBS::MDD::update(const Constraints& _constraints)
 void LibCBS::MDD::deleteForward(MDDNode* node)
 {
   for (auto next_node : node->next) {
-    auto itr = std::find_if(next_node->prev.begin(),
-                            next_node->prev.end(),
-                            [node] (MDDNode* _node)
-                            { return _node->v == node->v; });
+    auto itr =
+        std::find_if(next_node->prev.begin(), next_node->prev.end(),
+                     [node](MDDNode* _node) { return _node->v == node->v; });
     next_node->prev.erase(itr);
     if (next_node->prev.empty()) deleteForward(next_node);
   }
-  auto itr = std::find_if(body[node->t].begin(),
-                          body[node->t].end(),
-                          [node] (MDDNode* _node)
-                          { return _node->v == node->v; });
+  auto itr =
+      std::find_if(body[node->t].begin(), body[node->t].end(),
+                   [node](MDDNode* _node) { return _node->v == node->v; });
   if (itr != body[node->t].end()) body[node->t].erase(itr);
 }
 
@@ -455,26 +427,22 @@ void LibCBS::MDD::deleteForward(MDDNode* node)
 void LibCBS::MDD::deleteBackword(MDDNode* node)
 {
   for (auto prev_node : node->prev) {
-    auto itr = std::find_if(prev_node->next.begin(),
-                            prev_node->next.end(),
-                            [node] (MDDNode* _node)
-                            { return _node->v == node->v; });
+    auto itr =
+        std::find_if(prev_node->next.begin(), prev_node->next.end(),
+                     [node](MDDNode* _node) { return _node->v == node->v; });
     prev_node->next.erase(itr);
     if (prev_node->next.empty()) deleteBackword(prev_node);
   }
-  auto itr = std::find_if(body[node->t].begin(),
-                          body[node->t].end(),
-                          [node] (MDDNode* _node)
-                          { return _node->v == node->v; });
+  auto itr =
+      std::find_if(body[node->t].begin(), body[node->t].end(),
+                   [node](MDDNode* _node) { return _node->v == node->v; });
   if (itr != body[node->t].end()) body[node->t].erase(itr);
 }
 
 std::string LibCBS::MDD::getPureMDDName()
 {
-  return std::to_string(s->id) + "-"
-    + std::to_string(g->id) + "-"
-    + std::to_string(c) + "-"
-    + std::to_string(i) + "-";
+  return std::to_string(s->id) + "-" + std::to_string(g->id) + "-" +
+         std::to_string(c) + "-" + std::to_string(i) + "-";
 }
 
 // make path using MDD
@@ -505,7 +473,7 @@ Path LibCBS::MDD::getPath(Constraint_p const constraint) const
   // create a new MDD by copying itself
   MDD mdd = *this;
   // incorporate new constraint
-  mdd.update({ constraint });
+  mdd.update({constraint});
   return mdd.getPath();
 }
 
@@ -527,27 +495,21 @@ int LibCBS::MDD::getWidth(int t) const
 
 void LibCBS::MDD::println() const
 {
-  std::cout << "MDD_" << i << "^" << c << ", valid="
-            << valid << std::endl;
+  std::cout << "MDD_" << i << "^" << c << ", valid=" << valid << std::endl;
   if (!valid) return;
   for (int t = 0; t <= c; ++t) {
     std::cout << "t=" << t << std::endl;
     for (auto node : body[t]) {
-      std::cout << "- v=("
-                << node->v->pos.x << ", "
-                << node->v->pos.y << "), "
-                << "t=" << node->t
-                << ", next: ";
+      std::cout << "- v=(" << node->v->pos.x << ", " << node->v->pos.y << "), "
+                << "t=" << node->t << ", next: ";
       for (auto next_node : node->next) {
-        std::cout << "("
-                  << next_node->v->pos.x << ", "
-                  << next_node->v->pos.y << "), ";
+        std::cout << "(" << next_node->v->pos.x << ", " << next_node->v->pos.y
+                  << "), ";
       }
       std::cout << ", prev: ";
       for (auto prev_node : node->prev) {
-        std::cout << "("
-                  << prev_node->v->pos.x << ", "
-                  << prev_node->v->pos.y << "), ";
+        std::cout << "(" << prev_node->v->pos.x << ", " << prev_node->v->pos.y
+                  << "), ";
       }
       std::cout << std::endl;
     }

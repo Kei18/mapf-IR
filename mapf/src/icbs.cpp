@@ -14,9 +14,8 @@ void ICBS::run()
   CompareHighLevelNodes compare = getObjective();
 
   // OPEN
-  std::priority_queue<HighLevelNode_p,
-                      HighLevelNodes,
-                      decltype(compare)> HighLevelTree(compare);
+  std::priority_queue<HighLevelNode_p, HighLevelNodes, decltype(compare)>
+      HighLevelTree(compare);
 
   // set initial node
   HighLevelNode_p n = std::make_shared<HighLevelNode>();
@@ -35,12 +34,9 @@ void ICBS::run()
     // pickup one node
     n = HighLevelTree.top();
 
-    info(" ",
-         "elapsed:", getSolverElapsedTime(),
-         ", explored_node_num:", iteration,
-         ", nodes_num:", h_node_num,
-         ", conflicts:", n->f,
-         ", constraints:", n->constraints.size(),
+    info(" ", "elapsed:", getSolverElapsedTime(),
+         ", explored_node_num:", iteration, ", nodes_num:", h_node_num,
+         ", conflicts:", n->f, ", constraints:", n->constraints.size(),
          ", soc:", n->soc);
 
     // check conflict
@@ -67,13 +63,8 @@ void ICBS::run()
       LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
       HighLevelNode_p m = std::make_shared<HighLevelNode>(
-          ++h_node_num,
-          n->paths,
-          new_constraints,
-          n->makespan,
-          n->soc,
-          n->f,
-          true );
+          ++h_node_num, n->paths, new_constraints, n->makespan, n->soc, n->f,
+          true);
       MDDTable[m->id] = MDDTable[n->id];  // copy MDD
       invoke(m, c->id);
       if (!m->valid) continue;
@@ -110,8 +101,7 @@ void ICBS::setInitialHighLevelNode(HighLevelNode_p n)
 
 LibCBS::Constraints ICBS::getPrioritizedConflict(HighLevelNode_p h_node)
 {
-  return LibCBS::getPrioritizedConflict(h_node->paths,
-                                        MDDTable[h_node->id]);
+  return LibCBS::getPrioritizedConflict(h_node->paths, MDDTable[h_node->id]);
 }
 
 // find path with MDD, not using A* based search
@@ -119,8 +109,8 @@ LibCBS::Constraints ICBS::getPrioritizedConflict(HighLevelNode_p h_node)
 Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
   LibCBS::MDD mdd = *(MDDTable[h_node->id][id]);
-  LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
-  mdd.update({ last_constraint });  // check only last
+  LibCBS::Constraint_p last_constraint = *(h_node->constraints.end() - 1);
+  mdd.update({last_constraint});  // check only last
 
   if (mdd.valid) {  // use mdd as much as possible
     // update table
@@ -155,8 +145,8 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
        */
       if (c > mdd.c + THRESHOLD) break;
 
-      LibCBS::MDD_p new_mdd
-        = std::make_shared<LibCBS::MDD>(c, id, P, h_node->constraints);
+      LibCBS::MDD_p new_mdd =
+          std::make_shared<LibCBS::MDD>(c, id, P, h_node->constraints);
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
         return new_mdd->getPath();
@@ -171,7 +161,7 @@ void ICBS::registerLazyEval(const int LB_SOC, HighLevelNode_p h_node)
 {
   auto itr = LAZY_EVAL_TABLE.find(LB_SOC);
   if (itr == LAZY_EVAL_TABLE.end()) {  // first time
-    LAZY_EVAL_TABLE[LB_SOC] = { h_node };
+    LAZY_EVAL_TABLE[LB_SOC] = {h_node};
   } else {  // already registered some nodes
     itr->second.push_back(h_node);
   }
@@ -193,22 +183,22 @@ CBS::HighLevelNodes ICBS::lazyEval()
   for (auto h_node : h_nodes) {
     if (overCompTime()) break;
     // invoke
-    LibCBS::Constraint_p last_constraint = *(h_node->constraints.end()-1);
+    LibCBS::Constraint_p last_constraint = *(h_node->constraints.end() - 1);
     int id = last_constraint->id;
     int c = last_constraint->t;
     while (true) {
       ++c;
       if (overCompTime()) break;
-      LibCBS::MDD_p new_mdd
-        = std::make_shared<LibCBS::MDD>(c, id, P, h_node->constraints);
+      LibCBS::MDD_p new_mdd =
+          std::make_shared<LibCBS::MDD>(c, id, P, h_node->constraints);
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
         Path path = new_mdd->getPath();
         Paths paths = h_node->paths;
         paths.insert(id, path);
-        h_node->f = h_node->f
-          - h_node->paths.countConflict(id, h_node->paths.get(id))
-          + h_node->paths.countConflict(id, paths.get(id));
+        h_node->f = h_node->f -
+                    h_node->paths.countConflict(id, h_node->paths.get(id)) +
+                    h_node->paths.countConflict(id, paths.get(id));
         h_node->paths = paths;
         h_node->makespan = h_node->paths.getMakespan();
         h_node->soc = h_node->paths.getSOC();
@@ -225,8 +215,8 @@ CBS::HighLevelNodes ICBS::lazyEval()
     LAZY_EVAL_LB_SOC = -1;
   } else {
     LAZY_EVAL_LB_SOC = LAZY_EVAL_TABLE.begin()->first;
-    for (auto itr = LAZY_EVAL_TABLE.begin();
-         itr != LAZY_EVAL_TABLE.end(); ++itr) {
+    for (auto itr = LAZY_EVAL_TABLE.begin(); itr != LAZY_EVAL_TABLE.end();
+         ++itr) {
       LAZY_EVAL_LB_SOC = std::min(itr->first, LAZY_EVAL_LB_SOC);
     }
   }
@@ -243,12 +233,10 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
     if (path.empty()) continue;
     // format
     while (path.size() - 1 < h_node->makespan) {
-      path.push_back(*(path.end()-1));
+      path.push_back(*(path.end() - 1));
     }
     // number of conflicts
-    int cnum_old
-      = h_node->paths.countConflict(c->id,
-                                    h_node->paths.get(c->id));
+    int cnum_old = h_node->paths.countConflict(c->id, h_node->paths.get(c->id));
     int cnum_new = h_node->paths.countConflict(c->id, path);
     if (cnum_old <= cnum_new) continue;
 
@@ -263,6 +251,5 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
 void ICBS::printHelp()
 {
   std::cout << ICBS::SOLVER_NAME << "\n"
-            << "  (no option)"
-            << std::endl;
+            << "  (no option)" << std::endl;
 }

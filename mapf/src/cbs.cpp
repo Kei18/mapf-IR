@@ -2,10 +2,7 @@
 
 const std::string CBS::SOLVER_NAME = "CBS";
 
-CBS::CBS(Problem* _P) : Solver(_P)
-{
-  solver_name = CBS::SOLVER_NAME;
-}
+CBS::CBS(Problem* _P) : Solver(_P) { solver_name = CBS::SOLVER_NAME; }
 
 void CBS::run()
 {
@@ -13,9 +10,8 @@ void CBS::run()
   CompareHighLevelNodes compare = getObjective();
 
   // OPEN
-  std::priority_queue<HighLevelNode_p,
-                      HighLevelNodes,
-                      decltype(compare)> HighLevelTree(compare);
+  std::priority_queue<HighLevelNode_p, HighLevelNodes, decltype(compare)>
+      HighLevelTree(compare);
 
   HighLevelNode_p n = std::make_shared<HighLevelNode>();
   setInitialHighLevelNode(n);
@@ -37,17 +33,13 @@ void CBS::run()
     n = HighLevelTree.top();
     HighLevelTree.pop();
 
-    info(" ",
-         "elapsed:", getSolverElapsedTime(),
-         ", explored_node_num:", iteration,
-         ", nodes_num:", h_node_num,
-         ", conflicts:", n->f,
-         ", constraints:", n->constraints.size(),
+    info(" ", "elapsed:", getSolverElapsedTime(),
+         ", explored_node_num:", iteration, ", nodes_num:", h_node_num,
+         ", conflicts:", n->f, ", constraints:", n->constraints.size(),
          ", soc:", n->soc);
 
     // check conflict
-    LibCBS::Constraints constraints =
-      LibCBS::getFirstConstraints(n->paths);
+    LibCBS::Constraints constraints = LibCBS::getFirstConstraints(n->paths);
     if (constraints.empty()) {
       solved = true;
       break;
@@ -57,14 +49,14 @@ void CBS::run()
     for (auto c : constraints) {
       LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
-      HighLevelNode_p m = std::make_shared<HighLevelNode>
-        (h_node_num,       // id
-         n->paths,         // (old) paths, updated by invoke
-         new_constraints,  // new constraints
-         n->makespan,      // (old) makespan
-         n->soc,           // (old) sum of costs
-         n->f,             // (old) #conflicts
-         true );
+      HighLevelNode_p m = std::make_shared<HighLevelNode>(
+          h_node_num,       // id
+          n->paths,         // (old) paths, updated by invoke
+          new_constraints,  // new constraints
+          n->makespan,      // (old) makespan
+          n->soc,           // (old) sum of costs
+          n->f,             // (old) #conflicts
+          true);
       invoke(m, c->id);
       if (!m->valid) continue;
       HighLevelTree.push(m);
@@ -77,13 +69,11 @@ void CBS::run()
 
 CBS::CompareHighLevelNodes CBS::getObjective()
 {
-  CompareHighLevelNodes compare =
-    [] (HighLevelNode_p a, HighLevelNode_p b)
-    {
-     if (a->soc != b->soc) return a->soc > b->soc;
-     if (a->f != b->f) return a->f > b->f;  // tie-breaker
-     return false;
-    };
+  CompareHighLevelNodes compare = [](HighLevelNode_p a, HighLevelNode_p b) {
+    if (a->soc != b->soc) return a->soc > b->soc;
+    if (a->f != b->f) return a->f > b->f;  // tie-breaker
+    return false;
+  };
   return compare;
 }
 
@@ -117,29 +107,27 @@ Path CBS::getInitialPath(int id)
   Node* g = P->getGoal(id);
   Nodes config_g = P->getConfigGoal();
 
-  AstarHeuristics fValue =
-    [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+  AstarHeuristics fValue = [&](AstarNode* n) {
+    return n->g + pathDist(n->v, g);
+  };
 
-  CompareAstarNode compare =
-    [&] (AstarNode* a, AstarNode* b) {
-      if (a->f != b->f) return a->f > b->f;
-      // IMPORTANT! Avoid goal locations of others.
-      // This makes low-level search faster
-      if (a->v != g && inArray(a->v, config_g)) return true;
-      if (b->v != g && inArray(b->v, config_g)) return false;
-      if (a->g != b->g) return a->g < b->g;
-      return false;
-    };
+  CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
+    if (a->f != b->f) return a->f > b->f;
+    // IMPORTANT! Avoid goal locations of others.
+    // This makes low-level search faster
+    if (a->v != g && inArray(a->v, config_g)) return true;
+    if (b->v != g && inArray(b->v, config_g)) return false;
+    if (a->g != b->g) return a->g < b->g;
+    return false;
+  };
 
-  CheckAstarFin checkAstarFin = [&] (AstarNode* n) { return n->v == g; };
+  CheckAstarFin checkAstarFin = [&](AstarNode* n) { return n->v == g; };
 
-  CheckInvalidAstarNode checkInvalidAstarNode =
-    [&] (AstarNode* m) {  return false; };
+  CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
+    return false;
+  };
 
-  return getTimedPath(s, g,
-                      fValue,
-                      compare,
-                      checkAstarFin,
+  return getTimedPath(s, g, fValue, compare, checkAstarFin,
                       checkInvalidAstarNode);
 }
 
@@ -156,9 +144,9 @@ void CBS::invoke(HighLevelNode_p h_node, int id)
    * update f-value (#conflicts)
    * it takes too much time for compute without the previous value
    */
-  h_node->f = h_node->f
-    - h_node->paths.countConflict(id, h_node->paths.get(id))
-    + h_node->paths.countConflict(id, paths.get(id));
+  h_node->f = h_node->f -
+              h_node->paths.countConflict(id, h_node->paths.get(id)) +
+              h_node->paths.countConflict(id, paths.get(id));
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();
@@ -183,55 +171,48 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 
   AstarHeuristics fValue;
   if (pathDist(id) > max_constraint_time) {
-    fValue = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+    fValue = [&](AstarNode* n) { return n->g + pathDist(n->v, g); };
   } else {
     // when someone occupies the goal until a certain timestep
-    fValue = [&] (AstarNode* n) {
-               return std::max(max_constraint_time + 1,
-                               n->g + pathDist(n->v, g)); };
+    fValue = [&](AstarNode* n) {
+      return std::max(max_constraint_time + 1, n->g + pathDist(n->v, g));
+    };
   }
 
-  CompareAstarNode compare =
-    [&] (AstarNode* a, AstarNode* b) {
-      if (a->f != b->f) return a->f > b->f;
-      if (a->g != b->g) return a->g < b->g;
-      // avoid conflict with others
-      for (int i = 0; i < P->getNum(); ++i) {
-        if (i == id) continue;
-        if (a->g <= h_node->makespan &&
-            h_node->paths.get(i, a->g) == a->v) return true;
-        if (b->g <= h_node->makespan &&
-            h_node->paths.get(i, b->g) == b->v) return false;
+  CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
+    if (a->f != b->f) return a->f > b->f;
+    if (a->g != b->g) return a->g < b->g;
+    // avoid conflict with others
+    for (int i = 0; i < P->getNum(); ++i) {
+      if (i == id) continue;
+      if (a->g <= h_node->makespan && h_node->paths.get(i, a->g) == a->v)
+        return true;
+      if (b->g <= h_node->makespan && h_node->paths.get(i, b->g) == b->v)
+        return false;
+    }
+    return false;
+  };
+
+  CheckAstarFin checkAstarFin = [&](AstarNode* n) {
+    return n->v == g && n->g > max_constraint_time;
+  };
+
+  CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
+    for (auto c : constraints) {
+      if (m->g == c->t && m->v == c->v) {
+        // vertex or swap conflict
+        if (c->u == nullptr || c->u == m->p->v) return true;
       }
-      return false;
-    };
+    }
+    return false;
+  };
 
-  CheckAstarFin checkAstarFin =
-    [&] (AstarNode* n) {
-      return n->v == g && n->g > max_constraint_time;
-    };
-
-  CheckInvalidAstarNode checkInvalidAstarNode =
-    [&] (AstarNode* m) {
-      for (auto c : constraints) {
-        if (m->g == c->t && m->v == c->v) {
-          // vertex or swap conflict
-          if (c->u == nullptr || c->u == m->p->v) return true;
-        }
-      }
-      return false;
-    };
-
-  return getTimedPath(s, g,
-                      fValue,
-                      compare,
-                      checkAstarFin,
+  return getTimedPath(s, g, fValue, compare, checkAstarFin,
                       checkInvalidAstarNode);
 }
 
 void CBS::printHelp()
 {
   std::cout << CBS::SOLVER_NAME << "\n"
-            << "  (no option)"
-            << std::endl;
+            << "  (no option)" << std::endl;
 }
