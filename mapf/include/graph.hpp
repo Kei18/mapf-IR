@@ -162,6 +162,9 @@ public:
 
   // get path length between two nodes
   int pathDist(Node* const s, Node* const g);
+
+  // get all nodes
+  Nodes getV();
 };
 
 class Grid : public Graph {
