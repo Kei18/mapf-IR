@@ -10,6 +10,7 @@
 #include "../include/pibt.hpp"
 #include "../include/pibt_complete.hpp"
 #include "../include/whca.hpp"
+#include "../include/lib_ir.hpp"
 #include "solver.hpp"
 
 class IR : public Solver
@@ -63,10 +64,6 @@ private:
                   const Plan& current_plan);
   std::vector<int> getInteractingAgents(const Paths& current_paths,
                                         const int id_largest_gap);
-
-  Path basicSingleAgentPath(const int id, const Plan& plan);
-  Plan refineSinglePath(const Plan& original_plan);
-  Plan refineSinglePath(const int agent, const Plan& original_plan);
 
 public:
   IR(Problem* _P);

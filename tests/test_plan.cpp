@@ -115,3 +115,18 @@ TEST(Plan, validate)
   plan5.add({ w });
   ASSERT_FALSE(plan5.validate({ v }, { w }));
 }
+
+TEST(Plan, maxConstraintTime)
+{
+  Grid G("8x8.map");
+  Node* v = G.getNode(0);
+  Node* u = G.getNode(1);
+  Node* w = G.getNode(2);
+
+  Plan plan;
+  plan.add({v, u});
+  plan.add({v, u});
+  plan.add({u, w});
+  ASSERT_EQ(plan.getMaxConstraintTime(0, v, u, &G), 1);
+  ASSERT_EQ(plan.getMaxConstraintTime(1, u, w, &G), 0);
+}

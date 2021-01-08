@@ -11,6 +11,7 @@
 #include "paths.hpp"
 #include "plan.hpp"
 #include "problem.hpp"
+#include "lib_solver.hpp"
 #include "util.hpp"
 
 class Solver
@@ -34,34 +35,23 @@ protected:
 
   bool verbose;  // true -> print additional info
 
-  // for space-time A*
-  struct AstarNode {
-    Node* v;
-    int g;  // in getTimedPath, g represents t
-    int f;
-    AstarNode* p;  // parent
-  };
-  using CompareAstarNode = std::function<bool(AstarNode*, AstarNode*)>;
-  using CheckAstarFin = std::function<bool(AstarNode*)>;
-  using CheckInvalidAstarNode = std::function<bool(AstarNode*)>;
-  using AstarHeuristics = std::function<int(AstarNode*)>;
-
-  Path getPath(Node* const s, Node* const g) { return G->getPath(s, g); }
-  int pathDist(Node* const s, Node* const g) { return G->pathDist(s, g); }
+  Path getPath(Node* const s, Node* const g) const { return G->getPath(s, g); }
+  int pathDist(Node* const s, Node* const g) const { return G->pathDist(s, g); }
   // get path distance for a_i
-  int pathDist(int i) { return G->pathDist(P->getStart(i), P->getGoal(i)); }
+  int pathDist(int i) const { return G->pathDist(P->getStart(i), P->getGoal(i)); }
+
+
   // space-time A*
   Path getTimedPath(Node* const s,  // start
                     Node* const g,  // goal
-                    AstarHeuristics& fValue, CompareAstarNode& compare,
+                    AstarHeuristics& fValue,
+                    CompareAstarNode& compare,
                     CheckAstarFin& checkAstarFin,
                     CheckInvalidAstarNode& checkInvalidAstarNode);
 
-  double getSolverElapsedTime() const;  // get elapsed time from start
+  int getSolverElapsedTime() const;  // get elapsed time from start
+  int getRemainedTime() const;  // get remained time
   bool overCompTime() const;            // check time limit
-
-  static Paths planToPaths(const Plan& plan);
-  static Plan pathsToPlan(const Paths& paths);
 
   // print debug info (only when verbose=true)
   void info() const

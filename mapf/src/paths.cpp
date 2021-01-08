@@ -23,6 +23,12 @@ Node* Paths::get(int i, int t) const
 
 bool Paths::empty() const { return paths.empty(); }
 
+bool Paths::empty(const int i) const
+{
+  if (!(0 <= i && i < paths.size())) halt("invalid index, i=" + std::to_string(i));
+  return paths[i].empty();
+}
+
 void Paths::insert(int i, const Path& path)
 {
   if (!(0 <= i && i < paths.size())) halt("invalid index");
@@ -186,4 +192,22 @@ int Paths::countConflict(int id, const Path& path) const
     }
   }
   return cnt;
+}
+
+int Paths::getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const
+{
+  const int makespan = getMakespan();
+  const int dist = G->pathDist(s, g);
+  const int num = paths.size();
+  for (int t = makespan; t >= dist; --t) {
+    for (int i = 0; i < num; ++i) {
+      if (i != id && !empty(i) && get(i, t) == g) return t;
+    }
+  }
+  return 0;
+}
+
+int Paths::getMaxConstraintTime(const int id, Problem* P) const
+{
+  return getMaxConstraintTime(id, P->getStart(id), P->getGoal(id), P->getG());
 }

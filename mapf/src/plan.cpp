@@ -123,3 +123,21 @@ bool Plan::validate(const Config& starts, const Config& goals) const
   }
   return true;
 }
+
+int Plan::getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const
+{
+  const int makespan = getMakespan();
+  const int dist = G->pathDist(s, g);
+  const int num = configs[0].size();
+  for (int t = makespan-1; t >= dist; --t) {
+    for (int i = 0; i < num; ++i) {
+      if (i != id && get(t, i) == g) return t;
+    }
+  }
+  return 0;
+}
+
+int Plan::getMaxConstraintTime(const int id, Problem* P) const
+{
+  return getMaxConstraintTime(id, P->getStart(id), P->getGoal(id), P->getG());
+}

@@ -25,88 +25,16 @@ void Solver::solve()
   end();
 }
 
-/*
- * Template of Space-Time A*.
- * See the following reference.
- *
- * Cooperative Pathﬁnding.
- * D. Silver.
- * AI Game Programming Wisdom 3, pages 99–111, 2006.
- */
-Path Solver::getTimedPath(Node* const s, Node* const g, AstarHeuristics& fValue,
-                          CompareAstarNode& compare,
-                          CheckAstarFin& checkAstarFin,
-                          CheckInvalidAstarNode& checkInvalidAstarNode)
+Path Solver::getTimedPath
+(Node* const s,
+ Node* const g,
+ AstarHeuristics& fValue,
+ CompareAstarNode& compare,
+ CheckAstarFin& checkAstarFin,
+ CheckInvalidAstarNode& checkInvalidAstarNode)
 {
-  auto getNodeName = [](AstarNode* n) {
-    return std::to_string(n->v->id) + "-" + std::to_string(n->g);
-  };
-
-  std::vector<AstarNode*> GC;  // garbage collection
-  auto createNewNode = [&](Node* v, int g, int f, AstarNode* p) {
-    AstarNode* new_node = new AstarNode{v, g, f, p};
-    GC.push_back(new_node);
-    return new_node;
-  };
-
-  // OPEN and CLOSE list
-  std::priority_queue<AstarNode*, std::vector<AstarNode*>, CompareAstarNode>
-      OPEN(compare);
-  std::unordered_map<std::string, bool> CLOSE;
-
-  // initial node
-  AstarNode* n = createNewNode(s, 0, 0, nullptr);
-  n->f = fValue(n);
-  OPEN.push(n);
-
-  // main loop
-  bool invalid = true;
-  while (!OPEN.empty()) {
-    // check time limit
-    if (overCompTime()) break;
-
-    // minimum node
-    n = OPEN.top();
-    OPEN.pop();
-
-    // check CLOSE list
-    if (CLOSE.find(getNodeName(n)) != CLOSE.end()) continue;
-    CLOSE[getNodeName(n)] = true;
-
-    // check goal condition
-    if (checkAstarFin(n)) {
-      invalid = false;
-      break;
-    }
-
-    // expand
-    Nodes C = n->v->neighbor;
-    C.push_back(n->v);
-    for (auto u : C) {
-      int g_cost = n->g + 1;
-      AstarNode* m = createNewNode(u, g_cost, 0, n);
-      m->f = fValue(m);
-      // already searched?
-      if (CLOSE.find(getNodeName(m)) != CLOSE.end()) continue;
-      // check constraints
-      if (checkInvalidAstarNode(m)) continue;
-      OPEN.push(m);
-    }
-  }
-
-  Path path;
-  if (!invalid) {  // success
-    while (n != nullptr) {
-      path.push_back(n->v);
-      n = n->p;
-    }
-    std::reverse(path.begin(), path.end());
-  }
-
-  // free
-  for (auto p : GC) delete p;
-
-  return path;
+  return getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
 }
 
 void Solver::start()
@@ -123,45 +51,12 @@ void Solver::end()
   if (!solved && solution.empty()) solution.add(P->getConfigStart());
 }
 
-double Solver::getSolverElapsedTime() const { return getElapsedTime(t_start); }
+int Solver::getSolverElapsedTime() const { return getElapsedTime(t_start); }
+int Solver::getRemainedTime() const { return max_comp_time - getSolverElapsedTime(); }
 
 bool Solver::overCompTime() const
 {
   return getSolverElapsedTime() >= max_comp_time;
-}
-
-// convert Plan to Paths
-Paths Solver::planToPaths(const Plan& plan)
-{
-  if (plan.empty()) halt("invalid operation.");
-  int num_agents = plan.get(0).size();
-  Paths paths(num_agents);
-  int makespan = plan.getMakespan();
-  for (int i = 0; i < num_agents; ++i) {
-    Path path;
-    for (int t = 0; t <= makespan; ++t) {
-      path.push_back(plan.get(t, i));
-    }
-    paths.insert(i, path);
-  }
-  return paths;
-}
-
-// convert Paths to Plan
-Plan Solver::pathsToPlan(const Paths& paths)
-{
-  Plan plan;
-  if (paths.empty()) return plan;
-  int makespan = paths.getMakespan();
-  int num_agents = paths.size();
-  for (int t = 0; t <= makespan; ++t) {
-    Config c;
-    for (int i = 0; i < num_agents; ++i) {
-      c.push_back(paths.get(i, t));
-    }
-    plan.add(c);
-  }
-  return plan;
 }
 
 void Solver::printResult()

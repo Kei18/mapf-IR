@@ -13,6 +13,7 @@ TEST(Paths, basic)
   Paths paths(2);
   paths.insert(0, { v });
   ASSERT_EQ(paths.get(0).size(), 1);
+  ASSERT_TRUE(paths.empty(1));
   paths.insert(1, { u, w });
   ASSERT_EQ(paths.get(0).size(), 2);
   ASSERT_EQ(paths.get(1).size(), 2);
@@ -22,6 +23,7 @@ TEST(Paths, basic)
   ASSERT_EQ(paths.get(0, 1), v);
   ASSERT_EQ(paths.get(1, 0), u);
   ASSERT_EQ(paths.get(1, 1), w);
+  ASSERT_FALSE(paths.empty(1));
 
   // shrink
   paths.insert(1, { u });
@@ -95,4 +97,18 @@ TEST(Paths, conflict)
   paths4.insert(1, { u, v, v });
   paths4.insert(2, { w, w, w });
   ASSERT_EQ(paths4.countConflict(2, { w, w, u }), 1);
+}
+
+TEST(Paths, maxConstraintTime)
+{
+  Grid G("8x8.map");
+  Node* v = G.getNode(0);
+  Node* u = G.getNode(1);
+  Node* w = G.getNode(2);
+
+  Paths paths(2);
+  paths.insert(0, {v, v, u});
+  paths.insert(1, {u, u, w});
+  ASSERT_EQ(paths.getMaxConstraintTime(0, v, u, &G), 1);
+  ASSERT_EQ(paths.getMaxConstraintTime(1, u, w, &G), 0);
 }

@@ -61,26 +61,6 @@ Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
   // pre processing
   Nodes config_s = P->getConfigStart();
   Nodes config_g = P->getConfigGoal();
-  int max_constraint_time = 0;  // from when the agent stays its goal
-  for (int i = 0; i < P->getNum(); ++i) {
-    Path p = paths.get(i);
-    if (p.empty()) continue;
-    for (int t = 0; t < p.size(); ++t) {
-      if (p[t] == g) {
-        max_constraint_time = std::max(t, max_constraint_time);
-      }
-    }
-  }
-
-  AstarHeuristics fValue;
-  if (pathDist(id) > max_constraint_time) {
-    fValue = [&](AstarNode* n) { return n->g + pathDist(n->v, g); };
-  } else {
-    // when someone occupies its goal
-    fValue = [&](AstarNode* n) {
-      return std::max(max_constraint_time + 1, n->g + pathDist(n->v, g));
-    };
-  }
 
   CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
     if (a->f != b->f) return a->f > b->f;
@@ -94,29 +74,7 @@ Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
     return false;
   };
 
-  CheckAstarFin checkAstarFin = [&](AstarNode* n) {
-    return n->v == g && n->g > max_constraint_time;
-  };
-
-  CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
-    for (int i = 0; i < P->getNum(); ++i) {
-      Path p = paths.get(i);
-      if (p.empty()) continue;
-      // last node
-      if (m->g >= p.size()) {
-        if (*(p.end() - 1) == m->v) return true;
-        continue;
-      }
-      // vertex conflict
-      if (p[m->g] == m->v) return true;
-      // swap conflict
-      if (p[m->g] == m->p->v && p[m->g - 1] == m->v) return true;
-    }
-    return false;
-  };
-
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return getBasicPrioritizedPath(id, P, paths, getRemainedTime(), compare);
 }
 
 void HCA::setParams(int argc, char* argv[])

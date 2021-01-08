@@ -1,5 +1,6 @@
 #pragma once
 #include "graph.hpp"
+#include "problem.hpp"
 
 /*
  * array of path
@@ -23,6 +24,9 @@ public:
 
   // whether paths are empty
   bool empty() const;
+
+  // whether a path of a_i is empty
+  bool empty(int i) const;
 
   // insert new path
   void insert(int i, const Path& path);
@@ -62,4 +66,11 @@ public:
 
   // count conflict with one path
   int countConflict(int id, const Path& path) const;
+
+  // =========================
+  // when updating a single path,
+  // the path should be longer than this value to avoid conflicts
+  int getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const;
+  int getMaxConstraintTime(const int id, Problem* P) const;
+
 };

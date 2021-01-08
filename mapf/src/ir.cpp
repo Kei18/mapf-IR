@@ -126,7 +126,7 @@ Plan IR::getInitialPlan()
 Plan IR::refinePlan(const Config& config_s, const Config& config_g,
                     const Plan& current_plan)
 {
-  return refineSinglePath(current_plan);
+  return LibIR::refineSinglePaths(current_plan, P, getRemainedTime());
 
   // Paths current_paths = planToPaths(current_plan);
   // auto gap = [&](int i) { return current_paths.costOfPath(i) - pathDist(i); };
@@ -193,85 +193,6 @@ std::vector<int> IR::getInteractingAgents(const Paths& current_paths,
   return sample_vec;
 }
 
-Plan IR::refineSinglePath(const Plan& original_plan)
-{
-  auto plan = original_plan;
-  for (int i = 0; i < P->getNum(); ++i) {
-    plan = refineSinglePath(i, plan);
-  }
-  return plan;
-}
-
-Path IR::basicSingleAgentPath(const int id, const Plan& plan)
-{
-  // configuration
-  const auto s = P->getStart(id);
-  const auto g = P->getGoal(id);
-  const auto makespan = plan.getMakespan();
-
-  // calculate single path
-  auto config_s = P->getConfigStart();
-  auto config_g = P->getConfigGoal();
-  int max_constraint_time = 0;  // from when the agent stays its goal
-  for (int i = 0; i < P->getNum(); ++i) {
-    if (i == id) continue;
-    for (int t = 0; t < makespan; ++t) {
-      if (plan.get(t, i) == g) {
-        max_constraint_time = std::max(t, max_constraint_time);
-      }
-    }
-  }
-
-  AstarHeuristics fValue;
-  if (pathDist(id) > max_constraint_time) {
-    fValue = [&](AstarNode* n) { return n->g + pathDist(n->v, g); };
-  } else {
-    // when someone occupies its goal
-    fValue = [&](AstarNode* n) {
-      return std::max(max_constraint_time + 1, n->g + pathDist(n->v, g));
-    };
-  }
-
-  CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
-    if (a->f != b->f) return a->f > b->f;
-    if (a->g != b->g) return a->g < b->g;
-    return false;
-  };
-
-  CheckAstarFin checkAstarFin = [&](AstarNode* n) {
-    return n->v == g && n->g > max_constraint_time;
-  };
-
-  CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
-    for (int i = 0; i < P->getNum(); ++i) {
-      if (i == id) continue;
-      // last node
-      if (m->g > makespan || (m->g == makespan && m->v != g)) return true;
-      // vertex conflict
-      if (plan.get(m->g, i) == m->v) return true;
-      // swap conflict
-      if (plan.get(m->g, i) == m->p->v
-          && plan.get(m->g - 1, i) == m->v) return true;
-    }
-    return false;
-  };
-
-  return getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
-}
-
-Plan IR::refineSinglePath(const int id, const Plan& original_plan)
-{
-  const auto refined_path = basicSingleAgentPath(id, original_plan);
-
-  // compare two paths
-  if (getPathCost(refined_path) < getPathCost(original_plan.getPath(id))) {
-    auto paths = planToPaths(original_plan);
-    paths.insert(id, refined_path);
-    return pathsToPlan(paths);
-  }
-
-  return original_plan;
-}
 
 // Plan IR::refinePathAtGoal(const int id, const Plan& original_plan)
 // {

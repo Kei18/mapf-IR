@@ -67,22 +67,11 @@ void WHCA::run()
   solution = pathsToPlan(paths);
 }
 
-Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g,
-                                     const Paths& paths)
+Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& paths)
 {
   // pre processing
   Nodes config_g;
-  int max_constraint_time = 0;
-  for (int i = 0; i < P->getNum(); ++i) {
-    config_g.push_back(P->getGoal(i));
-    Path p = paths.get(i);
-    if (p.empty()) continue;
-    for (int t = 0; t < p.size(); ++t) {
-      if (p[t] == g) {
-        max_constraint_time = std::max(t, max_constraint_time);
-      }
-    }
-  }
+  int max_constraint_time = paths.getMaxConstraintTime(id, P);
 
   AstarHeuristics fValue = [&](AstarNode* n) {
     return n->g + pathDist(n->v, g);
