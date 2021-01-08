@@ -83,15 +83,7 @@ int Paths::costOfPath(int i) const
     halt("invalid index " + std::to_string(i));
   }
   if (paths[i].empty()) halt("invalid operation, id=" + std::to_string(i));
-  int c = paths[i].size();
-  auto itr = paths[i].end() - 1;
-  Node* g = *itr;
-  while (*itr == g) {
-    --c;
-    if (c <= 0) break;
-    --itr;
-  }
-  return c;
+  return getPathCost(get(i));
 }
 
 int Paths::getSOC() const

@@ -42,3 +42,20 @@ TEST(Graph, huge_field)
   Node* u = G.getNode(84, 461);
   ASSERT_EQ(G.pathDist(v, u), 863);
 }
+
+TEST(Graph, cost)
+{
+  Grid G("8x8.map");
+  Node* v = G.getNode(0);
+  Node* u = G.getNode(1);
+  Node* w = G.getNode(2);
+
+  Path path2 = { v, u, w };
+  ASSERT_EQ(getPathCost(path2), 2);
+
+  Path path1 = { v, u, u };
+  ASSERT_EQ(getPathCost(path1), 1);
+
+  Path path0 = { u, u, u };
+  ASSERT_EQ(getPathCost(path0), 0);
+}

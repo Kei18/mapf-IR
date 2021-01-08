@@ -129,6 +129,17 @@ struct Node {
   return true;
 }
 
+[[maybe_unused]] static int getPathCost(const Path& path)
+{
+  int cost = path.size() - 1;
+  auto itr = path.end() - 1;
+  while (itr != path.begin() && *itr == *(itr-1)) {
+    --cost;
+    --itr;
+  }
+  return cost;
+}
+
 // Pure graph. Base class of Grid class.
 class Graph
 {

@@ -1,12 +1,12 @@
 #include "../include/plan.hpp"
 
-Config Plan::get(int t) const
+Config Plan::get(const int t) const
 {
   if (!(0 <= t && t < configs.size())) halt("invalid timestep");
   return configs[t];
 }
 
-Node* Plan::get(int t, int i) const
+Node* Plan::get(const int t, const int i) const
 {
   if (empty()) halt("invalid operation");
   if (!(0 <= t && t < configs.size())) halt("invalid timestep");
@@ -14,10 +14,18 @@ Node* Plan::get(int t, int i) const
   return configs[t][i];
 }
 
+Path Plan::getPath(const int i) const
+{
+  Path path;
+  int makespan = getMakespan();
+  for (int t = 0; t <= makespan; ++t) path.push_back(get(t, i));
+  return path;
+}
+
 Config Plan::last() const
 {
   if (empty()) halt("invalid operation");
-  return configs[configs.size() - 1];
+  return configs[getMakespan()];
 }
 
 void Plan::add(const Config& c)
@@ -32,23 +40,24 @@ bool Plan::empty() const { return configs.empty(); }
 
 int Plan::size() const { return configs.size(); }
 
-int Plan::getMakespan() const { return configs.size() - 1; }
+int Plan::getMakespan() const { return size() - 1; }
+
+int Plan::getPathCost(const int i) const
+{
+  const int makespan = getMakespan();
+  const Node* g = get(makespan, i);
+  int c = makespan;
+  while (c > 0 && get(c-1, i) == g) --c;
+  return c;
+}
 
 int Plan::getSOC() const
 {
   int makespan = getMakespan();
   if (makespan <= 0) return 0;
-  int num_agents = configs[0].size();
+  int num_agents = get(0).size();
   int soc = 0;
-  for (int i = 0; i < num_agents; ++i) {
-    int c = makespan;
-    Node* g = configs[makespan][i];
-    while (configs[c - 1][i] == g) {
-      --c;
-      if (c <= 0) break;
-    }
-    soc += c;
-  }
+  for (int i = 0; i < num_agents; ++i) soc += getPathCost(i);
   return soc;
 }
 
@@ -82,15 +91,20 @@ void Plan::operator+=(const Plan& other)
 
 bool Plan::validate(Problem* P) const
 {
+  return validate(P->getConfigStart(), P->getConfigGoal());
+}
+
+bool Plan::validate(const Config& starts, const Config& goals) const
+{
   if (configs.empty()) return false;
 
   // start and goal
-  if (!sameConfig(P->getConfigStart(), get(0))) return false;
-  if (!sameConfig(P->getConfigGoal(), get(getMakespan()))) return false;
+  if (!sameConfig(starts, get(0))) return false;
+  if (!sameConfig(goals, get(getMakespan()))) return false;
 
   // check conflicts and continuity
   int num_agents = get(0).size();
-  for (int t = 1; t < getMakespan(); ++t) {
+  for (int t = 1; t <= getMakespan(); ++t) {
     if (get(t).size() != num_agents) return false;
     for (int i = 0; i < num_agents; ++i) {
       Node* v_i_t = get(t, i);

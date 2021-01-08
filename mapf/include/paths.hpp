@@ -1,5 +1,5 @@
 #pragma once
-#include "problem.hpp"
+#include "graph.hpp"
 
 /*
  * array of path

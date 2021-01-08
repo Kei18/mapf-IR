@@ -1,4 +1,4 @@
-name: build
+name: test
 
 on:
   push:
@@ -20,6 +20,10 @@ jobs:
           cd build
           cmake ..
           make
+
+      - name: test
+        working-directory: build
+        run: ./test
 
       - name: run-app
         working-directory: build

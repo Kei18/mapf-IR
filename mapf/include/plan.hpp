@@ -13,10 +13,16 @@ public:
   ~Plan() {}
 
   // timestep -> configuration
-  Config get(int t) const;
+  Config get(const int t) const;
 
   // timestep, agent -> location
-  Node* get(int t, int i) const;
+  Node* get(const int t, const int i) const;
+
+  // path
+  Path getPath(const int i) const;
+
+  // path cost
+  int getPathCost(const int i) const;
 
   // last configuration
   Config last() const;
@@ -42,6 +48,7 @@ public:
 
   // check the plan is valid or not
   bool validate(Problem* P) const;
+  bool validate(const Config& starts, const Config& goals) const;
 };
 
 using Plans = std::vector<Plan>;
