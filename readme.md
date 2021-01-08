@@ -1,6 +1,6 @@
 Multi-Agent Path Finding
 ===
-[![Build Status](https://travis-ci.com/Kei18/mapf-IR.svg?token=NJ5EpN7k73FqKbLee887&branch=master)](https://travis-ci.com/Kei18/mapf-IR)
+![test](https://github.com/Kei18/mapf-IR/workflows/test/badge.svg?branch=dev)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "Iterative Refinement for Realtime MAPF".

@@ -87,12 +87,12 @@ TEST(Paths, conflict)
   paths3.insert(0, { v, u, w });
   paths3.insert(1, { u, v, v });
   paths3.insert(2, { w, w, w });
-  ASSERT_EQ(paths2.countConflict(), 2);
+  ASSERT_EQ(paths3.countConflict(), 2);
 
   // insert agents
   Paths paths4(3);
   paths4.insert(0, { v, u, w });
   paths4.insert(1, { u, v, v });
   paths4.insert(2, { w, w, w });
-  ASSERT_EQ(paths2.countConflict(2, { w, w, u }), 1);
+  ASSERT_EQ(paths4.countConflict(2, { w, w, u }), 1);
 }

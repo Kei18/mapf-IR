@@ -64,6 +64,10 @@ private:
   std::vector<int> getInteractingAgents(const Paths& current_paths,
                                         const int id_largest_gap);
 
+  Path basicSingleAgentPath(const int id, const Plan& plan);
+  Plan refineSinglePath(const Plan& original_plan);
+  Plan refineSinglePath(const int agent, const Plan& original_plan);
+
 public:
   IR(Problem* _P);
   ~IR();

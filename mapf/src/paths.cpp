@@ -31,7 +31,7 @@ void Paths::insert(int i, const Path& path)
   paths[i] = path;
   if (path.size() - 1 == getMakespan()) return;
   format();                                 // align each path size
-  if (paths[i].size() < old_len) shrink();  // cutoff additional configs
+  if (path.size() < old_len) shrink();      // cutoff additional configs
   makespan = getMaxLengthPaths();           // update makespan
 }
 
