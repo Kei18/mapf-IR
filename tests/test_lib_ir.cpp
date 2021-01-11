@@ -116,3 +116,30 @@ TEST(LibIR, identifyInteractingSetByMDD)
   auto modif_list2 = LibIR::identifyInteractingSetByMDD(1, plan, &G, s2, g2);
   ASSERT_EQ(modif_list2.size(), 0);
 }
+
+TEST(libIR, identifyAgentsAtGoal)
+{
+  Grid G("8x8.map");
+
+  Node* a = G.getNode(0);
+  Node* b = G.getNode(1);
+  Node* c = G.getNode(2);
+  Node* d = G.getNode(3);
+  Node* e = G.getNode(4);
+  Node* x = G.getNode(3, 1);
+
+  Config starts = { c, a };
+  Config goals  = { d, e };
+  Plan plan;
+  plan.add({ c, a });
+  plan.add({ d, b });
+  plan.add({ d, c });
+  plan.add({ x, d });
+  plan.add({ d, e });
+  ASSERT_TRUE(plan.validate(starts, goals));
+
+  auto modif_list1 = LibIR::identifyAgentsAtGoal(0, plan, &G, c, d);
+  ASSERT_EQ(modif_list1.size(), 2);
+  auto modif_list2 = LibIR::identifyAgentsAtGoal(1, plan, &G, a, e);
+  ASSERT_EQ(modif_list2.size(), 0);
+}

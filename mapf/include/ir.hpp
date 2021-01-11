@@ -62,8 +62,6 @@ private:
   bool stopRefinement();
   Plan refinePlan(const Config& config_s, const Config& config_g,
                   const Plan& current_plan);
-  std::vector<int> getInteractingAgents(const Paths& current_paths,
-                                        const int id_largest_gap);
 
 public:
   IR(Problem* _P);

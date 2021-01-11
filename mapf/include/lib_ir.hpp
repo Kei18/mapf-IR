@@ -1,6 +1,7 @@
 #pragma once
 #include "lib_solver.hpp"
 #include "lib_cbs.hpp"
+#include <set>
 
 
 namespace LibIR
@@ -151,5 +152,31 @@ namespace LibIR
   (const int i, const Plan& plan, Problem* P, std::mt19937* MT=nullptr)
   {
     return identifyInteractingSetByMDD(i, plan, P->getG(), P->getStart(i), P->getGoal(i), MT);
+  }
+
+  static std::vector<int> identifyAgentsAtGoal
+  (const int i, const Plan& plan, Graph* G, Node* s, Node* g)
+  {
+    const int cost = plan.getPathCost(i);
+    const int dist = G->pathDist(s, g);
+    const int num  = plan.get(0).size();
+
+    std::set<int> modif_set;
+    for (int t = cost - 1; t >= dist; --t) {
+      for (int j = 0; j < num; ++j) {
+        if (j == i) continue;
+        if (plan.get(t, j) == g) modif_set.insert(j);
+      }
+    }
+    if (!modif_set.empty()) modif_set.insert(i);
+    std::vector<int> moidf_list(modif_set.begin(), modif_set.end());
+    return moidf_list;
+  }
+
+  [[maybe_unused]]
+  static std::vector<int> identifyAgentsAtGoal
+  (const int i, const Plan& plan, Problem* P)
+  {
+    return identifyAgentsAtGoal(i, plan, P->getG(), P->getStart(i), P->getGoal(i));
   }
 };

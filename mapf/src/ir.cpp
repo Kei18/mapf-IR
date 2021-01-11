@@ -129,20 +129,22 @@ Plan IR::refinePlan(const Config& config_s, const Config& config_g,
   Plan plan = current_plan;
   plan = LibIR::refineSinglePaths(plan, P, getRemainedTime());
   plan = LibIR::refineTwoPathsAtGoal(plan, P, getRemainedTime());
-  for (int i = 0; i < P->getNum(); ++i) {
-    const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, MT);
-    if (modif_list.empty()) continue;
-
-    info(" ", i, modif_list.size(), plan.getSOC());
-    int comp_time_limit =
-        std::min(max_comp_time - (int)getSolverElapsedTime(), timeout_refinement);
-    if (comp_time_limit <= 0) return plan;  // timeout
-    Problem* _P =
-        new Problem(P, config_s, config_g, comp_time_limit, max_timestep);
-    plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
-    delete _P;
-  }
   return plan;
+  // for (int i = 0; i < P->getNum(); ++i) {
+  //   const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, MT);
+  //   const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
+  //   if (modif_list.empty()) continue;
+
+  //   info(" ", i, modif_list.size(), plan.getSOC());
+  //   int comp_time_limit =
+  //       std::min(max_comp_time - (int)getSolverElapsedTime(), timeout_refinement);
+  //   if (comp_time_limit <= 0) return plan;  // timeout
+  //   Problem* _P =
+  //       new Problem(P, config_s, config_g, comp_time_limit, max_timestep);
+  //   plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
+  //   delete _P;
+  // }
+  // return plan;
 
   // Paths current_paths = planToPaths(current_plan);
   // auto gap = [&](int i) { return current_paths.costOfPath(i) - pathDist(i); };
@@ -191,24 +193,6 @@ Plan IR::refinePlan(const Config& config_s, const Config& config_g,
   // delete _P;
   // return plan;
 }
-
-std::vector<int> IR::getInteractingAgents(const Paths& current_paths,
-                                          const int id_largest_gap)
-{
-  int cost_largest_gap = current_paths.costOfPath(id_largest_gap);
-  int dist_largest_gap = pathDist(id_largest_gap);
-  std::set<int> sample = {id_largest_gap};
-  Node* g = P->getGoal(id_largest_gap);
-  for (int t = cost_largest_gap - 1; t >= dist_largest_gap; --t) {
-    for (int i = 0; i < P->getNum(); ++i) {
-      if (i == id_largest_gap) continue;
-      if (current_paths.get(i, t) == g) sample.insert(i);
-    }
-  }
-  std::vector<int> sample_vec(sample.begin(), sample.end());
-  return sample_vec;
-}
-
 
 std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,
                                           const std::vector<int>& sample)
