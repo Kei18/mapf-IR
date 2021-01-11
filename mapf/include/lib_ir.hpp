@@ -85,25 +85,25 @@ namespace LibIR
           tmp_path.resize(t);
           tmp_paths.insert(i, tmp_path);
 
+          const int original_costs = paths.costOfPath(i) + paths.costOfPath(j);
+          const int upper_bound = original_costs - tmp_paths.costOfPath(i) - 1;
+
           // constraints
           std::tuple<Node*, int> constraint = std::make_tuple(g, t);
 
           // get refined plan for j
           const auto refined_path_j = getBasicPrioritizedPath
             (j, starts[j], goals[j], G, tmp_paths,
-             time_limit - getElapsedTime(t_start), { constraint });
-          if (refined_path_j.empty()) continue;
+             time_limit - getElapsedTime(t_start), { constraint }, upper_bound);
+          if (refined_path_j.empty()) {
+            stop_flg = true;
+            break;
+          }
           tmp_paths.insert(j, refined_path_j);
 
           // check update or not
-          const int original_costs = paths.costOfPath(i) + paths.costOfPath(j);
-          const int tmp_costs = tmp_paths.costOfPath(i) + tmp_paths.costOfPath(j);
-          if (tmp_costs < original_costs) {
-            paths = tmp_paths;
-            path = paths.get(i);
-          } else {
-            stop_flg = true;
-          }
+          paths = tmp_paths;
+          path = paths.get(i);
           break;
         }
         if (stop_flg) break;
@@ -184,4 +184,42 @@ namespace LibIR
   {
     return identifyAgentsAtGoal(i, plan, P->getG(), P->getStart(i), P->getGoal(i));
   }
+
+  static std::tuple<int, std::vector<int>> identifyBottleneckAgentsWithScore
+  (const int i, const Plan& original_plan, Graph* G, const Config& starts, const Config& goals)
+  {
+    int score = 0;
+    std::vector<int> modif_list;
+    auto paths = planToPaths(original_plan);
+    paths.clear(i);
+
+    const int num = paths.size();
+
+    for (int j = 0; j < num; ++j) {
+      if (i == j) continue;
+      Node* s = starts[j];
+      Node* g = goals[j];
+      const int dist = G->pathDist(s, g);
+      const int original_cost = paths.costOfPath(j);
+      if (original_cost == dist) continue;
+      const auto path = getBasicPrioritizedPath(j, s, g, G, paths);
+      const int cost = getPathCost(path);
+      if (cost < original_cost) {
+        score += original_cost - cost;
+        modif_list.push_back(j);
+      }
+    }
+
+    if (!modif_list.empty()) modif_list.push_back(i);
+    return std::make_tuple(score, modif_list);
+  }
+
+  [[maybe_unused]]
+  static std::tuple<int, std::vector<int>> identifyBottleneckAgentsWithScore
+  (const int i, const Plan& plan, Problem* P)
+  {
+    return identifyBottleneckAgentsWithScore
+      (i, plan, P->getG(), P->getConfigStart(), P->getConfigGoal());
+  }
+
 };

@@ -41,6 +41,11 @@ void Paths::insert(int i, const Path& path)
   makespan = getMaxLengthPaths();           // update makespan
 }
 
+void Paths::clear(int i)
+{
+  paths[i].clear();
+}
+
 int Paths::size() const { return paths.size(); }
 
 void Paths::operator+=(const Paths& other)
@@ -88,7 +93,6 @@ int Paths::costOfPath(int i) const
   if (!(0 <= i && i < paths.size())) {
     halt("invalid index " + std::to_string(i));
   }
-  if (paths[i].empty()) halt("invalid operation, id=" + std::to_string(i));
   return getPathCost(get(i));
 }
 

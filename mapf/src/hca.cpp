@@ -74,7 +74,7 @@ Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
     return false;
   };
 
-  return getBasicPrioritizedPath(id, P, paths, getRemainedTime(), compare);
+  return getBasicPrioritizedPath(id, P, paths, getRemainedTime(), -1, compare);
 }
 
 void HCA::setParams(int argc, char* argv[])

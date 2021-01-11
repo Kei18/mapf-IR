@@ -143,3 +143,32 @@ TEST(libIR, identifyAgentsAtGoal)
   auto modif_list2 = LibIR::identifyAgentsAtGoal(1, plan, &G, a, e);
   ASSERT_EQ(modif_list2.size(), 0);
 }
+
+TEST(libIR, identifyBottleneckAgents)
+{
+  Grid G("8x8.map");
+
+  Node* a = G.getNode(0);
+  Node* b = G.getNode(1);
+  Node* c = G.getNode(2);
+  Node* d = G.getNode(3);
+  Node* e = G.getNode(4);
+  Node* x = G.getNode(3, 1);
+
+  Config starts = { c, a };
+  Config goals  = { d, e };
+  Plan plan;
+  plan.add({ c, a });
+  plan.add({ d, b });
+  plan.add({ d, c });
+  plan.add({ x, d });
+  plan.add({ d, e });
+  ASSERT_TRUE(plan.validate(starts, goals));
+
+  auto res0 = LibIR::identifyBottleneckAgentsWithScore(0, plan, &G, starts, goals);
+  ASSERT_EQ(std::get<0>(res0), 0);
+  ASSERT_EQ(std::get<1>(res0).size(), 0);
+  auto res1 = LibIR::identifyBottleneckAgentsWithScore(1, plan, &G, starts, goals);
+  ASSERT_EQ(std::get<0>(res1), 3);
+  ASSERT_EQ(std::get<1>(res1).size(), 2);
+}

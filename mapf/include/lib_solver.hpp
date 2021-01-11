@@ -99,7 +99,7 @@ static Path getPathBySpaceTimeAstar
   bool invalid = true;
   while (!OPEN.empty()) {
     // check time limit
-    if (getElapsedTime(t_start) > time_limit) break;
+    if (time_limit > 0 && getElapsedTime(t_start) > time_limit) break;
 
     // minimum node
     n = OPEN.top();
@@ -159,9 +159,10 @@ static Path getBasicPrioritizedPath
  Node* g,
  Graph* G,
  const Paths& paths,
- const int time_limit,
- std::vector<std::tuple<Node*, int>> constraints,  // space-time
- CompareAstarNode& compare = compareAstarNodeBasic)
+ const int time_limit=-1,
+ std::vector<std::tuple<Node*, int>> constraints={},  // space-time
+ const int upper_bound=-1,
+ CompareAstarNode& compare=compareAstarNodeBasic)
 {
   // max timestep that another agent uses the goal
   int max_constraint_time = paths.getMaxConstraintTime(id, s, g, G);
@@ -185,6 +186,8 @@ static Path getBasicPrioritizedPath
   const int num_agents = paths.size();
 
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
+    if (upper_bound != -1 && m->g > upper_bound) return true;
+
     for (int i = 0; i < num_agents; ++i) {
       if (i == id || paths.empty(i)) continue;
       // last node
@@ -216,8 +219,9 @@ static Path getBasicPrioritizedPath
  Problem* P,
  const Paths& paths,
  const int time_limit,
+ const int upper_bound=-1,
  CompareAstarNode& compare=compareAstarNodeBasic)
 {
   return getBasicPrioritizedPath
-    (id, P->getStart(id), P->getGoal(id), P->getG(), paths, time_limit, {}, compare);
+    (id, P->getStart(id), P->getGoal(id), P->getG(), paths, time_limit, {}, upper_bound, compare);
 }

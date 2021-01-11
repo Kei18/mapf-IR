@@ -31,6 +31,9 @@ public:
   // insert new path
   void insert(int i, const Path& path);
 
+  // clear
+  void clear(int i);
+
   // return paths.size
   int size() const;
 
