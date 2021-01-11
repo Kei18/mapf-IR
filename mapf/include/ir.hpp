@@ -58,10 +58,7 @@ private:
   std::tuple<bool, Plan> getOptimalPlan(Problem* _P, const Plan& current_plan,
                                         const std::vector<int>& sample);
 
-  // should be defined
-  bool stopRefinement();
-  Plan refinePlan(const Config& config_s, const Config& config_g,
-                  const Plan& current_plan);
+  Plan refinePlan(const Plan& current_plan);
 
 public:
   IR(Problem* _P);

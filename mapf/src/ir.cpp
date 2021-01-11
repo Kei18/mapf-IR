@@ -47,33 +47,38 @@ void IR::run()
   solution = getInitialPlan();
   solved = !solution.empty();
   if (!solved) return;  // failure
-  Plan init_plan = solution;
-  int last_soc = init_plan.getSOC();
+  const int init_plan_soc = solution.getSOC();
+  const int init_plan_makespan = solution.getMakespan();
   HIST.push_back(std::make_tuple(getSolverElapsedTime(), solution));
+  info("  init plan",
+       ", comp_time:", getSolverElapsedTime(),
+       ", soc:", init_plan_soc,
+       ", makespan:", init_plan_makespan);
+
+  int last_soc = init_plan_soc;
 
   // start refinement
-  while (true) {
+  for (int i = 0; i < max_iteration; ++i) {
     if (make_log_every_itr) makeLog(output_file);
     if (overCompTime()) break;
 
-    // print info
-    int soc = solution.getSOC();
-    info("  iter: ", HIST.size(), ", comp_time:", getSolverElapsedTime(),
-         ", soc:", soc, "(improved: ", last_soc - soc,
-         ")"
-         ", makespan:",
-         solution.getMakespan());
-    last_soc = solution.getSOC();
-
     // refine plan
-    solution = refinePlan(P->getConfigStart(), P->getConfigGoal(), solution);
+    solution = refinePlan(solution);
+    const int soc = solution.getSOC();
+    const int makespan = solution.getMakespan();
     HIST.push_back(std::make_tuple(getSolverElapsedTime(), solution));
-    if (stopRefinement()) break;
+
+    // print info
+    info("  iter: ", i + 1,
+         ", comp_time:", getSolverElapsedTime(),
+         ", soc:", soc, "(improved: ", last_soc - soc, ")"
+         ", makespan:", makespan);
+    last_soc = soc;
   }
 
   // print final info
-  info("  refinement results, soc:", init_plan.getSOC(), "->",
-       solution.getSOC(), ", makespan:", init_plan.getMakespan(), "->",
+  info("  refinement results, soc:", init_plan_soc, "->",
+       solution.getSOC(), ", makespan:", init_plan_makespan, "->",
        solution.getMakespan());
 }
 
@@ -123,13 +128,20 @@ Plan IR::getInitialPlan()
   return plan;
 }
 
-Plan IR::refinePlan(const Config& config_s, const Config& config_g,
-                    const Plan& current_plan)
+Plan IR::refinePlan(const Plan& current_plan)
 {
   Plan plan = current_plan;
-  plan = LibIR::refineSinglePaths(plan, P, getRemainedTime());
-  plan = LibIR::refineTwoPathsAtGoal(plan, P, getRemainedTime());
+  int last_soc = plan.getSOC();
+  do {
+    plan = LibIR::refineSinglePaths(plan, P, getRemainedTime());
+    plan = LibIR::refineTwoPathsAtGoal(plan, P, getRemainedTime());
+    int current_soc = plan.getSOC();
+    if (last_soc == current_soc) break;
+    last_soc = current_soc;
+  } while (true);
+
   return plan;
+
   // for (int i = 0; i < P->getNum(); ++i) {
   //   const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, MT);
   //   const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
@@ -234,8 +246,6 @@ std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,
 
   return std::make_tuple(success, plan);
 }
-
-bool IR::stopRefinement() { return HIST.size() >= max_iteration; }
 
 void IR::setParams(int argc, char* argv[])
 {

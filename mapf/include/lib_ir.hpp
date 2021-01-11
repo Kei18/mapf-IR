@@ -63,15 +63,17 @@ namespace LibIR
     for (int i = 0; i < num; ++i) {
       Node* s = starts[i];
       Node* g = goals[i];
-      const Path path = paths.get(i);
+      Path path = paths.get(i);
       const int cost = getPathCost(path);
       const int dist = G->pathDist(s, g);
 
       // filtering
       if (cost <= dist + 1) continue;
 
+      bool stop_flg = false;
       for (int t = cost - 1; t > dist; --t) {
-        if (!(path[t] != g && path[t-1] == g && path[t+1] == g)) continue;
+        if (path[t] == g) continue;
+        if (path[t-1] != g || path[t+1] != g) break;
 
         for (int j = 0; j < num; ++j) {
           if (i == j) continue;
@@ -98,10 +100,13 @@ namespace LibIR
           const int tmp_costs = tmp_paths.costOfPath(i) + tmp_paths.costOfPath(j);
           if (tmp_costs < original_costs) {
             paths = tmp_paths;
+            path = paths.get(i);
           } else {
-            continue;
+            stop_flg = true;
           }
+          break;
         }
+        if (stop_flg) break;
       }
     }
 

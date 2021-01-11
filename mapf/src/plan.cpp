@@ -99,25 +99,43 @@ bool Plan::validate(const Config& starts, const Config& goals) const
   if (configs.empty()) return false;
 
   // start and goal
-  if (!sameConfig(starts, get(0))) return false;
-  if (!sameConfig(goals, get(getMakespan()))) return false;
+  if (!sameConfig(starts, get(0))) {
+    warn("validation, invalid starts");
+    return false;
+  }
+  if (!sameConfig(goals, get(getMakespan()))) {
+    warn("validation, invalid goals");
+    return false;
+  }
 
   // check conflicts and continuity
   int num_agents = get(0).size();
   for (int t = 1; t <= getMakespan(); ++t) {
-    if (get(t).size() != num_agents) return false;
+    if (get(t).size() != num_agents) {
+      warn("validation, invalid size");
+      return false;
+    }
     for (int i = 0; i < num_agents; ++i) {
       Node* v_i_t = get(t, i);
       Node* v_i_t_1 = get(t - 1, i);
       Nodes cands = v_i_t_1->neighbor;
       cands.push_back(v_i_t_1);
-      if (!inArray(v_i_t, cands)) return false;  // invalid move
+      if (!inArray(v_i_t, cands)) {
+        warn("validation, invalid move");
+        return false;
+      }
       // see conflicts
       for (int j = i + 1; j < num_agents; ++j) {
         Node* v_j_t = get(t, j);
         Node* v_j_t_1 = get(t - 1, j);
-        if (v_i_t == v_j_t) return false;
-        if (v_i_t == v_j_t_1 && v_i_t_1 == v_j_t) return false;
+        if (v_i_t == v_j_t) {
+          warn("validation, vertex conflict");
+          return false;
+        }
+        if (v_i_t == v_j_t_1 && v_i_t_1 == v_j_t) {
+          warn("validation, swap conflict");
+          return false;
+        }
       }
     }
   }
