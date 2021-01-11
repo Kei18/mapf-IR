@@ -2,6 +2,7 @@
 #include "util.hpp"
 #include "plan.hpp"
 #include "paths.hpp"
+#include <functional>
 
 // convert Plan to Paths
 [[maybe_unused]]

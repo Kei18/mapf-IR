@@ -90,3 +90,29 @@ TEST(LibIR, refineTwoPathsAtGoal_challenging)
   ASSERT_EQ(refined_plan.getSOC(), 13);
   ASSERT_EQ(refined_plan.getMakespan(), 7);
 }
+
+TEST(LibIR, identifyInteractingSetByMDD)
+{
+  Grid G("8x8.map");
+
+  Node* s1 = G.getNode(0, 1);
+  Node* s2 = G.getNode(1, 0);
+  Node* s3 = G.getNode(2, 0);
+  Node* g1 = G.getNode(2, 1);
+  Node* g2 = G.getNode(0, 2);
+  Node* g3 = G.getNode(2, 2);
+
+  Config starts = { s1, s2, s3 };
+  Config goals =  { g1, g2, g3 };
+  Plan plan;
+  plan.add({ s1, s2, s3 });
+  plan.add({ G.getNode(0, 1), G.getNode(1, 1), G.getNode(2, 1) });
+  plan.add({ G.getNode(1, 1), G.getNode(1, 2), G.getNode(2, 2) });
+  plan.add({ g1, g2, g3 });
+  ASSERT_TRUE(plan.validate(starts, goals));
+
+  auto modif_list1 = LibIR::identifyInteractingSetByMDD(0, plan, &G, s1, g1);
+  ASSERT_EQ(modif_list1.size(), 2);
+  auto modif_list2 = LibIR::identifyInteractingSetByMDD(1, plan, &G, s2, g2);
+  ASSERT_EQ(modif_list2.size(), 0);
+}

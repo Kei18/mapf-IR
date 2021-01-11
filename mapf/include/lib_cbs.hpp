@@ -105,6 +105,7 @@ namespace LibCBS
 
     // update MDD with new constraints
     void update(const Constraints& _constraints);
+    bool forceUpdate(const Constraints& _constraints);
 
     // sub-procedures used in update
     void deleteForward(MDDNode* node);

@@ -407,6 +407,77 @@ void LibCBS::MDD::update(const Constraints& _constraints)
   if (body[0].empty() || body[c].empty()) valid = false;
 }
 
+bool LibCBS::MDD::forceUpdate(const Constraints& _constraints)
+{
+  bool updated = false;
+
+  // format constraints
+  Constraints constraints;
+  for (auto constraint : _constraints) {
+    if (constraint->id != i && constraint->id != -1) continue;
+    // vertex conflict at the goal, must increase cost
+    if (constraint->t >= c && constraint->u == nullptr) {
+      if (constraint->v == g) valid = false;
+      continue;
+    }
+    // swap conflict, never occur
+    if (constraint->t > c && constraint->u != nullptr) {
+      continue;
+    }
+    constraints.push_back(constraint);
+  }
+
+  // delete nodes
+  for (auto constraint : constraints) {
+
+    if (constraint->stay) {  // check goal
+      for (int t = constraint->t; t <= c; ++t) {
+        auto itr_v = std::find_if(
+            body[t].begin(), body[t].end(),
+            [constraint](MDDNode* node) { return node->v == constraint->v; });
+        if (itr_v == body[t].end()) continue;
+        MDDNode* node_v = *itr_v;
+        deleteForward(node_v);
+        deleteBackword(node_v);
+        updated = true;
+      }
+      continue;
+    }
+
+    auto itr_v = std::find_if(
+        body[constraint->t].begin(), body[constraint->t].end(),
+        [constraint](MDDNode* node) { return node->v == constraint->v; });
+    if (itr_v == body[constraint->t].end()) continue;
+
+    MDDNode* node_v = *itr_v;
+    if (constraint->u == nullptr) {  // vertex constraints, v
+      deleteForward(node_v);
+      deleteBackword(node_v);
+      updated = true;
+    } else {  // swap conflict, u->v
+      auto itr_vu = std::find_if(
+          node_v->prev.begin(), node_v->prev.end(),
+          [constraint](MDDNode* node) { return node->v == constraint->u; });
+      MDDNode* node_u = *itr_vu;
+      if (itr_vu != node_v->prev.end()) {
+        auto itr_uv = std::find_if(
+            node_u->next.begin(), node_u->next.end(),
+            [node_v](MDDNode* node) { return node->v == node_v->v; });
+        updated = true;
+        node_v->prev.erase(itr_vu);
+        node_u->next.erase(itr_uv);
+        if (node_v->prev.empty()) deleteForward(node_v);
+        if (node_u->next.empty()) deleteBackword(node_u);
+      }
+    }
+  }
+
+  // update validity
+  if (body[0].empty() || body[c].empty()) valid = false;
+
+  return updated;
+}
+
 // delete unreachable nodes recursively
 void LibCBS::MDD::deleteForward(MDDNode* node)
 {

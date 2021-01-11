@@ -126,7 +126,23 @@ Plan IR::getInitialPlan()
 Plan IR::refinePlan(const Config& config_s, const Config& config_g,
                     const Plan& current_plan)
 {
-  return LibIR::refineSinglePaths(current_plan, P, getRemainedTime());
+  Plan plan = current_plan;
+  plan = LibIR::refineSinglePaths(plan, P, getRemainedTime());
+  plan = LibIR::refineTwoPathsAtGoal(plan, P, getRemainedTime());
+  for (int i = 0; i < P->getNum(); ++i) {
+    const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, MT);
+    if (modif_list.empty()) continue;
+
+    info(" ", i, modif_list.size(), plan.getSOC());
+    int comp_time_limit =
+        std::min(max_comp_time - (int)getSolverElapsedTime(), timeout_refinement);
+    if (comp_time_limit <= 0) return plan;  // timeout
+    Problem* _P =
+        new Problem(P, config_s, config_g, comp_time_limit, max_timestep);
+    plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
+    delete _P;
+  }
+  return plan;
 
   // Paths current_paths = planToPaths(current_plan);
   // auto gap = [&](int i) { return current_paths.costOfPath(i) - pathDist(i); };
@@ -193,24 +209,6 @@ std::vector<int> IR::getInteractingAgents(const Paths& current_paths,
   return sample_vec;
 }
 
-
-// Plan IR::refinePathAtGoal(const int id, const Plan& original_plan)
-// {
-//   const Node* g = P->getGoal(id);
-//   const Path original_path = original_plan.getPath(id);
-//   const int original_cost = getPathCost(original_path);
-//   const int real_dist = pathDist(P->getStart(id), g);
-
-//   while (int t = cost - 1; t > real_dist; --t) {
-//     for (int i = 0; i < P->getNum(); ++i) {
-//       if (i == id || original_plan.get(t, i) != g) continue;
-//       if (t - 2 < 0 || original_path[t-2] != g) continue;
-//       // get refined path for i
-//       int length = getPathCost(original_plan.getPath(id));
-//       Path path;
-//     }
-//   }
-// }
 
 std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,
                                           const std::vector<int>& sample)

@@ -1,9 +1,13 @@
 #pragma once
 #include "lib_solver.hpp"
+#include "lib_cbs.hpp"
 
 
 namespace LibIR
 {
+  /*
+   * refine example: x, y, y, z -> x, y, z
+   */
   static Plan refineSinglePaths
   (const Plan& original_plan,
    Graph* G,
@@ -32,7 +36,6 @@ namespace LibIR
     return pathsToPlan(paths);
   }
 
-
   [[maybe_unused]]
   static Plan refineSinglePaths(const Plan& original_plan, Problem* P, const int time_limit)
   {
@@ -40,7 +43,11 @@ namespace LibIR
       (original_plan, P->getG(), P->getConfigStart(), P->getConfigGoal(), time_limit);
   }
 
-  [[maybe_unused]]
+  /*
+   * refine example:
+   * - x, y, z, y -> x, y, y, y
+   * - *, v, z, * -> *, v, *, *
+   */
   static Plan refineTwoPathsAtGoal
   (const Plan& original_plan,
    Graph* G,
@@ -98,5 +105,51 @@ namespace LibIR
     }
 
     return pathsToPlan(paths);
+  }
+
+  [[maybe_unused]]
+  static Plan refineTwoPathsAtGoal(const Plan& original_plan, Problem* P, const int time_limit)
+  {
+    return refineTwoPathsAtGoal
+      (original_plan, P->getG(), P->getConfigStart(), P->getConfigGoal(), time_limit);
+  }
+
+  static std::vector<int> identifyInteractingSetByMDD
+  (const int i, const Plan& plan, Graph* G, Node* s, Node* g, std::mt19937* MT=nullptr)
+  {
+    std::vector<int> modif_list;
+
+    // basic info
+    const int cost = plan.getPathCost(i);
+    const int dist = G->pathDist(s, g);
+    std::vector<int> agents(plan.get(0).size());
+    std::iota(agents.begin(), agents.end(), 0);
+    if (MT != nullptr) std::shuffle(agents.begin(), agents.end(), *MT);
+
+    // filtering
+    if (cost == dist) return modif_list;
+
+    // make mdd with small cost
+    auto mdd = LibCBS::MDD(dist, i, G, s, g, true);
+    mdd.build();
+
+    // create modif list
+    modif_list.push_back(i);
+    for (auto j : agents) {
+      if (i == j) continue;
+      if (mdd.forceUpdate(LibCBS::getConstraintsByFixedPaths(plan, { j })) || !mdd.valid) {
+        modif_list.push_back(j);
+      }
+      if (!mdd.valid) break;
+    }
+
+    return modif_list;
+  }
+
+  [[maybe_unused]]
+  static std::vector<int> identifyInteractingSetByMDD
+  (const int i, const Plan& plan, Problem* P, std::mt19937* MT=nullptr)
+  {
+    return identifyInteractingSetByMDD(i, plan, P->getG(), P->getStart(i), P->getGoal(i), MT);
   }
 };
