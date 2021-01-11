@@ -30,6 +30,7 @@ add_test(test_plan ./tests/test_plan.cpp)
 add_test(test_paths ./tests/test_paths.cpp)
 add_test(test_lib_solver ./tests/test_lib_solver.cpp)
 add_test(test_problem ./tests/test_problem.cpp)
+add_test(test_lib_ir ./tests/test_lib_ir.cpp)
 
 add_executable(test ${TEST_ALL_SRC})
 target_link_libraries(test lib-mapf gtest)

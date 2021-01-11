@@ -16,6 +16,8 @@ private:
   int max_timestep;      // timestep limit
   int max_comp_time;     // comp_time limit, ms
 
+  const bool instance_initialized;  // for memory manage
+
   // set starts and goals randomly
   void setRandomStartsGoals();
 

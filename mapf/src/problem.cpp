@@ -5,7 +5,8 @@
 
 #include "../include/util.hpp"
 
-Problem::Problem(const std::string& _instance) : instance(_instance)
+Problem::Problem(const std::string& _instance)
+  : instance(_instance), instance_initialized(true)
 {
   // read instance file
   std::ifstream file(instance);
@@ -112,7 +113,8 @@ Problem::Problem(Problem* P, Config _config_s, Config _config_g,
       config_g(_config_g),
       num_agents(P->getNum()),
       max_timestep(_max_timestep),
-      max_comp_time(_max_comp_time)
+      max_comp_time(_max_comp_time),
+      instance_initialized(false)
 {
 }
 
@@ -120,6 +122,11 @@ Problem::~Problem()
 {
   config_s.clear();
   config_g.clear();
+
+  if (instance_initialized) {
+    delete G;
+    delete MT;
+  }
 }
 
 Node* Problem::getStart(int i) const

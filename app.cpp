@@ -100,8 +100,6 @@ int main(int argc, char* argv[])
 
   // for memory management
   delete solver;
-  delete P->getG();
-  delete P;
 
   return 0;
 }
