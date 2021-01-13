@@ -136,34 +136,41 @@ Plan IR::refinePlan(const Plan& current_plan)
     plan = LibIR::refineSinglePaths(plan, P, getRemainedTime());
     plan = LibIR::refineTwoPathsAtGoal(plan, P, getRemainedTime());
     int current_soc = plan.getSOC();
+    info(" ", current_soc);
     if (last_soc == current_soc) break;
     last_soc = current_soc;
   } while (true);
 
+  // do {
+  //   for (int i = 0; i < P->getNum(); ++i) {
+  //     const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
+  //     if (modif_list.empty()) continue;
+
+  //     info(" ", i, modif_list.size(), plan.getSOC());
+  //     int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
+  //     if (comp_time_limit <= 0) return plan;  // timeout
+  //     Problem* _P =
+  //       new Problem(P, P->getConfigStart(), P->getConfigGoal(), comp_time_limit, max_timestep);
+  //     plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
+  //     delete _P;
+  //   }
+  //   int current_soc = plan.getSOC();
+  //   if (last_soc == current_soc) break;
+  //   last_soc = current_soc;
+  // } while (true);
+
   for (int i = 0; i < P->getNum(); ++i) {
-    const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
+    int time_limit = std::min(getRemainedTime(), timeout_refinement);
+    const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, true, time_limit, MT);
+    // const auto modif_list = LibIR::identifyInteractingSetByMDDAggressive(i, plan, P, true, MT);
     if (modif_list.empty()) continue;
 
     info(" ", i, modif_list.size(), plan.getSOC());
-    int comp_time_limit =
-        std::min(max_comp_time - (int)getSolverElapsedTime(), timeout_refinement);
-    if (comp_time_limit <= 0) return plan;  // timeout
-    Problem* _P =
-      new Problem(P, P->getConfigStart(), P->getConfigGoal(), comp_time_limit, max_timestep);
-    plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
-    delete _P;
-  }
 
-  for (int i = 0; i < P->getNum(); ++i) {
-    const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, MT);
-    if (modif_list.empty()) continue;
-
-    info(" ", i, modif_list.size(), plan.getSOC());
-    int comp_time_limit =
-      std::min(max_comp_time - (int)getSolverElapsedTime(), timeout_refinement);
-    if (comp_time_limit <= 0) return plan;  // timeout
+    time_limit = std::min(getRemainedTime(), timeout_refinement);
+    if (time_limit <= 0) return plan;  // timeout
     Problem* _P =
-      new Problem(P, P->getConfigStart(), P->getConfigGoal(), comp_time_limit, max_timestep);
+      new Problem(P, P->getConfigStart(), P->getConfigGoal(), time_limit, max_timestep);
     plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
     delete _P;
   }
@@ -184,53 +191,6 @@ Plan IR::refinePlan(const Plan& current_plan)
   }
 
   return plan;
-
-  // Paths current_paths = planToPaths(current_plan);
-  // auto gap = [&](int i) { return current_paths.costOfPath(i) - pathDist(i); };
-
-  // // find agent with largest gap
-  // int id_largest_gap = -1;
-  // int gap_largest = 0;
-  // for (int i = 0; i < P->getNum(); ++i) {
-  //   if (inArray(i, CLOSE)) continue;
-  //   int gap_i = gap(i);
-  //   if (gap_i > gap_largest) {
-  //     id_largest_gap = i;
-  //     gap_largest = gap_i;
-  //   }
-  // }
-
-  // // failed to find the agent with largest gap
-  // if (id_largest_gap == -1) {
-  //   CLOSE.clear();
-  //   HIST_GROUP_SIZE.push_back(0);
-  //   HIST_GAP.push_back(0);
-  //   return current_plan;
-  // }
-
-  // // find interacting agents
-  // std::vector<int> sample = getInteractingAgents(current_paths, id_largest_gap);
-  // HIST_GROUP_SIZE.push_back(sample.size());
-  // HIST_GAP.push_back(gap_largest);
-  // info("   ", "id=", id_largest_gap, ", gap=", gap_largest,
-  //      ", interacting size:", sample.size());
-
-  // // create problem
-  // int comp_time_limit =
-  //     std::min(max_comp_time - (int)getSolverElapsedTime(), timeout_refinement);
-  // if (comp_time_limit <= 0) return current_plan;  // timeout
-  // Problem* _P =
-  //     new Problem(P, config_s, config_g, comp_time_limit, max_timestep);
-
-  // // solve
-  // auto res = getOptimalPlan(_P, current_plan, sample);
-
-  // Plan plan = std::get<1>(res);
-  // if (!std::get<0>(res) || plan.getSOC() == current_plan.getSOC()) {
-  //   CLOSE.push_back(id_largest_gap);
-  // }
-  // delete _P;
-  // return plan;
 }
 
 std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,

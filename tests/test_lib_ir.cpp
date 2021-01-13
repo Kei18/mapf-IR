@@ -117,6 +117,52 @@ TEST(LibIR, identifyInteractingSetByMDD)
   ASSERT_EQ(modif_list2.size(), 0);
 }
 
+TEST(libIR, identifyInteractingSetByMDD_Advanced)
+{
+  Grid G("8x8.map");
+
+  Config starts = { G.getNode(0,3), G.getNode(1,2), G.getNode(2,0) };
+  Config goals  = { G.getNode(3,3), G.getNode(1,4), G.getNode(2,4) };
+  Plan plan;
+  plan.add({ G.getNode(0,3), G.getNode(1,2), G.getNode(2,0) });
+  plan.add({ G.getNode(0,3), G.getNode(1,3), G.getNode(2,1) });
+  plan.add({ G.getNode(1,3), G.getNode(1,4), G.getNode(2,2) });
+  plan.add({ G.getNode(1,3), G.getNode(1,4), G.getNode(2,3) });
+  plan.add({ G.getNode(2,3), G.getNode(1,4), G.getNode(2,4) });
+  plan.add({ G.getNode(3,3), G.getNode(1,4), G.getNode(2,4) });
+  ASSERT_TRUE(plan.validate(starts, goals));
+
+  auto modif_list1 = LibIR::identifyInteractingSetByMDD
+    (0, plan, &G, G.getNode(0,3), G.getNode(3,3));
+  ASSERT_EQ(modif_list1.size(), 2);
+  auto modif_list2 = LibIR::identifyInteractingSetByMDD
+    (0, plan, &G, G.getNode(0,3), G.getNode(3,3), true);
+  ASSERT_EQ(modif_list2.size(), 3);
+}
+
+TEST(libIR, identifyInteractingSetByMDDAggressive)
+{
+  Grid G("8x8.map");
+
+  Config starts = { G.getNode(2,0), G.getNode(1,1), G.getNode(0,2) };
+  Config goals  = { G.getNode(2,3), G.getNode(3,1), G.getNode(3,2) };
+  Plan plan;
+  plan.add({ G.getNode(2,0), G.getNode(1,1), G.getNode(0,2) });
+  plan.add({ G.getNode(2,1), G.getNode(1,1), G.getNode(1,2) });
+  plan.add({ G.getNode(2,1), G.getNode(1,1), G.getNode(2,2) });
+  plan.add({ G.getNode(2,2), G.getNode(2,1), G.getNode(3,2) });
+  plan.add({ G.getNode(2,3), G.getNode(3,1), G.getNode(3,2) });
+
+  ASSERT_TRUE(plan.validate(starts, goals));
+
+  auto modif_list1 = LibIR::identifyInteractingSetByMDD
+    (1, plan, &G, G.getNode(1,1), G.getNode(3,1));
+  ASSERT_EQ(modif_list1.size(), 2);
+  auto modif_list2 = LibIR::identifyInteractingSetByMDDAggressive
+    (1, plan, &G, starts, goals);
+  ASSERT_EQ(modif_list2.size(), 3);
+}
+
 TEST(libIR, identifyAgentsAtGoal)
 {
   Grid G("8x8.map");

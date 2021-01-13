@@ -2,6 +2,7 @@
 #include "lib_solver.hpp"
 #include "lib_cbs.hpp"
 #include <set>
+#include <stack>
 
 
 namespace LibIR
@@ -121,9 +122,10 @@ namespace LibIR
   }
 
   static std::vector<int> identifyInteractingSetByMDD
-  (const int i, const Plan& plan, Graph* G, Node* s, Node* g, std::mt19937* MT=nullptr)
+  (const int i, const Plan& plan, Graph* G, Node* s, Node* g,
+   bool whole_duration=false, const int time_limit=-1, std::mt19937* MT=nullptr)
   {
-    std::vector<int> modif_list;
+    auto t_start = Time::now();
 
     // basic info
     const int cost = plan.getPathCost(i);
@@ -133,30 +135,88 @@ namespace LibIR
     if (MT != nullptr) std::shuffle(agents.begin(), agents.end(), *MT);
 
     // filtering
-    if (cost == dist) return modif_list;
+    if (cost == dist) return {};
 
-    // make mdd with small cost
-    auto mdd = LibCBS::MDD(dist, i, G, s, g, true);
-    mdd.build();
+    // modification set
+    std::set<int> modif_set;
 
-    // create modif list
-    modif_list.push_back(i);
-    for (auto j : agents) {
-      if (i == j) continue;
-      if (mdd.forceUpdate(LibCBS::getConstraintsByFixedPaths(plan, { j })) || !mdd.valid) {
-        modif_list.push_back(j);
+    for (int t = dist; t < cost; ++t) {
+      // make mdd with small cost
+      auto mdd = LibCBS::MDD(t, i, G, s, g, true);
+      if (time_limit == -1) {
+        mdd.build();
+      } else {
+        int _t_limit = time_limit - getElapsedTime(t_start);
+        if (_t_limit < 0) return {};
+        mdd.build(_t_limit);
       }
-      if (!mdd.valid) break;
+
+      // create modif list
+      for (auto j : agents) {
+        if (i == j) continue;
+        if (mdd.forceUpdate(LibCBS::getConstraintsByFixedPaths(plan, { j })) || !mdd.valid) {
+          modif_set.insert(j);
+        }
+        if (!mdd.valid) break;
+      }
+
+      if (!whole_duration) break;
+    }
+
+    if (modif_set.empty()) return {};
+
+    modif_set.insert(i);
+    std::vector<int> moidf_list(modif_set.begin(), modif_set.end());
+    return moidf_list;
+  }
+
+  [[maybe_unused]]
+  static std::vector<int> identifyInteractingSetByMDD
+  (const int i, const Plan& plan, Problem* P,
+   const bool whole_duration=false, const int time_limit=-1, std::mt19937* MT=nullptr)
+  {
+    return identifyInteractingSetByMDD
+      (i, plan, P->getG(), P->getStart(i), P->getGoal(i), whole_duration, time_limit, MT);
+  }
+
+  static std::vector<int> identifyInteractingSetByMDDAggressive
+  (const int i, const Plan& plan, Graph* G, const Config& starts, const Config& goals,
+   bool whole_duration=false, const int time_limit=-1, std::mt19937* MT=nullptr)
+  {
+    auto init_modif_list = identifyInteractingSetByMDD
+      (i, plan, G, starts[i], goals[i], whole_duration, time_limit, MT);
+    if (init_modif_list.empty()) return {};
+
+    std::vector<int> modif_list;
+    std::stack<int> OPEN;
+    std::unordered_map<int, bool> CLOSE;
+
+    for (auto j : init_modif_list) OPEN.push(j);
+
+    while (!OPEN.empty()) {
+      auto j = OPEN.top();
+      OPEN.pop();
+      if (CLOSE.find(j) != CLOSE.end()) continue;
+      CLOSE[j] = true;
+      modif_list.push_back(j);
+      auto list = identifyInteractingSetByMDD
+        (j, plan, G, starts[j], goals[j], whole_duration, time_limit, MT);
+      for (auto k : list) {
+        if (CLOSE.find(k) != CLOSE.end()) continue;
+        OPEN.push(k);
+      }
     }
 
     return modif_list;
   }
 
   [[maybe_unused]]
-  static std::vector<int> identifyInteractingSetByMDD
-  (const int i, const Plan& plan, Problem* P, std::mt19937* MT=nullptr)
+  static std::vector<int> identifyInteractingSetByMDDAggressive
+  (const int i, const Plan& plan, Problem* P,
+   const bool whole_duration=false, const int time_limit=-1, std::mt19937* MT=nullptr)
   {
-    return identifyInteractingSetByMDD(i, plan, P->getG(), P->getStart(i), P->getGoal(i), MT);
+    return identifyInteractingSetByMDDAggressive
+      (i, plan, P->getG(), P->getConfigStart(), P->getConfigGoal(), whole_duration, time_limit, MT);
   }
 
   static std::vector<int> identifyAgentsAtGoal
@@ -221,5 +281,4 @@ namespace LibIR
     return identifyBottleneckAgentsWithScore
       (i, plan, P->getG(), P->getConfigStart(), P->getConfigGoal());
   }
-
 };
