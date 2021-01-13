@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(LibIR, refineSinglePaths)
+TEST(LibIR, refineSinglePath)
 {
   Grid G("8x8.map");
 
@@ -15,15 +15,15 @@ TEST(LibIR, refineSinglePaths)
   Config goals  = { u, x };
 
   Plan plan;
-  plan.add(starts);
+  plan.add({ v, w });
   plan.add({ v, x });
-  plan.add(goals);
+  plan.add({ u, x });
   ASSERT_TRUE(plan.validate(starts, goals));
   ASSERT_EQ(plan.getSOC(), 3);
 
-  Plan refined_plan = LibIR::refineSinglePaths(plan, &G, starts, goals, 1000);
+  plan = LibIR::refineSinglePath(0, plan, &G, v, u, 1000);
   ASSERT_TRUE(plan.validate(starts, goals));
-  ASSERT_EQ(refined_plan.getSOC(), 2);
+  ASSERT_EQ(plan.getSOC(), 2);
 }
 
 TEST(LibIR, refineTwoPathsAtGoal)
@@ -49,10 +49,10 @@ TEST(LibIR, refineTwoPathsAtGoal)
   ASSERT_EQ(plan.getSOC(), 8);
   ASSERT_EQ(plan.getMakespan(), 4);
 
-  Plan refined_plan = LibIR::refineTwoPathsAtGoal(plan, &G, starts, goals, 1000);
-  ASSERT_TRUE(refined_plan.validate(starts, goals));
-  ASSERT_EQ(refined_plan.getSOC(), 7);
-  ASSERT_EQ(refined_plan.getMakespan(), 6);
+  plan = LibIR::refineTwoPathsAtGoal(0, plan, &G, starts, goals);
+  ASSERT_TRUE(plan.validate(starts, goals));
+  ASSERT_EQ(plan.getSOC(), 7);
+  ASSERT_EQ(plan.getMakespan(), 6);
 }
 
 TEST(LibIR, refineTwoPathsAtGoal_challenging)
@@ -85,10 +85,10 @@ TEST(LibIR, refineTwoPathsAtGoal_challenging)
   ASSERT_EQ(plan.getSOC(), 19);
   ASSERT_EQ(plan.getMakespan(), 7);
 
-  Plan refined_plan = LibIR::refineTwoPathsAtGoal(plan, &G, starts, goals, 1000);
-  ASSERT_TRUE(refined_plan.validate(starts, goals));
-  ASSERT_EQ(refined_plan.getSOC(), 13);
-  ASSERT_EQ(refined_plan.getMakespan(), 7);
+  plan = LibIR::refineTwoPathsAtGoal(0, plan, &G, starts, goals);
+  ASSERT_TRUE(plan.validate(starts, goals));
+  ASSERT_EQ(plan.getSOC(), 13);
+  ASSERT_EQ(plan.getMakespan(), 7);
 }
 
 TEST(LibIR, identifyInteractingSetByMDD)

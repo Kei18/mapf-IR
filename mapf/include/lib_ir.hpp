@@ -10,39 +10,28 @@ namespace LibIR
   /*
    * refine example: x, y, y, z -> x, y, z
    */
-  static Plan refineSinglePaths
-  (const Plan& original_plan,
-   Graph* G,
-   const Config& starts,
-   const Config& goals,
-   const int time_limit)
+  static Plan refineSinglePath
+  (const int i, const Plan& plan, Graph* G, Node* s, Node* g, const int time_limit=-1)
   {
-    const auto t_start = Time::now();
-    const int num = starts.size();
-    auto paths = planToPaths(original_plan);
+    // filtering
+    const int cost = plan.getPathCost(i);
+    if (cost == G->pathDist(s, g)) return plan;
 
-    for (int i = 0; i < num; ++i) {
-      const int cost = paths.costOfPath(i);
+    // get new path
+    auto paths = planToPaths(plan);
+    const auto path = getBasicPrioritizedPath(i, s, g, G, paths, time_limit, {});
+    if (path.empty() || getPathCost(path) >= cost) return plan;
 
-      // filtering
-      if (cost == G->pathDist(starts[i], goals[i])) continue;
+    // update paths
+    paths.insert(i, path);
 
-      // get new path
-      const auto path = getBasicPrioritizedPath
-        (i, starts[i], goals[i], G, paths, time_limit - getElapsedTime(t_start), {});
-      if (path.empty()) continue;
-
-      // update path
-      if (getPathCost(path) < cost) paths.insert(i, path);
-    }
     return pathsToPlan(paths);
   }
 
   [[maybe_unused]]
-  static Plan refineSinglePaths(const Plan& original_plan, Problem* P, const int time_limit)
+  static Plan refineSinglePath(const int i, const Plan& plan, Problem* P, const int time_limit=-1)
   {
-    return refineSinglePaths
-      (original_plan, P->getG(), P->getConfigStart(), P->getConfigGoal(), time_limit);
+    return refineSinglePath(i, plan, P->getG(), P->getStart(i), P->getGoal(i), time_limit);
   }
 
   /*
@@ -51,74 +40,69 @@ namespace LibIR
    * - *, v, z, * -> *, v, *, *
    */
   static Plan refineTwoPathsAtGoal
-  (const Plan& original_plan,
-   Graph* G,
-   const Config& starts,
-   const Config& goals,
-   const int time_limit)
+  (const int i, const Plan& plan, Graph* G,
+   const Config& starts, const Config& goals, const int time_limit=-1)
   {
-    const auto t_start = Time::now();
-    const int num = starts.size();
-    auto paths = planToPaths(original_plan);
+    auto t_start = Time::now();
 
-    for (int i = 0; i < num; ++i) {
-      Node* s = starts[i];
-      Node* g = goals[i];
-      Path path = paths.get(i);
-      const int cost = getPathCost(path);
-      const int dist = G->pathDist(s, g);
+    // filtering
+    Node* s = starts[i];
+    Node* g = goals[i];
+    const int cost = plan.getPathCost(i);
+    const int dist = G->pathDist(s, g);
+    if (cost <= dist + 1) return plan;
 
-      // filtering
-      if (cost <= dist + 1) continue;
+    const int num = plan.get(0).size();
+    auto paths = planToPaths(plan);
+    Path path = paths.get(i);
+    bool stop_flg = false;
 
-      bool stop_flg = false;
-      for (int t = cost - 1; t > dist; --t) {
-        if (path[t] == g) continue;
-        if (path[t-1] != g || path[t+1] != g) break;
+    for (int t = cost - 1; t > dist; --t) {
+      if (path[t] == g) continue;
+      if (path[t-1] != g || path[t+1] != g) break;
 
-        for (int j = 0; j < num; ++j) {
-          if (i == j) continue;
-          if (paths.get(j, t) != g) continue;
+      for (int j = 0; j < num; ++j) {
+        if (i == j) continue;
+        if (paths.get(j, t) != g) continue;
 
-          // create temporal paths
-          auto tmp_path  = path;
-          auto tmp_paths = paths;
-          tmp_path.resize(t);
-          tmp_paths.insert(i, tmp_path);
+        // create temporal paths
+        auto tmp_path  = path;
+        auto tmp_paths = paths;
+        tmp_path.resize(t);
+        tmp_paths.insert(i, tmp_path);
 
-          const int original_costs = paths.costOfPath(i) + paths.costOfPath(j);
-          const int upper_bound = original_costs - tmp_paths.costOfPath(i) - 1;
+        const int original_costs = paths.costOfPath(i) + paths.costOfPath(j);
+        const int upper_bound = original_costs - tmp_paths.costOfPath(i) - 1;
 
-          // constraints
-          std::tuple<Node*, int> constraint = std::make_tuple(g, t);
+        // constraints
+        std::tuple<Node*, int> constraint = std::make_tuple(g, t);
 
-          // get refined plan for j
-          const auto refined_path_j = getBasicPrioritizedPath
-            (j, starts[j], goals[j], G, tmp_paths,
-             time_limit - getElapsedTime(t_start), { constraint }, upper_bound);
-          if (refined_path_j.empty()) {
-            stop_flg = true;
-            break;
-          }
-          tmp_paths.insert(j, refined_path_j);
-
-          // check update or not
-          paths = tmp_paths;
-          path = paths.get(i);
+        // get refined plan for j
+        const auto refined_path_j = getBasicPrioritizedPath
+          (j, starts[j], goals[j], G, tmp_paths,
+           time_limit - getElapsedTime(t_start), { constraint }, upper_bound);
+        if (refined_path_j.empty()) {
+          stop_flg = true;
           break;
         }
-        if (stop_flg) break;
+        tmp_paths.insert(j, refined_path_j);
+
+        // check update or not
+        paths = tmp_paths;
+        path = paths.get(i);
+        break;
       }
+      if (stop_flg) break;
     }
 
     return pathsToPlan(paths);
   }
 
   [[maybe_unused]]
-  static Plan refineTwoPathsAtGoal(const Plan& original_plan, Problem* P, const int time_limit)
+  static Plan refineTwoPathsAtGoal(const int i, const Plan& plan, Problem* P, const int time_limit)
   {
     return refineTwoPathsAtGoal
-      (original_plan, P->getG(), P->getConfigStart(), P->getConfigGoal(), time_limit);
+      (i, plan, P->getG(), P->getConfigStart(), P->getConfigGoal(), time_limit);
   }
 
   static std::vector<int> identifyInteractingSetByMDD

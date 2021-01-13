@@ -77,14 +77,6 @@ void Solver::printResult()
             << ", makespan=" << std::right << std::setw(4)
             << solution.getMakespan() << " (LB=" << std::right << std::setw(6)
             << LB_makespan << ")" << std::endl;
-
-  // additional
-  for (int i = 0; i < P->getNum(); ++i) {
-    int c = solution.getPathCost(i) - pathDist(i);
-    if (c != 0) {
-      std::cout << i << ": " << c << std::endl;
-    }
-  }
 }
 
 void Solver::makeLog(const std::string& logfile)

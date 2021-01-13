@@ -132,63 +132,84 @@ Plan IR::refinePlan(const Plan& current_plan)
 {
   Plan plan = current_plan;
   int last_soc = plan.getSOC();
+
+  const Config& starts = P->getConfigStart();
+  const Config& goals = P->getConfigGoal();
+
+  // single refine
   do {
-    plan = LibIR::refineSinglePaths(plan, P, getRemainedTime());
-    plan = LibIR::refineTwoPathsAtGoal(plan, P, getRemainedTime());
-    int current_soc = plan.getSOC();
-    info(" ", current_soc);
-    if (last_soc == current_soc) break;
+    for (int i = 0; i < P->getNum(); ++i) {
+      const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
+      if (comp_time_limit < 0) return plan;
+      plan = LibIR::refineSinglePath(i, plan, P, comp_time_limit);
+      info(" ", i, plan.getSOC());
+    }
+    const int current_soc = plan.getSOC();
+    if (current_soc >= last_soc) break;
     last_soc = current_soc;
   } while (true);
 
-  // do {
-  //   for (int i = 0; i < P->getNum(); ++i) {
-  //     const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
-  //     if (modif_list.empty()) continue;
+  // refinement at goals
+  do {
+    for (int i = 0; i < P->getNum(); ++i) {
+      const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
+      if (comp_time_limit < 0) return plan;
+      plan = LibIR::refineTwoPathsAtGoal(i, plan, P, comp_time_limit);
+      info(" ", i, plan.getSOC());
+    }
+    const int current_soc = plan.getSOC();
+    if (current_soc >= last_soc) break;
+    last_soc = current_soc;
+  } while (true);
 
-  //     info(" ", i, modif_list.size(), plan.getSOC());
-  //     int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
-  //     if (comp_time_limit <= 0) return plan;  // timeout
-  //     Problem* _P =
-  //       new Problem(P, P->getConfigStart(), P->getConfigGoal(), comp_time_limit, max_timestep);
-  //     plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
-  //     delete _P;
-  //   }
-  //   int current_soc = plan.getSOC();
-  //   if (last_soc == current_soc) break;
-  //   last_soc = current_soc;
-  // } while (true);
+  // old IR
+  do {
+    for (int i = 0; i < P->getNum(); ++i) {
+      const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
+      if (modif_list.empty()) continue;
+      const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
+      if (comp_time_limit < 0) return plan;
+      Problem _P = Problem(P, starts, goals, comp_time_limit, max_timestep);
+      plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
+      info(" oldIR", i, ", soc=", plan.getSOC(), ", |M|=", modif_list.size());
+    }
+    const int current_soc = plan.getSOC();
+    if (current_soc >= last_soc) break;
+    last_soc = current_soc;
+  } while (true);
 
-  for (int i = 0; i < P->getNum(); ++i) {
-    int time_limit = std::min(getRemainedTime(), timeout_refinement);
-    const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, true, time_limit, MT);
-    // const auto modif_list = LibIR::identifyInteractingSetByMDDAggressive(i, plan, P, true, MT);
-    if (modif_list.empty()) continue;
+  // MDD
+  do {
+    for (int i = 0; i < P->getNum(); ++i) {
+      int time_limit = std::min(getRemainedTime(), timeout_refinement);
+      const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, true, time_limit, MT);
+      if (modif_list.empty()) continue;
+      const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
+      if (comp_time_limit < 0) return plan;
+      Problem _P = Problem(P, starts, goals, comp_time_limit, max_timestep);
+      plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
+      info(" MDD", i, ", soc=", plan.getSOC(), ", |M|=", modif_list.size());
+    }
+    const int current_soc = plan.getSOC();
+    if (current_soc >= last_soc) break;
+    last_soc = current_soc;
+  } while (true);
 
-    info(" ", i, modif_list.size(), plan.getSOC());
-
-    time_limit = std::min(getRemainedTime(), timeout_refinement);
-    if (time_limit <= 0) return plan;  // timeout
-    Problem* _P =
-      new Problem(P, P->getConfigStart(), P->getConfigGoal(), time_limit, max_timestep);
-    plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
-    delete _P;
-  }
-
-  for (int i = 0; i < P->getNum(); ++i) {
-    auto res = LibIR::identifyBottleneckAgentsWithScore(i, plan, P);
-    const auto modif_list = std::get<1>(res);
-    if (modif_list.empty()) continue;
-
-    info(" ", i, modif_list.size(), plan.getSOC(), std::get<0>(res));
-    int comp_time_limit =
-      std::min(max_comp_time - (int)getSolverElapsedTime(), timeout_refinement);
-    if (comp_time_limit <= 0) return plan;  // timeout
-    Problem* _P =
-      new Problem(P, P->getConfigStart(), P->getConfigGoal(), comp_time_limit, max_timestep);
-    plan = std::get<1>(getOptimalPlan(_P, plan, modif_list));
-    delete _P;
-  }
+  // bottle neck
+  do {
+    for (int i = 0; i < P->getNum(); ++i) {
+      const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore(i, plan, P));
+      if (modif_list.empty()) continue;
+      const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
+      if (comp_time_limit < 0) return plan;
+      Problem _P = Problem(P, starts, goals, comp_time_limit, max_timestep);
+      plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
+      info(" Bottle neck", i, ", soc=", plan.getSOC(), ", |M|=", modif_list.size());
+    }
+    const int current_soc = plan.getSOC();
+    if (current_soc >= last_soc) break;
+    last_soc = current_soc;
+  } while (true);
 
   return plan;
 }
