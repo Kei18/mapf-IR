@@ -203,7 +203,8 @@ static Path getBasicPrioritizedPath
 
     // check additional constraints
     for (auto c : constraints) {
-      if (m->v == std::get<0>(c) && m->g == std::get<1>(c)) return true;
+      const int t = std::get<1>(c);
+      if (m->v == std::get<0>(c) && (t == -1 || t == m->g)) return true;
     }
 
     return false;
@@ -218,7 +219,7 @@ static Path getBasicPrioritizedPath
 (const int id,
  Problem* P,
  const Paths& paths,
- const int time_limit,
+ const int time_limit=-1,
  const int upper_bound=-1,
  CompareAstarNode& compare=compareAstarNodeBasic)
 {

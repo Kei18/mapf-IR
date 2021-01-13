@@ -14,6 +14,7 @@
 #include <util.hpp>
 #include <vector>
 #include <whca.hpp>
+#include <revisit_pp.hpp>
 
 void printHelp();
 Solver* getSolver(const std::string solver_name, Problem* P, bool verbose,
@@ -122,6 +123,8 @@ Solver* getSolver(const std::string solver_name, Problem* P, bool verbose,
     solver = new PIBT_COMPLETE(P);
   } else if (solver_name == "ECBS") {
     solver = new ECBS(P);
+  } else if (solver_name == "RevisitPP") {
+    solver = new RevisitPP(P);
   } else if (solver_name == "IR") {
     solver = new IR(P);
   } else {

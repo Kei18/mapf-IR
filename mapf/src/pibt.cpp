@@ -192,20 +192,7 @@ Node* PIBT::chooseNode(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
     int o_v = (int)(occupied_now.find(v->id) != occupied_now.end());
     int o_u = (int)(occupied_now.find(u->id) != occupied_now.end());
     if (o_v != o_u) return o_v < o_u;
-    // degree
-    int d_v = v->getDegree();
-    int d_u = u->getDegree();
-    if (d_v != d_u) return d_v > d_u;
-    // Manhattan dist
-    int m_v = v->manhattanDist(a->g);
-    int m_u = u->manhattanDist(a->g);
-    if (m_v != m_u) return m_v < m_u;
-    // Euclidean dist
-    float e_v = v->euclideanDist(a->g);
-    float e_u = u->euclideanDist(a->g);
-    if (e_v != e_u) return e_v < e_u;
-    // random
-    return getRandomBoolean(MT);
+    return false;
   });
   return v;
 }
