@@ -86,27 +86,30 @@ void IR::run()
 Plan IR::getInitialPlan()
 {
   // set problem
-  Problem* _P = new Problem(P, P->getConfigStart(), P->getConfigGoal(),
-                            max_comp_time, max_timestep);
+  Problem _P = Problem(P, P->getConfigStart(), P->getConfigGoal(),
+                       max_comp_time, max_timestep);
 
   // set solver
   Solver* solver;
   switch (init_solver) {
     case INIT_SOLVER_TYPE::HCA:
-      solver = new HCA(_P);
+      solver = new HCA(&_P);
       break;
     case INIT_SOLVER_TYPE::WHCA:
-      solver = new WHCA(_P);
+      solver = new WHCA(&_P);
       break;
     case INIT_SOLVER_TYPE::ECBS:
-      solver = new ECBS(_P);
+      solver = new ECBS(&_P);
       break;
     case INIT_SOLVER_TYPE::PIBT:
-      solver = new PIBT(_P);
+      solver = new PIBT(&_P);
+      break;
+    case INIT_SOLVER_TYPE::RevisitPP:
+      solver = new RevisitPP(&_P);
       break;
     case INIT_SOLVER_TYPE::PIBT_COMPLETE:
     default:
-      solver = new PIBT_COMPLETE(_P);
+      solver = new PIBT_COMPLETE(&_P);
       break;
   }
 
@@ -123,7 +126,6 @@ Plan IR::getInitialPlan()
 
   // memory management
   delete solver;
-  delete _P;
 
   return plan;
 }
@@ -198,7 +200,9 @@ Plan IR::refinePlan(const Plan& current_plan)
   // bottle neck
   do {
     for (int i = 0; i < P->getNum(); ++i) {
-      const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore(i, plan, P));
+      int time_limit = std::min(getRemainedTime(), timeout_refinement);
+      const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore
+                                          (i, plan, P, time_limit));
       if (modif_list.empty()) continue;
       const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
       if (comp_time_limit < 0) return plan;
@@ -298,6 +302,8 @@ void IR::setParams(int argc, char* argv[])
           init_solver = INIT_SOLVER_TYPE::WHCA;
         } else if (s == "ECBS") {
           init_solver = INIT_SOLVER_TYPE::ECBS;
+        } else if (s == "RevisitPP") {
+          init_solver = INIT_SOLVER_TYPE::RevisitPP;
         } else if (s == "PIBT_COMPLETE") {
           init_solver = INIT_SOLVER_TYPE::PIBT_COMPLETE;
         } else {

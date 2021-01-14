@@ -182,6 +182,9 @@ public:
   // get path length between two nodes
   int pathDist(Node* const s, Node* const g);
 
+  // get path avoiding several nodes, used for creating well-formed instance
+  Path getPath(Node* const s, Node* const g, Nodes prohibited, std::mt19937* MT=nullptr);
+
   // get all nodes
   Nodes getV();
 };

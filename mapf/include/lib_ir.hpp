@@ -230,7 +230,8 @@ namespace LibIR
   }
 
   static std::tuple<int, std::vector<int>> identifyBottleneckAgentsWithScore
-  (const int i, const Plan& original_plan, Graph* G, const Config& starts, const Config& goals)
+  (const int i, const Plan& original_plan, Graph* G,
+   const Config& starts, const Config& goals, const int time_limit=-1)
   {
     int score = 0;
     std::vector<int> modif_list;
@@ -246,7 +247,7 @@ namespace LibIR
       const int dist = G->pathDist(s, g);
       const int original_cost = paths.costOfPath(j);
       if (original_cost == dist) continue;
-      const auto path = getBasicPrioritizedPath(j, s, g, G, paths);
+      const auto path = getBasicPrioritizedPath(j, s, g, G, paths, time_limit);
       const int cost = getPathCost(path);
       if (cost < original_cost) {
         score += original_cost - cost;
@@ -260,9 +261,9 @@ namespace LibIR
 
   [[maybe_unused]]
   static std::tuple<int, std::vector<int>> identifyBottleneckAgentsWithScore
-  (const int i, const Plan& plan, Problem* P)
+  (const int i, const Plan& plan, Problem* P, const int time_limit=-1)
   {
     return identifyBottleneckAgentsWithScore
-      (i, plan, P->getG(), P->getConfigStart(), P->getConfigGoal());
+      (i, plan, P->getG(), P->getConfigStart(), P->getConfigGoal(), time_limit);
   }
 };

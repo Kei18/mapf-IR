@@ -19,11 +19,13 @@ Problem::Problem(const std::string& _instance)
   std::regex r_agents = std::regex(R"(agents=(\d+))");
   std::regex r_seed = std::regex(R"(seed=(\d+))");
   std::regex r_random_problem = std::regex(R"(random_problem=(\d+))");
+  std::regex r_well_formed = std::regex(R"(well_formed=(\d+))");
   std::regex r_max_timestep = std::regex(R"(max_timestep=(\d+))");
   std::regex r_max_comp_time = std::regex(R"(max_comp_time=(\d+))");
   std::regex r_sg = std::regex(R"((\d+),(\d+),(\d+),(\d+))");
 
   bool read_scen = true;
+  bool well_formed = false;
   while (getline(file, line)) {
     // comment
     if (std::regex_match(line, results, r_comment)) {
@@ -51,6 +53,11 @@ Problem::Problem(const std::string& _instance)
         config_s.clear();
         config_g.clear();
       }
+      continue;
+    }
+    //
+    if (std::regex_match(line, results, r_well_formed)) {
+      if (std::stoi(results[1].str())) well_formed = true;
       continue;
     }
     // set max timestep
@@ -97,7 +104,11 @@ Problem::Problem(const std::string& _instance)
     warn("given starts/goals are not sufficient\nrandomly create instances");
   }
   if (num_agents > config_s.size()) {
-    setRandomStartsGoals();
+    if (well_formed) {
+      setWellFormedInstance();
+    } else {
+      setRandomStartsGoals();
+    }
   }
 
   // trimming
@@ -186,6 +197,46 @@ void Problem::setRandomStartsGoals()
     config_g.push_back(G->getNode(goals[j]));
     if (config_g.size() == num_agents) break;
     ++j;
+  }
+}
+
+void Problem::setWellFormedInstance()
+{
+  // initialize
+  config_s.clear();
+  config_g.clear();
+
+  // get grid size
+  Grid* grid = reinterpret_cast<Grid*>(G);
+  const int N = grid->getWidth() * grid->getHeight();
+
+  Nodes prohibited, starts_goals;
+
+  while (config_g.size() < getNum()) {
+    while (true) {
+      // determine start
+      Node* s;
+      do {
+        s = G->getNode(getRandomInt(0, N-1, MT));
+      } while (s == nullptr || inArray(s, prohibited));
+
+      // determine goal
+      Node* g;
+      do {
+        g = G->getNode(getRandomInt(0, N-1, MT));
+      } while (g == nullptr || g == s || inArray(g, prohibited));
+
+      // ensure well formed property
+      auto path = G->getPath(s, g, starts_goals);
+      if (!path.empty()) {
+        config_s.push_back(s);
+        config_g.push_back(g);
+        starts_goals.push_back(s);
+        starts_goals.push_back(g);
+        for (auto v : path) prohibited.push_back(v);
+        break;
+      }
+    }
   }
 }
 

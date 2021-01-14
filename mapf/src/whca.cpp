@@ -13,9 +13,7 @@ void WHCA::run()
 {
   // initialize
   Paths paths(P->getNum());
-  for (int i = 0; i < P->getNum(); ++i) {
-    paths.insert(i, {P->getStart(i)});
-  }
+  for (int i = 0; i < P->getNum(); ++i) paths.insert(i, {P->getStart(i)});
 
   // initial prioritization, far agent is prioritized
   std::vector<int> ids(P->getNum());
@@ -71,7 +69,17 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
 {
   // pre processing
   Nodes config_g;
-  int max_constraint_time = paths.getMaxConstraintTime(id, P);
+  int max_constraint_time = 0;
+  for (int i = 0; i < P->getNum(); ++i) {
+    config_g.push_back(P->getGoal(i));
+    Path p = paths.get(i);
+    if (p.empty()) continue;
+    for (int t = 0; t < p.size(); ++t) {
+      if (p[t] == g) {
+        max_constraint_time = std::max(t, max_constraint_time);
+      }
+    }
+  }
 
   AstarHeuristics fValue = [&](AstarNode* n) {
     return n->g + pathDist(n->v, g);

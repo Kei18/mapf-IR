@@ -3,6 +3,7 @@
 
 #include "default_params.hpp"
 #include "graph.hpp"
+#include "util.hpp"
 
 class Problem
 {
@@ -20,6 +21,9 @@ private:
 
   // set starts and goals randomly
   void setRandomStartsGoals();
+
+  // set well-formed instance
+  void setWellFormedInstance();
 
 public:
   Problem(const std::string& _instance);

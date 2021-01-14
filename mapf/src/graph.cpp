@@ -36,6 +36,90 @@ Path Graph::getPath(Node* const s, Node* const g)
   return path;
 }
 
+Path Graph::getPath(Node* const s, Node* const g, Nodes prohibited, std::mt19937* MT)
+{
+  if (s == g) return {};
+
+  struct AstarNode {
+    Node* v;
+    int g;
+    int f;
+    AstarNode* p;  // parent
+
+    AstarNode(Node* _v, int _g, int _f, AstarNode* _p) : v(_v), g(_g), f(_f), p(_p) {}
+  };
+  using AstarNodes = std::vector<AstarNode*>;
+
+  auto compare = [&](AstarNode* a, AstarNode* b) {
+    if (a->f != b->f) return a->f > b->f;
+    if (a->g != b->g) return a->g < b->g;
+    return false;
+  };
+
+  AstarNodes GC;  // garbage collection
+  auto createNewNode = [&GC](Node* v, int g, int f, AstarNode* p) {
+    AstarNode* new_node = new AstarNode(v, g, f, p);
+    GC.push_back(new_node);
+    return new_node;
+  };
+
+  // OPEN and CLOSE list
+  std::priority_queue<AstarNode*, AstarNodes, decltype(compare)> OPEN(compare);
+  std::unordered_map<int, bool> CLOSE;
+
+  // initial node
+  AstarNode* n = createNewNode(s, 0, dist(s, g), nullptr);
+  OPEN.push(n);
+
+  // main loop
+  bool invalid = true;
+  while (!OPEN.empty()) {
+
+    // minimum node
+    n = OPEN.top();
+    OPEN.pop();
+
+    // check CLOSE list
+    if (CLOSE.find(n->v->id) != CLOSE.end()) continue;
+    CLOSE[n->v->id] = true;
+
+    // check goal condition
+    if (n->v == g) {
+      invalid = false;
+      break;
+    }
+
+    // expand
+    Nodes C = n->v->neighbor;
+    C.push_back(n->v);
+    if (MT != nullptr) std::shuffle(C.begin(), C.end(), *MT);
+    for (auto u : C) {
+      int g_cost = n->g + 1;
+      AstarNode* m = createNewNode(u, g_cost, g_cost + dist(u, g), n);
+      // already searched?
+      if (CLOSE.find(m->v->id) != CLOSE.end()) continue;
+      // check constraints
+      if (inArray(m->v, prohibited)) continue;
+      OPEN.push(m);
+    }
+  }
+
+  Path path;
+  if (!invalid) {  // success
+    while (n != nullptr) {
+      path.push_back(n->v);
+      n = n->p;
+    }
+    std::reverse(path.begin(), path.end());
+  }
+
+  // free
+  for (auto p : GC) delete p;
+
+  return path;
+
+}
+
 int Graph::pathDist(Node* const s, Node* const g)
 {
   if (s == g) return 0;

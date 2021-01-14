@@ -410,20 +410,18 @@ void LibCBS::MDD::update(const Constraints& _constraints)
 bool LibCBS::MDD::forceUpdate(const Constraints& _constraints)
 {
   bool updated = false;
+  if (!valid) return false;
 
   // format constraints
   Constraints constraints;
   for (auto constraint : _constraints) {
     if (constraint->id != i && constraint->id != -1) continue;
     // vertex conflict at the goal, must increase cost
-    if (constraint->t >= c && constraint->u == nullptr) {
-      if (constraint->v == g) valid = false;
-      continue;
+    if (constraint->t >= c && constraint->u == nullptr && constraint->v == g) {
+      valid = false;
     }
-    // swap conflict, never occur
-    if (constraint->t > c && constraint->u != nullptr) {
-      continue;
-    }
+    // unused constraints
+    if (constraint->t > c) continue;
     constraints.push_back(constraint);
   }
 
