@@ -129,11 +129,20 @@ Problem::Problem(Problem* P, Config _config_s, Config _config_g,
 {
 }
 
+Problem::Problem(Problem* P, int _max_comp_time)
+  : G(P->getG()),
+    MT(P->getMT()),
+    config_s(P->getConfigStart()),
+    config_g(P->getConfigGoal()),
+    num_agents(P->getNum()),
+    max_timestep(P->getMaxTimestep()),
+    max_comp_time(_max_comp_time),
+    instance_initialized(false)
+{
+}
+
 Problem::~Problem()
 {
-  config_s.clear();
-  config_g.clear();
-
   if (instance_initialized) {
     delete G;
     delete MT;

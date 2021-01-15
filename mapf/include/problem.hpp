@@ -29,6 +29,7 @@ public:
   Problem(const std::string& _instance);
   Problem(Problem* P, Config _config_s, Config _config_g, int _max_comp_time,
           int _max_timestep);
+  Problem(Problem* P, int _max_comp_time);
   ~Problem();
 
   Graph* getG() { return G; }

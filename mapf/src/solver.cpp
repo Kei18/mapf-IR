@@ -9,7 +9,9 @@ Solver::Solver(Problem* _P)
       G(_P->getG()),
       MT(_P->getMT()),
       max_timestep(P->getMaxTimestep()),
-      max_comp_time(P->getMaxCompTime())
+      max_comp_time(P->getMaxCompTime()),
+      LB_soc(0),
+      LB_makespan(0)
 {
   solved = false;
   verbose = false;
@@ -59,16 +61,32 @@ bool Solver::overCompTime() const
   return getSolverElapsedTime() >= max_comp_time;
 }
 
-void Solver::printResult()
+void Solver::computeLowerBounds()
 {
-  int LB_soc = 0;
-  int LB_makespan = 0;
+  LB_soc = 0;
+  LB_makespan = 0;
+
   for (int i = 0; i < P->getNum(); ++i) {
     int d = pathDist(i);
     LB_soc += d;
     if (d > LB_makespan) LB_makespan = d;
   }
+}
 
+int Solver::getLowerBoundSOC()
+{
+  if (LB_soc == 0) computeLowerBounds();
+  return LB_soc;
+}
+
+int Solver::getLowerBoundMakespan()
+{
+  if (LB_makespan == 0) computeLowerBounds();
+  return LB_makespan;
+}
+
+void Solver::printResult()
+{
   std::cout << "solved=" << solved << ", solver=" << std::right << std::setw(8)
             << solver_name << ", comp_time(ms)=" << std::right << std::setw(8)
             << comp_time << ", soc=" << std::right << std::setw(6)

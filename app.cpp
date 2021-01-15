@@ -17,8 +17,8 @@
 #include <revisit_pp.hpp>
 
 void printHelp();
-Solver* getSolver(const std::string solver_name, Problem* P, bool verbose,
-                  int argc, char* argv[]);
+std::unique_ptr<Solver> getSolver
+(const std::string solver_name, Problem* P, bool verbose, int argc, char* argv[]);
 
 int main(int argc, char* argv[])
 {
@@ -77,18 +77,18 @@ int main(int argc, char* argv[])
   }
 
   // set problem
-  Problem* P = new Problem(instance_file);
+  Problem P = Problem(instance_file);
 
   // create scenario
   if (make_scen) {
-    P->makeScenFile(output_file);
+    P.makeScenFile(output_file);
     return 0;
   }
 
   // solve
-  Solver* solver = getSolver(solver_name, P, verbose, argc, argv_copy);
+  auto solver = getSolver(solver_name, &P, verbose, argc, argv_copy);
   solver->solve();
-  if (solver->succeed() && !solver->getSolution().validate(P)) {
+  if (solver->succeed() && !solver->getSolution().validate(&P)) {
     halt("invalid results");
   }
   solver->printResult();
@@ -99,37 +99,34 @@ int main(int argc, char* argv[])
     std::cout << "save result as " << output_file << std::endl;
   }
 
-  // for memory management
-  delete solver;
-
   return 0;
 }
 
-Solver* getSolver(const std::string solver_name, Problem* P, bool verbose,
-                  int argc, char* argv[])
+std::unique_ptr<Solver> getSolver
+(const std::string solver_name, Problem* P, bool verbose, int argc, char* argv[])
 {
-  Solver* solver;
+  std::unique_ptr<Solver> solver;
   if (solver_name == "PIBT") {
-    solver = new PIBT(P);
+    solver = std::make_unique<PIBT>(P);
   } else if (solver_name == "HCA") {
-    solver = new HCA(P);
+    solver = std::make_unique<HCA>(P);
   } else if (solver_name == "WHCA") {
-    solver = new WHCA(P);
+    solver = std::make_unique<WHCA>(P);
   } else if (solver_name == "CBS") {
-    solver = new CBS(P);
+    solver = std::make_unique<CBS>(P);
   } else if (solver_name == "ICBS") {
-    solver = new ICBS(P);
+    solver = std::make_unique<ICBS>(P);
   } else if (solver_name == "PIBT_COMPLETE") {
-    solver = new PIBT_COMPLETE(P);
+    solver = std::make_unique<PIBT_COMPLETE>(P);
   } else if (solver_name == "ECBS") {
-    solver = new ECBS(P);
+    solver = std::make_unique<ECBS>(P);
   } else if (solver_name == "RevisitPP") {
-    solver = new RevisitPP(P);
+    solver = std::make_unique<RevisitPP>(P);
   } else if (solver_name == "IR") {
-    solver = new IR(P);
+    solver = std::make_unique<IR>(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
-    solver = new PIBT(P);
+    solver = std::make_unique<PIBT>(P);
   }
   solver->setParams(argc, argv);
   solver->setVerbose(verbose);

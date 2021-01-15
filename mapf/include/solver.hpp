@@ -35,6 +35,9 @@ protected:
 
   bool verbose;  // true -> print additional info
 
+  int LB_soc;       // lower bound of soc
+  int LB_makespan;  // lower bound of makespan
+
   Path getPath(Node* const s, Node* const g) const { return G->getPath(s, g); }
   int pathDist(Node* const s, Node* const g) const { return G->pathDist(s, g); }
   // get path distance for a_i
@@ -77,6 +80,8 @@ private:
   void start();
   void end();
 
+  void computeLowerBounds();
+
 public:
   Solver(Problem* _P);
   virtual ~Solver(){};
@@ -88,6 +93,9 @@ public:
   Plan getSolution() const { return solution; };
   bool succeed() const { return solved; };
   std::string getSolverName() { return solver_name; };
+
+  int getLowerBoundSOC();
+  int getLowerBoundMakespan();
 
   // for parameters
   virtual void setParams(int argc, char* argv[]){};
