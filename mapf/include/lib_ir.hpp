@@ -209,15 +209,15 @@ namespace LibIR
     const int cost = plan.getPathCost(i);
     const int dist = G->pathDist(s, g);
     const int num  = plan.get(0).size();
+    if (cost == dist) return {};
 
-    std::set<int> modif_set;
+    std::set<int> modif_set = { i };
     for (int t = cost - 1; t >= dist; --t) {
       for (int j = 0; j < num; ++j) {
         if (j == i) continue;
         if (plan.get(t, j) == g) modif_set.insert(j);
       }
     }
-    if (!modif_set.empty()) modif_set.insert(i);
     std::vector<int> moidf_list(modif_set.begin(), modif_set.end());
     return moidf_list;
   }

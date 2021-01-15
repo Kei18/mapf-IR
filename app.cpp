@@ -7,6 +7,11 @@
 #include <icbs.hpp>
 #include <iostream>
 #include <ir.hpp>
+#include <ir_single_paths.hpp>
+#include <ir_fix_at_goals.hpp>
+#include <ir_focus_goals.hpp>
+#include <ir_mdd.hpp>
+#include <ir_bottleneck.hpp>
 #include <pibt.hpp>
 #include <pibt_complete.hpp>
 #include <problem.hpp>
@@ -124,6 +129,16 @@ std::unique_ptr<Solver> getSolver
     solver = std::make_unique<RevisitPP>(P);
   } else if (solver_name == "IR") {
     solver = std::make_unique<IR>(P);
+  } else if (solver_name == "IR_SINGLE_PATHS") {
+    solver = std::make_unique<IR_SinglePaths>(P);
+  } else if (solver_name == "IR_FIX_AT_GOALS") {
+    solver = std::make_unique<IR_FixAtGoals>(P);
+  } else if (solver_name == "IR_FOCUS_GOALS") {
+    solver = std::make_unique<IR_FocusGoals>(P);
+  } else if (solver_name == "IR_MDD") {
+    solver = std::make_unique<IR_MDD>(P);
+  } else if (solver_name == "IR_BOTTLENECK") {
+    solver = std::make_unique<IR_Bottleneck>(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = std::make_unique<PIBT>(P);
@@ -154,4 +169,9 @@ void printHelp()
   ICBS::printHelp();
   PIBT_COMPLETE::printHelp();
   IR::printHelp();
+  IR_SinglePaths::printHelp();
+  IR_FixAtGoals::printHelp();
+  IR_FocusGoals::printHelp();
+  IR_MDD::printHelp();
+  IR_Bottleneck::printHelp();
 }

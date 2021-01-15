@@ -3,15 +3,15 @@
  */
 
 #pragma once
-#include "../include/cbs_refine.hpp"
-#include "../include/ecbs.hpp"
-#include "../include/hca.hpp"
-#include "../include/icbs_refine.hpp"
-#include "../include/pibt.hpp"
-#include "../include/pibt_complete.hpp"
-#include "../include/whca.hpp"
-#include "../include/revisit_pp.hpp"
-#include "../include/lib_ir.hpp"
+#include "cbs_refine.hpp"
+#include "ecbs.hpp"
+#include "hca.hpp"
+#include "icbs_refine.hpp"
+#include "pibt.hpp"
+#include "pibt_complete.hpp"
+#include "whca.hpp"
+#include "revisit_pp.hpp"
+#include "lib_ir.hpp"
 #include "solver.hpp"
 
 class IR : public Solver
@@ -33,8 +33,6 @@ protected:
   // max iteration
   int current_iteration;
   int max_iteration;
-
-  std::vector<int> CLOSE;
 
   // for log
   std::string output_file;
@@ -68,13 +66,16 @@ protected:
   std::tuple<bool, Plan> getOptimalPlan(Problem* _P, const Plan& current_plan,
                                         const std::vector<int>& sample);
 
-  void refinePlan();
+  virtual void refinePlan();
+
+  void printProcessInfo();
+  int getRefineTimeLimit() const { return std::min(getRemainedTime(), timeout_refinement); }
 
 public:
   IR(Problem* _P);
   ~IR();
 
   void makeLog(const std::string& logfile);
-  void setParams(int argc, char* argv[]);
+  virtual void setParams(int argc, char* argv[]);
   static void printHelp();
 };

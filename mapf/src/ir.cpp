@@ -59,13 +59,20 @@ void IR::run()
   last_soc = init_plan_soc;
   last_makespan = init_plan_makespan;
 
+  if (make_log_every_itr) makeLog(output_file);
+
   // refinement
   refinePlan();
 
   // print final info
-  info("  refinement results, soc:", init_plan_soc, "->",
-       solution.getSOC(), ", makespan:", init_plan_makespan, "->",
-       solution.getMakespan());
+  const int soc = solution.getSOC();
+  const int makespan = solution.getMakespan();
+  info("  refinement results, soc:",
+       init_plan_soc, "->", soc,
+       " (improved:" , init_plan_soc - soc, ")",
+       ", makespan:",
+       init_plan_makespan, "->", solution.getMakespan(),
+       " (improved:" , init_plan_makespan - makespan, ")");
 }
 
 void IR::updateSolution(const Plan& plan)
@@ -77,16 +84,25 @@ void IR::updateSolution(const Plan& plan)
   const int makespan = solution.getMakespan();
   HIST.push_back(std::make_tuple(getSolverElapsedTime(), soc, makespan));
 
-  // print info
+  if (make_log_every_itr) makeLog(output_file);
+
+  printProcessInfo();
+
+  last_soc = soc;
+  last_makespan = makespan;
+}
+
+void IR::printProcessInfo()
+{
+  const int soc = solution.getSOC();
+  const int makespan = solution.getMakespan();
+
   info("  iter: ", current_iteration,
        ", comp_time:", getSolverElapsedTime(),
        ", soc:", soc, "(improved: ", last_soc - soc,
        ", LB: ", getLowerBoundSOC(), ")",
        ", makespan:", makespan, "(improved: ", last_makespan - makespan,
        ", LB: ", getLowerBoundMakespan(), ")");
-
-  last_soc = soc;
-  last_makespan = makespan;
 }
 
 // failed -> return empty plan
@@ -142,7 +158,6 @@ void IR::refinePlan()
   std::iota(A.begin(), A.end(), 0);
 
   while (current_iteration < max_iteration) {
-    if (make_log_every_itr) makeLog(output_file);
     if (overCompTime()) break;
 
     // create sample
@@ -158,92 +173,6 @@ void IR::refinePlan()
     updateSolution(plan);
   }
 }
-
-
-// void IR::refinePlan()
-// {
-//   Plan plan = solution;
-//   int last_soc = plan.getSOC();
-
-//   // single refine
-//   // do {
-//   //   for (int i = 0; i < P->getNum(); ++i) {
-//   //     const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
-//   //     if (comp_time_limit < 0) return plan;
-//   //     plan = LibIR::refineSinglePath(i, plan, P, comp_time_limit);
-//   //     info(" ", i, plan.getSOC());
-//   //   }
-//   //   const int current_soc = plan.getSOC();
-//   //   if (current_soc >= last_soc) break;
-//   //   last_soc = current_soc;
-//   // } while (true);
-
-//   // refinement at goals
-//   do {
-//     for (int i = 0; i < P->getNum(); ++i) {
-//       const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
-//       if (comp_time_limit < 0) return plan;
-//       plan = LibIR::refineTwoPathsAtGoal(i, plan, P, comp_time_limit);
-//     }
-//     info(" ", plan.getSOC());
-//     const int current_soc = plan.getSOC();
-//     if (current_soc >= last_soc) break;
-//     last_soc = current_soc;
-//   } while (true);
-
-//   // old IR
-//   do {
-//     for (int i = 0; i < P->getNum(); ++i) {
-//       const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
-//       if (modif_list.empty()) continue;
-//       const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
-//       if (comp_time_limit < 0) return plan;
-//       Problem _P = Problem(P, comp_time_limit);
-//       plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
-//       info(" oldIR", i, ", soc=", plan.getSOC(), ", |M|=", modif_list.size());
-//     }
-//     const int current_soc = plan.getSOC();
-//     if (current_soc >= last_soc) break;
-//     last_soc = current_soc;
-//   } while (true);
-
-//   // MDD
-//   do {
-//     for (int i = 0; i < P->getNum(); ++i) {
-//       int time_limit = std::min(getRemainedTime(), timeout_refinement);
-//       const auto modif_list = LibIR::identifyInteractingSetByMDD(i, plan, P, true, time_limit, MT);
-//       if (modif_list.empty()) continue;
-//       const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
-//       if (comp_time_limit < 0) return plan;
-//       Problem _P = Problem(P, comp_time_limit);
-//       plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
-//       info(" MDD", i, ", soc=", plan.getSOC(), ", |M|=", modif_list.size());
-//     }
-//     const int current_soc = plan.getSOC();
-//     if (current_soc >= last_soc) break;
-//     last_soc = current_soc;
-//   } while (true);
-
-//   // bottle neck
-//   do {
-//     for (int i = 0; i < P->getNum(); ++i) {
-//       int time_limit = std::min(getRemainedTime(), timeout_refinement);
-//       const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore
-//                                           (i, plan, P, time_limit));
-//       if (modif_list.empty()) continue;
-//       const int comp_time_limit = std::min(getRemainedTime(), timeout_refinement);
-//       if (comp_time_limit < 0) return plan;
-//       Problem _P = Problem(P, comp_time_limit);
-//       plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
-//       info(" Bottle neck", i, ", soc=", plan.getSOC(), ", |M|=", modif_list.size());
-//     }
-//     const int current_soc = plan.getSOC();
-//     if (current_soc >= last_soc) break;
-//     last_soc = current_soc;
-//   } while (true);
-
-//   return plan;
-// }
 
 std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,
                                           const std::vector<int>& sample)

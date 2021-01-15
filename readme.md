@@ -7,7 +7,7 @@ A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "
 It is written in C++(17) with [CMake](https://cmake.org/) build and tested on OSX 10.15.
 The visualizer uses [openFrameworks](https://openframeworks.cc).
 
-The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], PIBT-Complete, and IR.
+The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], Revisit Prioritized Planning [6], PIBT-Complete, and IR.
 
 ## Demo
 ![100 agents in arena](/material/arena_100agents.gif)
@@ -121,3 +121,6 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 1. Barer, M., Sharon, G., Stern, R., & Felner, A. (2014).
    Suboptimal Variants of the Conflict-Based Search Algorithm for the Multi-Agent Pathfinding Problem.
    In Seventh Annual Symposium on Combinatorial Search.
+1. Čáp, M., Novák, P., Kleiner, A., & Selecký, M. (2015).
+   Prioritized planning algorithms for trajectory coordination of multiple mobile robots.
+   IEEE transactions on automation science and engineering, 12(3), 835-849.
