@@ -371,7 +371,7 @@ void IR::makeLog(const std::string& logfile)
     log << "iter=" << t << ","
         << "comp_time=" << std::get<0>(hist) << ","
         << "soc=" << std::get<1>(hist) << ","
-        << "makespan=" << std::get<1>(hist);
+        << "makespan=" << std::get<1>(hist) << "\n";
   }
 
   makeLogSolution(log);

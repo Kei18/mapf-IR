@@ -120,7 +120,9 @@ void Solver::makeLogBasicInfo(std::ofstream& log)
   log << "solver=" << solver_name << "\n";
   log << "solved=" << solved << "\n";
   log << "soc=" << solution.getSOC() << "\n";
+  log << "lb_soc=" << getLowerBoundSOC() << "\n";
   log << "makespan=" << solution.getMakespan() << "\n";
+  log << "lb_makespan=" << getLowerBoundMakespan() << "\n";
   log << "comp_time=" << comp_time << "\n";
 }
 
