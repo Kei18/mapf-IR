@@ -43,6 +43,8 @@ public:
   int getMaxCompTime() { return max_comp_time; };
   std::string getInstanceFileName() { return instance; };
 
+  bool isInitializedInstance() const { return instance_initialized; }
+
   // used when making new instance file
   void makeScenFile(const std::string& output_file);
 };

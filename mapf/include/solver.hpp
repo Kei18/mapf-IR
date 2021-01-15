@@ -84,7 +84,7 @@ private:
 
 public:
   Solver(Problem* _P);
-  virtual ~Solver(){};
+  virtual ~Solver();
 
   // call start -> run -> end
   void solve();

@@ -20,6 +20,11 @@ Solver::Solver(Problem* _P)
   LibCBS::MDD::MT = MT;
 }
 
+Solver::~Solver()
+{
+  if (P->isInitializedInstance()) LibCBS::MDD::PURE_MDD_TABLE.clear();
+}
+
 void Solver::solve()
 {
   start();
@@ -91,10 +96,10 @@ void Solver::printResult()
             << solver_name << ", comp_time(ms)=" << std::right << std::setw(8)
             << comp_time << ", soc=" << std::right << std::setw(6)
             << solution.getSOC() << " (LB=" << std::right << std::setw(6)
-            << LB_soc << ")"
+            << getLowerBoundSOC() << ")"
             << ", makespan=" << std::right << std::setw(4)
             << solution.getMakespan() << " (LB=" << std::right << std::setw(6)
-            << LB_makespan << ")" << std::endl;
+            << getLowerBoundMakespan() << ")" << std::endl;
 }
 
 void Solver::makeLog(const std::string& logfile)

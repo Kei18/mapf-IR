@@ -274,9 +274,11 @@ void LibCBS::MDD::copy(const MDD& other)
                                   return _node->t == prev_node->t &&
                                          _node->v == prev_node->v;
                                 });
-        MDDNode* new_prev_node = *itr;
-        new_prev_node->next.push_back(new_node);
-        new_node->prev.push_back(new_prev_node);
+        if (itr != new_prev_nodes.end()) {
+          auto new_prev_node = *itr;
+          new_prev_node->next.push_back(new_node);
+          new_node->prev.push_back(new_prev_node);
+        }
       }
     }
     body.push_back(new_nodes);
