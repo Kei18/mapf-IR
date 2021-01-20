@@ -14,7 +14,7 @@ void IR_FocusGoals::refinePlan()
 
   std::vector<int> CLOSE;
 
-  while (current_iteration < max_iteration) {
+  while (current_iteration < max_iteration && !overCompTime()) {
     if (overCompTime()) break;
 
     if (simple_refine) {

@@ -12,6 +12,7 @@
 #include <ir_focus_goals.hpp>
 #include <ir_mdd.hpp>
 #include <ir_bottleneck.hpp>
+#include <ir_hybrid.hpp>
 #include <pibt.hpp>
 #include <pibt_complete.hpp>
 #include <problem.hpp>
@@ -139,6 +140,8 @@ std::unique_ptr<Solver> getSolver
     solver = std::make_unique<IR_MDD>(P);
   } else if (solver_name == "IR_BOTTLENECK") {
     solver = std::make_unique<IR_Bottleneck>(P);
+  } else if (solver_name == "IR_HYBRID") {
+    solver = std::make_unique<IR_HYBRID>(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by PIBT");
     solver = std::make_unique<PIBT>(P);

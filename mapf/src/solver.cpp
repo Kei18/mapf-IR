@@ -59,7 +59,9 @@ void Solver::end()
 }
 
 int Solver::getSolverElapsedTime() const { return getElapsedTime(t_start); }
-int Solver::getRemainedTime() const { return max_comp_time - getSolverElapsedTime(); }
+int Solver::getRemainedTime() const {
+  return std::max(0, max_comp_time - getSolverElapsedTime());
+}
 
 bool Solver::overCompTime() const
 {

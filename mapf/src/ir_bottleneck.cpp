@@ -12,7 +12,7 @@ void IR_Bottleneck::refinePlan()
 {
   Plan plan = solution;
 
-  while (current_iteration < max_iteration) {
+  while (current_iteration < max_iteration && !overCompTime()) {
     for (int i = 0; i < P->getNum(); ++i) {
       if (overCompTime()) break;
 

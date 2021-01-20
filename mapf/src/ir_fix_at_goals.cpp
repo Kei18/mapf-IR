@@ -12,7 +12,7 @@ void IR_FixAtGoals::refinePlan()
 {
   Plan plan = solution;
 
-  while (current_iteration < max_iteration) {
+  while (current_iteration < max_iteration && !overCompTime()) {
 
     // calculate gaps
     std::vector<int> gaps;
@@ -25,6 +25,8 @@ void IR_FixAtGoals::refinePlan()
     std::iota(A.begin(), A.end(), 0);
     std::sort(A.begin(), A.end(), [&] (int i, int j) { return gaps[i] > gaps[j]; });
 
+    const int last_itr_soc = last_soc;
+
     for (auto i : A) {
       if (overCompTime()) break;
       plan = LibIR::refineTwoPathsAtGoal(i, plan, P, getRefineTimeLimit());
@@ -32,6 +34,9 @@ void IR_FixAtGoals::refinePlan()
 
       if (current_iteration >= max_iteration) break;
     }
+
+    // no update
+    if (last_itr_soc == solution.getSOC()) break;
   }
 }
 
