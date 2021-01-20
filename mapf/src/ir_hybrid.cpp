@@ -17,6 +17,7 @@ void IR_HYBRID::refinePlan()
     last_itr_soc = plan.getSOC();
     for (int i = 0; i < P->getNum(); ++i) {
       if (overCompTime() || current_iteration >= max_iteration) break;
+      if (plan.getPathCost(i) - pathDist(i) == 0) continue;
       plan = LibIR::refineTwoPathsAtGoal(i, plan, P, getRefineTimeLimit());
       updateSolution(plan);
     }
@@ -27,6 +28,7 @@ void IR_HYBRID::refinePlan()
     last_itr_soc = plan.getSOC();
     for (int i = 0; i < P->getNum(); ++i) {
       if (overCompTime() || current_iteration >= max_iteration) break;
+      if (plan.getPathCost(i) - pathDist(i) == 0) continue;
       plan = LibIR::refineSinglePath(i, plan, P, getRefineTimeLimit());
       updateSolution(plan);
     }
@@ -41,8 +43,7 @@ void IR_HYBRID::refinePlan()
       const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
       if (modif_list.empty()) continue;
       Problem _P = Problem(P, getRefineTimeLimit());
-      auto res = getOptimalPlan(&_P, plan, modif_list);
-      plan = std::get<1>(res);
+      plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
       updateSolution(plan);
     }
   } while (last_itr_soc != plan.getSOC() && !overCompTime() && current_iteration < max_iteration);
@@ -57,8 +58,7 @@ void IR_HYBRID::refinePlan()
         LibIR::identifyInteractingSetByMDD(i, plan, P, true, getRefineTimeLimit(), MT);
       if (modif_list.empty()) continue;
       Problem _P = Problem(P, getRefineTimeLimit());
-      auto res = getOptimalPlan(&_P, plan, modif_list);
-      plan = std::get<1>(res);
+      plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
       updateSolution(plan);
     }
   } while (last_itr_soc != plan.getSOC() && !overCompTime() && current_iteration < max_iteration);

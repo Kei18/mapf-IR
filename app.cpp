@@ -167,6 +167,7 @@ void printHelp()
   PIBT::printHelp();
   HCA::printHelp();
   WHCA::printHelp();
+  RevisitPP::printHelp();
   CBS::printHelp();
   ECBS::printHelp();
   ICBS::printHelp();
@@ -177,4 +178,5 @@ void printHelp()
   IR_FocusGoals::printHelp();
   IR_MDD::printHelp();
   IR_Bottleneck::printHelp();
+  IR_HYBRID::printHelp();
 }

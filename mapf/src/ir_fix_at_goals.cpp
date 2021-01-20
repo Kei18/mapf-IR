@@ -1,43 +1,17 @@
 #include "../include/ir_fix_at_goals.hpp"
 
-const std::string IR_FixAtGoals::SOLVER_NAME = "IR_FixAtGoals";
+const std::string IR_FixAtGoals::SOLVER_NAME = "IR_FIX_AT_GOALS";
 
 IR_FixAtGoals::IR_FixAtGoals(Problem* _P)
-  : IR(_P)
+  : IR_FOCUS_ONE_AGENT(_P)
 {
   solver_name = IR_FixAtGoals::SOLVER_NAME;
 }
 
-void IR_FixAtGoals::refinePlan()
+void IR_FixAtGoals::updatePlanFocusOneAgent(const int i, Plan& plan)
 {
-  Plan plan = solution;
-
-  while (current_iteration < max_iteration && !overCompTime()) {
-
-    // calculate gaps
-    std::vector<int> gaps;
-    for (int i = 0; i < P->getNum(); ++i) {
-      gaps.push_back(plan.getPathCost(i) - pathDist(i));
-    }
-
-    // sort in the increasing order
-    std::vector<int> A(P->getNum());
-    std::iota(A.begin(), A.end(), 0);
-    std::sort(A.begin(), A.end(), [&] (int i, int j) { return gaps[i] > gaps[j]; });
-
-    const int last_itr_soc = last_soc;
-
-    for (auto i : A) {
-      if (overCompTime()) break;
-      plan = LibIR::refineTwoPathsAtGoal(i, plan, P, getRefineTimeLimit());
-      updateSolution(plan);
-
-      if (current_iteration >= max_iteration) break;
-    }
-
-    // no update
-    if (last_itr_soc == solution.getSOC()) break;
-  }
+  plan = LibIR::refineTwoPathsAtGoal(i, plan, P, getRefineTimeLimit());
+  updateSolution(plan);
 }
 
 void IR_FixAtGoals::printHelp()

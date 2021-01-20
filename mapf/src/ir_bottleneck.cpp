@@ -1,34 +1,21 @@
 #include "../include/ir_bottleneck.hpp"
 
-const std::string IR_Bottleneck::SOLVER_NAME = "IR_Bottleneck";
+const std::string IR_Bottleneck::SOLVER_NAME = "IR_BOTTLENECK";
 
 IR_Bottleneck::IR_Bottleneck(Problem* _P)
-  : IR(_P)
+  : IR_FOCUS_ONE_AGENT(_P)
 {
   solver_name = IR_Bottleneck::SOLVER_NAME;
 }
 
-void IR_Bottleneck::refinePlan()
+void IR_Bottleneck::updatePlanFocusOneAgent(const int i, Plan& plan)
 {
-  Plan plan = solution;
-
-  while (current_iteration < max_iteration && !overCompTime()) {
-    for (int i = 0; i < P->getNum(); ++i) {
-      if (overCompTime()) break;
-
-      // identify modification list
-      const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore
-                                          (i, plan, P, getRefineTimeLimit()));
-      if (modif_list.empty()) continue;
-
-      Problem _P = Problem(P, getRefineTimeLimit());
-      auto res = getOptimalPlan(&_P, plan, modif_list);
-      plan = std::get<1>(res);
-      updateSolution(plan);
-
-      if (current_iteration >= max_iteration) break;
-    }
-  }
+  const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore
+                                      (i, plan, P, getRefineTimeLimit()));
+  if (modif_list.empty()) return;
+  Problem _P = Problem(P, getRefineTimeLimit());
+  plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
+  updateSolution(plan);
 }
 
 void IR_Bottleneck::printHelp()

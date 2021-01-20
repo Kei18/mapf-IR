@@ -1,19 +1,16 @@
 #pragma once
-#include "ir.hpp"
+#include "ir_focus_one_agent.hpp"
 
-class IR_FocusGoals : public IR
+class IR_FocusGoals : public IR_FOCUS_ONE_AGENT
 {
 public:
   static const std::string SOLVER_NAME;
 
 private:
-  void refinePlan();
-
-  bool simple_refine;
+  void updatePlanFocusOneAgent(const int i, Plan& plan);
 
 public:
   IR_FocusGoals(Problem* _P);
 
   static void printHelp();
-  void setParams(int argc, char* argv[]);
 };

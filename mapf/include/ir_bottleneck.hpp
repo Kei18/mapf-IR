@@ -1,13 +1,13 @@
 #pragma once
-#include "ir.hpp"
+#include "ir_focus_one_agent.hpp"
 
-class IR_Bottleneck : public IR
+class IR_Bottleneck : public IR_FOCUS_ONE_AGENT
 {
 public:
   static const std::string SOLVER_NAME;
 
-private:
-  void refinePlan();
+protected:
+  void updatePlanFocusOneAgent(const int i, Plan& plan);
 
 public:
   IR_Bottleneck(Problem* _P);
