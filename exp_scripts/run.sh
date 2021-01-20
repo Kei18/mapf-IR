@@ -26,7 +26,6 @@ echo "start experiment"
 echo "- map: ${map}"
 echo "- agents: ${agents_list}"
 echo "- solver: ${solver}"
-echo "- flocking_blocks: ${flocking_blocks}"
 echo "- scen: from ${scen_start} to ${scen_end}"
 
 ## create output directory
@@ -65,7 +64,6 @@ STATUS_FILE=$OUTPUT_DIR/status.txt
     echo solver:$solver
     echo scen_start:$scen_start
     echo scen_end:$scen_end
-    echo flocking_blocks:$flocking_blocks
 } > $STATUS_FILE
 
 echo "\nfinish experiment"
