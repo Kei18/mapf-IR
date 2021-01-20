@@ -248,6 +248,10 @@ namespace LibIR
       const int original_cost = paths.costOfPath(j);
       if (original_cost == dist) continue;
       const auto path = getBasicPrioritizedPath(j, s, g, G, paths, time_limit);
+      if (path.empty()) {
+        modif_list.clear();
+        return std::make_tuple(0, modif_list);
+      }
       const int cost = getPathCost(path);
       if (cost < original_cost) {
         score += original_cost - cost;
