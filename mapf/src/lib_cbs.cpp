@@ -196,13 +196,13 @@ bool LibCBS::MDDNode::operator==(const MDDNode& other) const
 }
 
 LibCBS::MDD::MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid)
-    : c(_c), i(_i), G(_G), s(_s), g(_g), valid(_valid)
+  : c(_c), i(_i), G(_G), s(_s), g(_g), valid(_valid), solver(nullptr)
 {
 }
 
 LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints,
                  int time_limit)
-    : c(_c), i(_i), G(P->getG()), s(P->getStart(i)), g(P->getGoal(i))
+  : c(_c), i(_i), G(P->getG()), s(P->getStart(i)), g(P->getGoal(i)), solver(nullptr)
 {
   // for timeout
   auto t_s = Time::now();
@@ -223,8 +223,36 @@ LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints,
   update(constraints);
 }
 
+LibCBS::MDD::MDD(int _c, int _i, Problem* P, Solver* _solver, Constraints constraints, int time_limit)
+  : c(_c), i(_i), G(P->getG()), s(P->getStart(i)), g(P->getGoal(i)), solver(_solver)
+{
+  // for timeout
+  auto t_s = Time::now();
+
+  // check possibility
+  valid = solver->pathDist(i) <= c;
+
+  // build MDD without constraints
+  build(time_limit);
+
+  // check time limit
+  if (time_limit > 0 && (int)getElapsedTime(t_s) > time_limit) {
+    valid = false;
+    return;
+  }
+
+  // update MDD with constraints
+  update(constraints);
+}
+
+
 LibCBS::MDD::MDD(int _c, int _i, Problem* P)
     : LibCBS::MDD::MDD(_c, _i, P, {}, -1)  // -1: for timeout
+{
+}
+
+LibCBS::MDD::MDD(int _c, int _i, Solver* _solver)
+  : LibCBS::MDD::MDD(_c, _i, _solver->getP(), _solver, {}, -1)
 {
 }
 
@@ -239,7 +267,8 @@ LibCBS::MDD::MDD(const MDD& other)
       G(other.G),
       s(other.s),
       g(other.g),
-      valid(other.valid)
+      valid(other.valid),
+      solver(other.solver)
 {
   copy(other);
 }
@@ -315,7 +344,10 @@ void LibCBS::MDD::build(int time_limit)
       cands.push_back(node->v);
       for (auto v : cands) {
         // valid
-        if (G->pathDist(v, g) + t + 1 <= c) {
+        bool flg = (solver != nullptr)
+          ? solver->pathDist(i, v) + t + 1 <= c
+          : G->pathDist(v, g) + t + 1 <= c;
+        if (flg) {
           // already exists?
           MDDNode* next_node = nullptr;
           for (auto _node : nodes_at_t_next) {

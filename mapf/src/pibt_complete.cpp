@@ -25,6 +25,7 @@ void PIBT_COMPLETE::run()
   // solve by PIBT
   Problem _P = Problem(P, P->getConfigStart(), P->getConfigGoal(), max_comp_time, LB_makespan);
   std::unique_ptr<Solver> init_solver = std::make_unique<PIBT>(&_P);
+  init_solver->setDistanceTable((DistanceTable_p == nullptr) ? &DistanceTable : DistanceTable_p);
   info(" ", "run PIBT until timestep", LB_makespan);
   init_solver->solve();
   solution = init_solver->getSolution();
@@ -40,10 +41,10 @@ void PIBT_COMPLETE::run()
     auto t_complement = Time::now();
 
     // solved by ICBS
-    int comp_time_limit = max_comp_time - (int)getSolverElapsedTime();
     Problem _Q = Problem(P, solution.last(), P->getConfigGoal(),
-                          comp_time_limit, max_timestep - LB_makespan);
+                         getRemainedTime(), max_timestep - LB_makespan);
     std::unique_ptr<Solver> second_solver = std::make_unique<ICBS>(&_Q);
+    second_solver->setDistanceTable((DistanceTable_p == nullptr) ? &DistanceTable : DistanceTable_p);
     second_solver->solve();
     solution += second_solver->getSolution();
     if (second_solver->succeed()) solved = true;

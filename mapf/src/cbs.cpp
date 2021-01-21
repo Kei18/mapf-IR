@@ -108,7 +108,7 @@ Path CBS::getInitialPath(int id)
   Nodes config_g = P->getConfigGoal();
 
   AstarHeuristics fValue = [&](AstarNode* n) {
-    return n->g + pathDist(n->v, g);
+    return n->g + pathDist(id, n->v);
   };
 
   CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
@@ -171,11 +171,11 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 
   AstarHeuristics fValue;
   if (pathDist(id) > max_constraint_time) {
-    fValue = [&](AstarNode* n) { return n->g + pathDist(n->v, g); };
+    fValue = [&](AstarNode* n) { return n->g + pathDist(id, n->v); };
   } else {
     // when someone occupies the goal until a certain timestep
     fValue = [&](AstarNode* n) {
-      return std::max(max_constraint_time + 1, n->g + pathDist(n->v, g));
+      return std::max(max_constraint_time + 1, n->g + pathDist(id, n->v));
     };
   }
 

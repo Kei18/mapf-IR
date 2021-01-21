@@ -14,7 +14,7 @@ PIBT::PIBT(Problem* _P)
 void PIBT::run()
 {
   // create distance table
-  preprocessing();
+  // preprocessing();
 
   Plan plan;  // will be solution
 
@@ -36,7 +36,7 @@ void PIBT::run()
   for (int i = 0; i < P->getNum(); ++i) {
     Node* s = P->getStart(i);
     Node* g = P->getGoal(i);
-    int d = disable_dist_init ? 0 : D[i][s->id];
+    int d = disable_dist_init ? 0 : pathDist(i);
     Agent* a = new Agent{i,                          // id
                          s,                          // current location
                          nullptr,                    // next location
@@ -186,8 +186,8 @@ Node* PIBT::chooseNode(Agent* a)
   // pickup one node
   Node* v = *std::min_element(C.begin(), C.end(), [&](Node* v, Node* u) {
     // path distance
-    int c_v = D[a->id][v->id];
-    int c_u = D[a->id][u->id];
+    int c_v = pathDist(a->id, v);
+    int c_u = pathDist(a->id, u);
     if (c_v != c_u) return c_v < c_u;
     // occupancy
     int o_v = (int)(occupied_now[v->id] != nullptr);

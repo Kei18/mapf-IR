@@ -75,5 +75,5 @@ public:
   // the path should be longer than this value to avoid conflicts
   int getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const;
   int getMaxConstraintTime(const int id, Problem* P) const;
-
+  int getMaxConstraintTime(const int id, Node* g, const int dist) const;
 };

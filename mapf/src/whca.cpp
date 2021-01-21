@@ -19,10 +19,7 @@ void WHCA::run()
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
   if (!disable_dist_init) {
-    std::sort(ids.begin(), ids.end(), [&](int a, int b) {
-      return pathDist(P->getStart(a), P->getGoal(a)) >
-             pathDist(P->getStart(b), P->getGoal(b));
-    });
+    std::sort(ids.begin(), ids.end(), [&](int a, int b) { return pathDist(a) > pathDist(b); });
   }
 
   // start planning
@@ -82,7 +79,7 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
   }
 
   AstarHeuristics fValue = [&](AstarNode* n) {
-    return n->g + pathDist(n->v, g);
+    return n->g + pathDist(id, n->v);
   };
 
   CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {

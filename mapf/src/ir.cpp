@@ -138,6 +138,7 @@ Plan IR::getInitialPlan()
   // set solver options
   setSolverOption(solver, option_init_solver);
   solver->setVerbose(verbose_underlying_solver);
+  solver->setDistanceTable(&DistanceTable);
 
   // solve
   solver->solve();
@@ -198,6 +199,7 @@ std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,
   // set solver option
   setSolverOption(solver, option_optimal_solver);
   solver->setVerbose(verbose_underlying_solver);
+  solver->setDistanceTable(&DistanceTable);
 
   // solve
   solver->solve();

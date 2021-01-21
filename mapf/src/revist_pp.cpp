@@ -67,8 +67,59 @@ Path RevisitPP::getPrioritizedPath(int id, const Paths& paths,
 Path RevisitPP::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths,
                                    const std::vector<std::tuple<Node*, int>> constraints)
 {
-  return getBasicPrioritizedPath(id, s, g, P->getG(), paths, getRemainedTime(),
-                                 constraints, max_timestep);
+  const int ideal_dist = pathDist(id);
+
+  // max timestep that another agent uses the goal
+  int max_constraint_time = paths.getMaxConstraintTime(id, g, ideal_dist);
+
+  // setup functions
+  AstarHeuristics fValue;
+  if (ideal_dist > max_constraint_time) {
+    fValue = [&](AstarNode* n) { return n->g + pathDist(id, n->v); };
+  } else {
+    // when someone occupies its goal
+    fValue = [&](AstarNode* n) {
+      return std::max(max_constraint_time + 1, n->g + pathDist(id, n->v));
+    };
+  }
+
+  CheckAstarFin checkAstarFin = [&](AstarNode* n) {
+    return n->v == g && n->g > max_constraint_time;
+  };
+
+  Nodes config_s = P->getConfigStart();
+  Nodes config_g = P->getConfigGoal();
+
+  const int makespan = paths.getMakespan();
+  const int num_agents = P->getNum();
+
+  CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
+    if (m->g > max_timestep) return true;
+
+    for (int i = 0; i < num_agents; ++i) {
+      if (i == id || paths.empty(i)) continue;
+      // last node
+      if (m->g > makespan) {
+        if (paths.get(i, makespan) == m->v) return true;
+        continue;
+      }
+      // vertex conflict
+      if (paths.get(i, m->g) == m->v) return true;
+      // swap conflict
+      if (paths.get(i, m->g) == m->p->v && paths.get(i, m->g-1) == m->v) return true;
+
+      // check additional constraints
+      for (auto c : constraints) {
+        const int t = std::get<1>(c);
+        if (m->v == std::get<0>(c) && (t == -1 || t == m->g)) return true;
+      }
+    }
+
+    return false;
+  };
+
+  return getPathBySpaceTimeAstar
+    (s, g, fValue, compareAstarNodeBasic, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
 }
 
 void RevisitPP::setParams(int argc, char* argv[])

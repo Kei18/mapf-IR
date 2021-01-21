@@ -33,16 +33,19 @@ protected:
   double comp_time;  // time for deliberation
   bool solved;       // success -> true, failed -> false (default)
 
-  bool verbose;  // true -> print additional info
+  bool verbose;      // true -> print additional info
 
   int LB_soc;       // lower bound of soc
   int LB_makespan;  // lower bound of makespan
 
+  std::vector<std::vector<int>> DistanceTable;  // distance table [agent][node_id]
+  std::vector<std::vector<int>>* DistanceTable_p;
+
+  void createDistanceTable();  // preprocessing
+
+  // use search of original graph
   Path getPath(Node* const s, Node* const g) const { return G->getPath(s, g); }
   int pathDist(Node* const s, Node* const g) const { return G->pathDist(s, g); }
-  // get path distance for a_i
-  int pathDist(int i) const { return G->pathDist(P->getStart(i), P->getGoal(i)); }
-
 
   // space-time A*
   Path getTimedPath(Node* const s,  // start
@@ -93,9 +96,16 @@ public:
   Plan getSolution() const { return solution; };
   bool succeed() const { return solved; };
   std::string getSolverName() { return solver_name; };
+  Problem* getP() { return P; }
+
+  // get path distance for a_i
+  int pathDist(const int i) const;
+  int pathDist(const int i, Node* const s) const;
 
   int getLowerBoundSOC();
   int getLowerBoundMakespan();
+
+  void setDistanceTable(std::vector<std::vector<int>>* p) { DistanceTable_p = p; }
 
   // for parameters
   virtual void setParams(int argc, char* argv[]){};

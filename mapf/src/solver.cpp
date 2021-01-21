@@ -11,7 +11,9 @@ Solver::Solver(Problem* _P)
       max_timestep(P->getMaxTimestep()),
       max_comp_time(P->getMaxCompTime()),
       LB_soc(0),
-      LB_makespan(0)
+      LB_makespan(0),
+      DistanceTable(P->getNum(), std::vector<int>(G->getNodesSize(), max_timestep)),
+      DistanceTable_p(nullptr)
 {
   solved = false;
   verbose = false;
@@ -28,6 +30,14 @@ Solver::~Solver()
 void Solver::solve()
 {
   start();
+
+  // preprocessing
+  if (DistanceTable_p == nullptr) {
+    info("  pre-processing, create distance table by BFS");
+    createDistanceTable();
+    info("  done, elapsed: ", getSolverElapsedTime());
+  }
+
   run();
   end();
 }
@@ -90,6 +100,39 @@ int Solver::getLowerBoundMakespan()
 {
   if (LB_makespan == 0) computeLowerBounds();
   return LB_makespan;
+}
+
+void Solver::createDistanceTable()
+{
+  for (int i = 0; i < P->getNum(); ++i) {
+    // breadth first search
+    std::queue<Node*> OPEN;
+    Node* n = P->getGoal(i);
+    OPEN.push(n);
+    DistanceTable[i][n->id] = 0;
+    while (!OPEN.empty()) {
+      n = OPEN.front();
+      OPEN.pop();
+      const int d_n = DistanceTable[i][n->id];
+      for (auto m : n->neighbor) {
+        const int d_m = DistanceTable[i][m->id];
+        if (d_n + 1 >= d_m) continue;
+        DistanceTable[i][m->id] = d_n + 1;
+        OPEN.push(m);
+      }
+    }
+  }
+}
+
+int Solver::pathDist(const int i, Node* const s) const {
+  if (DistanceTable_p != nullptr) {
+    return DistanceTable_p->operator[](i)[s->id];
+  }
+  return DistanceTable[i][s->id];
+}
+
+int Solver::pathDist(const int i) const {
+  return pathDist(i, P->getStart(i));
 }
 
 void Solver::printResult()

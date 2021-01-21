@@ -17,6 +17,7 @@ public:
   static const std::string SOLVER_NAME;
 
 private:
+  // distance table
   std::vector<std::vector<int>> D;
 
   // PIBT agent
