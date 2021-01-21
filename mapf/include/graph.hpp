@@ -187,6 +187,8 @@ public:
 
   // get all nodes
   Nodes getV();
+
+  int getNodesSize() const { return V.size(); }
 };
 
 class Grid : public Graph

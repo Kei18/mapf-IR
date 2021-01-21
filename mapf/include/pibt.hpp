@@ -17,6 +17,8 @@ public:
   static const std::string SOLVER_NAME;
 
 private:
+  std::vector<std::vector<int>> D;
+
   // PIBT agent
   struct Agent {
     int id;
@@ -27,22 +29,27 @@ private:
     int init_d;         // initial distance
     float tie_breaker;  // epsilon, tie-breaker
   };
+  using Agents = std::vector<Agent*>;
+
+  // <node-id, agent>, whether the node is occupied or not
+  // work as reservation table
+  Agents occupied_now;
+  Agents occupied_next;
 
   // option
   bool disable_dist_init = false;
 
   // result of priority inheritance: true -> valid, false -> invalid
-  bool funcPIBT(Agent* ai, std::unordered_map<int, Agent*>& occupied_now,
-                std::unordered_map<int, Agent*>& occupied_next);
+  bool funcPIBT(Agent* ai);
   // plan next node
-  Node* planOneStep(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
-                    std::unordered_map<int, Agent*>& occupied_next);
+  Node* planOneStep(Agent* a);
   // chose one node from candidates, used in planOneStep
-  Node* chooseNode(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
-                   std::unordered_map<int, Agent*>& occupied_next);
+  Node* chooseNode(Agent* a);
 
   // main
   void run();
+
+  void preprocessing();
 
 public:
   PIBT(Problem* _P);

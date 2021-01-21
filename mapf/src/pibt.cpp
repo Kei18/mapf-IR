@@ -2,10 +2,20 @@
 
 const std::string PIBT::SOLVER_NAME = "PIBT";
 
-PIBT::PIBT(Problem* _P) : Solver(_P) { solver_name = PIBT::SOLVER_NAME; }
+PIBT::PIBT(Problem* _P)
+  : Solver(_P),
+    D(P->getNum(), std::vector<int>(P->getG()->getNodesSize(), 0)),
+    occupied_now(Agents(P->getG()->getNodesSize(), nullptr)),
+    occupied_next(Agents(P->getG()->getNodesSize(), nullptr))
+{
+  solver_name = PIBT::SOLVER_NAME;
+}
 
 void PIBT::run()
 {
+  // create distance table
+  preprocessing();
+
   Plan plan;  // will be solution
 
   // compare priority of agents
@@ -17,21 +27,16 @@ void PIBT::run()
   };
 
   // agents have not decided their next locations
-  std::priority_queue<Agent*, std::vector<Agent*>, decltype(compare)> undecided(
+  std::priority_queue<Agent*, Agents, decltype(compare)> undecided(
       compare);
   // agents have already decided their next locations
   std::vector<Agent*> decided;
-
-  // <node-id, agent>, whether the node is occupied or not
-  // work as reservation table
-  std::unordered_map<int, Agent*> occupied_now;
-  std::unordered_map<int, Agent*> occupied_next;
 
   // initialize
   for (int i = 0; i < P->getNum(); ++i) {
     Node* s = P->getStart(i);
     Node* g = P->getGoal(i);
-    int d = disable_dist_init ? 0 : pathDist(s, g);
+    int d = disable_dist_init ? 0 : D[i][s->id];
     Agent* a = new Agent{i,                          // id
                          s,                          // current location
                          nullptr,                    // next location
@@ -58,19 +63,19 @@ void PIBT::run()
       // if the agent has next location, then skip
       if (a->v_next == nullptr) {
         // determine its next location
-        funcPIBT(a, occupied_now, occupied_next);
+        funcPIBT(a);
       }
       decided.push_back(a);
     }
-
-    // clear
-    occupied_now.clear();
-    occupied_next.clear();
 
     // acting
     bool check_goal_cond = true;
     Config config(P->getNum(), nullptr);
     for (auto a : decided) {
+      // clear
+      if (occupied_now[a->v_now->id] == a) occupied_now[a->v_now->id] = nullptr;
+      occupied_next[a->v_next->id] = nullptr;
+
       // set next location
       config[a->id] = a->v_next;
       occupied_now[a->v_next->id] = a;
@@ -112,21 +117,19 @@ void PIBT::run()
   solution = plan;
 }
 
-bool PIBT::funcPIBT(Agent* ai, std::unordered_map<int, Agent*>& occupied_now,
-                    std::unordered_map<int, Agent*>& occupied_next)
+bool PIBT::funcPIBT(Agent* ai)
 {
   // decide next node
-  Node* v = planOneStep(ai, occupied_now, occupied_next);
+  Node* v = planOneStep(ai);
   while (v != nullptr) {
-    auto itr = occupied_now.find(v->id);
-    if (itr != occupied_now.end()) {  // someone occupies v
-      Agent* aj = itr->second;
+    auto aj = occupied_now[v->id];
+    if (aj != nullptr) {  // someone occupies v
       // avoid itself && allow rotations
       if (aj != ai && aj->v_next == nullptr) {
         // do priority inheritance and backtracking
-        if (!funcPIBT(aj, occupied_now, occupied_next)) {
+        if (!funcPIBT(aj)) {
           // replan
-          v = planOneStep(ai, occupied_now, occupied_next);
+          v = planOneStep(ai);
           continue;
         }
       }
@@ -143,10 +146,9 @@ bool PIBT::funcPIBT(Agent* ai, std::unordered_map<int, Agent*>& occupied_now,
 /*
  * no candidate node -> return nullptr
  */
-Node* PIBT::planOneStep(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
-                        std::unordered_map<int, Agent*>& occupied_next)
+Node* PIBT::planOneStep(Agent* a)
 {
-  Node* v = chooseNode(a, occupied_now, occupied_next);
+  Node* v = chooseNode(a);
   if (v != nullptr) {
     // update reservation
     occupied_next[v->id] = a;
@@ -156,8 +158,7 @@ Node* PIBT::planOneStep(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
 }
 
 // no candidate node -> return nullptr
-Node* PIBT::chooseNode(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
-                       std::unordered_map<int, Agent*>& occupied_next)
+Node* PIBT::chooseNode(Agent* a)
 {
   Nodes C;                           // candidates
   Nodes C_pre = a->v_now->neighbor;  // all possible node
@@ -165,19 +166,19 @@ Node* PIBT::chooseNode(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
 
   for (auto v : C_pre) {
     // avoid vertex conflict
-    if (occupied_next.find(v->id) != occupied_next.end()) continue;
+    if (occupied_next[v->id] != nullptr) continue;
     // avoid swap conflict
-    if (occupied_now.find(v->id) != occupied_now.end() &&
-        occupied_now[v->id]->v_next == a->v_now)
-      continue;
+    auto a_j = occupied_now[v->id];
+    if (a_j != nullptr && a_j->v_next == a->v_now) continue;
+
+    // goal exists -> return immediately
+    if (v == a->g) return v;
+
     C.push_back(v);
   }
 
   // correspond to stuck
   if (C.empty()) return nullptr;
-
-  // goal exists -> return immediately
-  if (inArray(a->g, C)) return a->g;
 
   // randomize
   std::shuffle(C.begin(), C.end(), *MT);
@@ -185,16 +186,38 @@ Node* PIBT::chooseNode(Agent* a, std::unordered_map<int, Agent*>& occupied_now,
   // pickup one node
   Node* v = *std::min_element(C.begin(), C.end(), [&](Node* v, Node* u) {
     // path distance
-    int c_v = pathDist(v, a->g);
-    int c_u = pathDist(u, a->g);
+    int c_v = D[a->id][v->id];
+    int c_u = D[a->id][u->id];
     if (c_v != c_u) return c_v < c_u;
     // occupancy
-    int o_v = (int)(occupied_now.find(v->id) != occupied_now.end());
-    int o_u = (int)(occupied_now.find(u->id) != occupied_now.end());
+    int o_v = (int)(occupied_now[v->id] != nullptr);
+    int o_u = (int)(occupied_now[u->id] != nullptr);
     if (o_v != o_u) return o_v < o_u;
     return false;
   });
   return v;
+}
+
+void PIBT::preprocessing()
+{
+  for (int i = 0; i < P->getNum(); ++i) {
+    // breadth first search
+    std::queue<Node*> OPEN;
+    Node* n = P->getGoal(i);
+    OPEN.push(n);
+
+    while (!OPEN.empty()) {
+      n = OPEN.front();
+      OPEN.pop();
+      const int d_n = D[i][n->id];
+      for (auto m : n->neighbor) {
+        const int d_m = D[i][m->id];
+        if (d_m != 0 && d_n + 1 >= d_m) continue;
+        D[i][m->id] = d_n + 1;
+        OPEN.push(m);
+      }
+    }
+  }
 }
 
 void PIBT::setParams(int argc, char* argv[])
