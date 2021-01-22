@@ -123,7 +123,8 @@ struct Node {
                                         const Config& config_j)
 {
   if (config_i.size() != config_j.size()) return false;
-  for (int k = 0; k < config_i.size(); ++k) {
+  const int size_i = config_i.size();
+  for (int k = 0; k < size_i; ++k) {
     if (config_i[k] != config_j[k]) return false;
   }
   return true;

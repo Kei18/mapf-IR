@@ -33,6 +33,11 @@ jobs:
         working-directory: auto_record
         run: python record.py
 
+      - name: git setting
+        run: |
+          git config --local user.email keisuke.oku18@gmail.com
+          git config --local user.name Kei18
+
       - name: deploy
         working-directory: auto_record
         run: |
