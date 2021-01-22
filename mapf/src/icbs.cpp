@@ -232,7 +232,8 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
     Path path = itr->second[c->id]->getPath(c);
     if (path.empty()) continue;
     // format
-    while (path.size() - 1 < h_node->makespan) {
+    const int path_size = path.size();
+    while (path_size - 1 < h_node->makespan) {
       path.push_back(*(path.end() - 1));
     }
     // number of conflicts

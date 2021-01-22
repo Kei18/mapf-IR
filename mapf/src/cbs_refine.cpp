@@ -13,7 +13,8 @@ CBS_REFINE::CBS_REFINE(Problem* _P, const Plan& _old_plan,
   // create fixed_agents set
   if (!modif_list.empty()) {
     if (_old_plan.empty()) return;
-    for (int i = 0; i < _old_plan.get(0).size(); ++i) {
+    const int size = _old_plan.get(0).size();
+    for (int i = 0; i < size; ++i) {
       if (!inArray(i, modif_list)) fixed_agents.push_back(i);
     }
   }

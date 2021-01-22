@@ -337,7 +337,7 @@ Grid::Grid(const std::string& _map_file) : Graph(), map_file(_map_file)
     // for CRLF coding
     if (*(line.end()-1) == 0x0d) line.pop_back();
 
-    if (line.size() != width) halt("map format is invalid");
+    if ((int)line.size() != width) halt("map format is invalid");
     for (int x = 0; x < width; ++x) {
       char s = line[x];
       if (s == 'T' or s == '@') continue;  // object
