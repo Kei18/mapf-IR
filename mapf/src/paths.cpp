@@ -87,7 +87,8 @@ int Paths::getMaxLengthPaths() const
   int max_val = 0;
   for (auto p : paths) {
     if (p.empty()) continue;
-    max_val = (p.size() - 1 > max_val) ? p.size() - 1 : max_val;
+    const int p_size = p.size();
+    max_val = (p_size - 1 > max_val) ? p_size - 1 : max_val;
   }
   return max_val;
 }
@@ -117,8 +118,10 @@ void Paths::format()
   int len = getMaxLengthPaths();
   for (int i = 0; i < paths_size; ++i) {
     if (paths[i].empty()) continue;
-    while (paths[i].size() - 1 != len) {
+    int p_size = paths[i].size();
+    while (p_size - 1 != len) {
       paths[i].push_back(*(paths[i].end() - 1));
+      ++p_size;
     }
   }
 }

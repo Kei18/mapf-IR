@@ -297,13 +297,14 @@ void IR::setParams(int argc, char* argv[])
         break;
       case 'Y':
         s = std::string(optarg);
-        for (int i = 0; i < s.size(); ++i) {
+        s_size = s.size();
+        for (int i = 0; i < s_size; ++i) {
           if (s[i] == ' ') {
             option_optimal_solver.push_back(s_tmp);
             s_tmp = "";
           } else {
             s_tmp += s[i];
-            if (i == s.size() - 1) option_optimal_solver.push_back(s_tmp);
+            if (i == s_size) option_optimal_solver.push_back(s_tmp);
           }
         }
         break;
