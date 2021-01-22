@@ -15,7 +15,8 @@ Path Paths::get(int i) const
 
 Node* Paths::get(int i, int t) const
 {
-  if (!(0 <= i && i < paths.size()) || !(0 <= t && t <= makespan)) {
+  const int paths_size = paths.size();
+  if (!(0 <= i && i < paths_size) || !(0 <= t && t <= makespan)) {
     halt("invalid index, i=" + std::to_string(i) + ", t=" + std::to_string(t));
   }
   return paths[i][t];
@@ -31,13 +32,15 @@ bool Paths::empty(const int i) const
 
 void Paths::insert(int i, const Path& path)
 {
-  if (!(0 <= i && i < paths.size())) halt("invalid index");
+  const int paths_size = paths.size();
+  if (!(0 <= i && i < paths_size)) halt("invalid index");
   if (path.empty()) halt("path must not be empty");
-  int old_len = paths[i].size();
+  const int old_len = paths[i].size();
   paths[i] = path;
-  if (path.size() - 1 == getMakespan()) return;
+  const int path_size = path.size();
+  if (path_size - 1 == getMakespan()) return;
   format();                                 // align each path size
-  if (path.size() < old_len) shrink();      // cutoff additional configs
+  if (path_size < old_len) shrink();      // cutoff additional configs
   makespan = getMaxLengthPaths();           // update makespan
 }
 

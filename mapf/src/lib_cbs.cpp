@@ -148,9 +148,10 @@ LibCBS::Constraints LibCBS::getPrioritizedConflict(
   Constraints cardinal_constraints = {};
   Constraints semi_cardinal_constraints = {};
   Constraints non_cardinal_constraints = {};
+  const int sample_size = sample.size();
   for (int t = 1; t <= paths.getMakespan(); ++t) {
-    for (int i = 0; i < sample.size(); ++i) {
-      for (int j = i + 1; j < sample.size(); ++j) {
+    for (int i = 0; i < sample_size; ++i) {
+      for (int j = i + 1; j < sample_size; ++j) {
         getPrioritizedConflict(t, sample[i], sample[j], paths, mdds,
                                cardinal_constraints, semi_cardinal_constraints,
                                non_cardinal_constraints);

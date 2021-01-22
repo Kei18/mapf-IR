@@ -43,5 +43,5 @@ jobs:
         run: |
           git checkout -b auto_record
           git add ./records/
-          git commit
+          git commit -m "auto record"
           git push origin auto_record
