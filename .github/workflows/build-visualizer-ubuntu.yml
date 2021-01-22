@@ -16,7 +16,10 @@ jobs:
 
       - name: build
         run: |
-          cd ./third_party/openFrameworks/scripts/linux/
+          cd ./third_party/openFrameworks/scripts/linux/ubuntu/
+          sh ./install_dependencies.sh
+          cd ..
           sh ./download_libs.sh
+          sh ./compileOF.sh
           cd ../../../../visualizer
           make build
