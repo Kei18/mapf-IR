@@ -1,0 +1,38 @@
+name: auto-record
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  auto-record:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: setup-python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - uses: actions/checkout@v1
+        with:
+          submodules: true
+
+      - name: build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+
+      - name: auto-record
+        working-directory: auto_record
+        run: python record.py
+
+      - name: deploy
+        run: |
+          git checkout -b auto_record
+          git add ./records/
+          git commit
+          git push origin auto_record
