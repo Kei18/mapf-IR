@@ -10,7 +10,7 @@ IR_FocusGoals::IR_FocusGoals(Problem* _P)
 
 void IR_FocusGoals::updatePlanFocusOneAgent(const int i, Plan& plan)
 {
-  const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
+  const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P->getGoal(i), pathDist(i));
   if (modif_list.empty()) return;
   Problem _P = Problem(P, getRefineTimeLimit());
   plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));

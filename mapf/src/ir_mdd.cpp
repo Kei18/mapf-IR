@@ -11,7 +11,7 @@ IR_MDD::IR_MDD(Problem* _P)
 void IR_MDD::updatePlanFocusOneAgent(const int i, Plan& plan)
 {
   const auto modif_list =
-    LibIR::identifyInteractingSetByMDD(i, plan, P, true, getRefineTimeLimit(), MT);
+    LibIR::identifyInteractingSetByMDD(i, plan, this, true, getRefineTimeLimit(), MT);
   if (modif_list.empty()) return;
   Problem _P = Problem(P, getRefineTimeLimit());
   plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));

@@ -40,7 +40,7 @@ void IR_HYBRID::refinePlan()
     for (int i = 0; i < P->getNum(); ++i) {
       if (overCompTime() || current_iteration >= max_iteration) break;
       if (plan.getPathCost(i) - pathDist(i) == 0) continue;
-      const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P);
+      const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P->getGoal(i), pathDist(i));
       if (modif_list.empty()) continue;
       Problem _P = Problem(P, getRefineTimeLimit());
       plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));

@@ -10,7 +10,18 @@ IR_SinglePaths::IR_SinglePaths(Problem* _P)
 
 void IR_SinglePaths::updatePlanFocusOneAgent(const int i, Plan& plan)
 {
-  plan = LibIR::refineSinglePath(i, plan, P, getRefineTimeLimit());
+  // filtering
+  const int cost = plan.getPathCost(i);
+  if (cost == pathDist(i)) return;
+
+  // get new path
+  auto paths = planToPaths(plan);
+  const auto path = getPrioritizedPath(i, paths, getRefineTimeLimit(), max_timestep);
+  if (path.empty() || getPathCost(path) >= cost) return;
+
+  // update paths
+  paths.insert(i, path);
+  plan = pathsToPlan(paths);
   updateSolution(plan);
 }
 

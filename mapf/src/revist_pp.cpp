@@ -118,8 +118,7 @@ Path RevisitPP::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths,
     return false;
   };
 
-  return getPathBySpaceTimeAstar
-    (s, g, fValue, compareAstarNodeBasic, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
+  return getTimedPath(s, g, fValue, compareAstarNodeBasic, checkAstarFin, checkInvalidAstarNode);
 }
 
 void RevisitPP::setParams(int argc, char* argv[])

@@ -184,9 +184,9 @@ TEST(libIR, identifyAgentsAtGoal)
   plan.add({ d, e });
   ASSERT_TRUE(plan.validate(starts, goals));
 
-  auto modif_list1 = LibIR::identifyAgentsAtGoal(0, plan, &G, c, d);
+  auto modif_list1 = LibIR::identifyAgentsAtGoal(0, plan, d, G.pathDist(c, d));
   ASSERT_EQ(modif_list1.size(), 2);
-  auto modif_list2 = LibIR::identifyAgentsAtGoal(1, plan, &G, a, e);
+  auto modif_list2 = LibIR::identifyAgentsAtGoal(1, plan, e, G.pathDist(a, e));
   ASSERT_EQ(modif_list2.size(), 0);
 }
 

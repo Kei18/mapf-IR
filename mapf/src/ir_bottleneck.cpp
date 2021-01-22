@@ -11,7 +11,7 @@ IR_Bottleneck::IR_Bottleneck(Problem* _P)
 void IR_Bottleneck::updatePlanFocusOneAgent(const int i, Plan& plan)
 {
   const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore
-                                      (i, plan, P, getRefineTimeLimit()));
+                                      (i, plan, this, getRefineTimeLimit()));
   if (modif_list.empty()) return;
   Problem _P = Problem(P, getRefineTimeLimit());
   plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));

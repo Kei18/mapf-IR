@@ -43,6 +43,7 @@ protected:
 
   void createDistanceTable();  // preprocessing
 
+public:
   // use search of original graph
   Path getPath(Node* const s, Node* const g) const { return G->getPath(s, g); }
   int pathDist(Node* const s, Node* const g) const { return G->pathDist(s, g); }
@@ -54,6 +55,24 @@ protected:
                     CompareAstarNode& compare,
                     CheckAstarFin& checkAstarFin,
                     CheckInvalidAstarNode& checkInvalidAstarNode);
+
+  Path getPrioritizedPath
+  (const int id,  // agent id
+   Node* const s,  // initial location
+   Node* const g,  // goal location
+   const Paths& paths,  // already reserved paths
+   const int time_limit=-1,  // time limit
+   const int upper_bound=-1,  // upper bound of timesteps
+   const std::vector<std::tuple<Node*, int>>& constraints={},  // additional constraints, space-time
+   CompareAstarNode& compare=compareAstarNodeBasic);
+
+  Path getPrioritizedPath
+  (const int id,
+   const Paths& paths,
+   const int time_limit=-1,
+   const int upper_bound=-1,
+   const std::vector<std::tuple<Node*, int>>& constraints={},
+   CompareAstarNode& compare=compareAstarNodeBasic);
 
   int getSolverElapsedTime() const;  // get elapsed time from start
   int getRemainedTime() const;  // get remained time
@@ -72,6 +91,7 @@ protected:
     info(std::forward<Tail>(tail)...);
   }
 
+protected:
   // main
   virtual void run() {}
 
