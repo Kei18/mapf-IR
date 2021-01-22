@@ -1,4 +1,4 @@
-name: visualizer-build
+name: build_visualizer
 
 on:
   push:
@@ -6,21 +6,6 @@ on:
       - dev
 
 jobs:
-  osx-build:
-    runs-on: macos-10.15
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-
-      - name: build
-        run: |
-          cd ./third_party/openFrameworks/scripts/osx/
-          sh ./download_libs.sh
-          cd ../../../../visualizer
-          make build
-
   linux-build:
     runs-on: ubuntu-latest
 

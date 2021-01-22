@@ -9,6 +9,11 @@ The visualizer uses [openFrameworks](https://openframeworks.cc).
 
 The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], Revisit Prioritized Planning [6], PIBT-Complete, and IR.
 
+| platform | status |
+| --- | --- |
+| macos-latest |  |
+| ubuntu-latest |  |
+
 ## Demo
 ![100 agents in arena](/material/arena_100agents.gif)
 
