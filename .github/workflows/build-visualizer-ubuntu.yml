@@ -1,4 +1,4 @@
-name: build_visualizer
+name: build_visualizer_ubuntu
 
 on:
   push:

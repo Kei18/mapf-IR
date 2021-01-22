@@ -1,4 +1,4 @@
-name: build_visualizer
+name: build_visualizer_macos
 
 on:
   push:
@@ -17,6 +17,6 @@ jobs:
       - name: build
         run: |
           cd ./third_party/openFrameworks/scripts/osx/
-          sh ./download_libs.sh -v 0.11.0
+          sh ./download_libs.sh
           cd ../../../../visualizer
           make build
