@@ -18,7 +18,8 @@ void HCA::run()
 
   // start planning
   bool invalid = false;
-  for (int j = 0; j < ids.size(); ++j) {
+  const int size_ids = ids.size();
+  for (int j = 0; j < size_ids; ++j) {
     int i = ids[j];
     info(" ", "elapsed:", getSolverElapsedTime(),
          ", agent-" + std::to_string(i), "starts planning,",

@@ -30,7 +30,7 @@ jobs:
         run: ./app -i ../instances/sample.txt -s PIBT -o result.txt -v
 
       - name: visualizer-build
+        working-directory: visualizer
         run: |
-          sh ./openFrameworks/scripts/osx/download_libs.sh
-          cd visualizer
+          sh ../openFrameworks/scripts/osx/download_libs.sh
           make build

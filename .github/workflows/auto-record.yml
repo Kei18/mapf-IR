@@ -40,6 +40,8 @@ jobs:
 
       - name: deploy
         run: |
+          git branch -r
+          git fetch --prune
           git checkout -b auto_record origin/auto_record
           ls -all
           mv auto_record/readme.md readme.md
