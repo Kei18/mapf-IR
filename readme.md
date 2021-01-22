@@ -18,11 +18,11 @@ You can see the performance of each solver from [auto\_record repo](https://gith
 ## Demo
 ![100 agents in arena](/material/arena_100agents.gif)
 
-100 agents in arena, planned by PIBT in 7ms.
+100 agents in arena, planned by PIBT in ~~67ms~~ 7ms.
 
 ![1000 agents in brc202d](/material/brc202d_1000agents.gif)
 
-1000 agents in brc202d, planned by PIBT-Complete in 1683ms.
+1000 agents in brc202d, planned by PIBT-Complete in ~~84sec~~ 1683ms.
 The gif shows a part of an MAPF plan.
 
 ## Building
