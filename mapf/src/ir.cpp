@@ -231,7 +231,7 @@ void IR::setParams(int argc, char* argv[])
       {0, 0, 0, 0},
   };
   optind = 1;  // reset
-  int opt, longindex;
+  int opt, longindex, s_size;
   std::string s, s_tmp;
 
   while ((opt = getopt_long(argc, argv, "o:lt:x:y:X:Y:Vn:S:", longopts,
@@ -270,7 +270,7 @@ void IR::setParams(int argc, char* argv[])
         break;
       case 'X':
         s = std::string(optarg);
-        const int s_size = s.size();
+        s_size = s.size();
         for (int i = 0; i < s_size; ++i) {
           if (s[i] == ' ') {
             option_init_solver.push_back(s_tmp);
@@ -369,7 +369,8 @@ void IR::makeLog(const std::string& logfile)
   makeLogBasicInfo(log);
 
   // record the data of each iteration
-  for (int t = 0; t < HIST.size(); ++t) {
+  const int HIST_size = HIST.size();
+  for (int t = 0; t < HIST_size; ++t) {
     auto hist = HIST[t];
     log << "iter=" << t << ","
         << "comp_time=" << std::get<0>(hist) << ","

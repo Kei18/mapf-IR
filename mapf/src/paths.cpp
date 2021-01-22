@@ -9,7 +9,8 @@ Paths::Paths(int num_agents)
 
 Path Paths::get(int i) const
 {
-  if (!(0 <= i && i < paths.size())) halt("invalid index");
+  const int paths_size = paths.size();
+  if (!(0 <= i && i < paths_size)) halt("invalid index");
   return paths[i];
 }
 
@@ -26,7 +27,8 @@ bool Paths::empty() const { return paths.empty(); }
 
 bool Paths::empty(const int i) const
 {
-  if (!(0 <= i && i < paths.size())) halt("invalid index, i=" + std::to_string(i));
+  const int paths_size = paths.size();
+  if (!(0 <= i && i < paths_size)) halt("invalid index, i=" + std::to_string(i));
   return paths[i].empty();
 }
 
@@ -94,7 +96,8 @@ int Paths::getMakespan() const { return makespan; }
 
 int Paths::costOfPath(int i) const
 {
-  if (!(0 <= i && i < paths.size())) {
+  const int paths_size = paths.size();
+  if (!(0 <= i && i < paths_size)) {
     halt("invalid index " + std::to_string(i));
   }
   return getPathCost(get(i));
@@ -103,14 +106,16 @@ int Paths::costOfPath(int i) const
 int Paths::getSOC() const
 {
   int soc = 0;
-  for (int i = 0; i < paths.size(); ++i) soc += costOfPath(i);
+  const int paths_size = paths.size();
+  for (int i = 0; i < paths_size; ++i) soc += costOfPath(i);
   return soc;
 }
 
 void Paths::format()
 {
+  const int paths_size = paths.size();
   int len = getMaxLengthPaths();
-  for (int i = 0; i < paths.size(); ++i) {
+  for (int i = 0; i < paths_size; ++i) {
     if (paths[i].empty()) continue;
     while (paths[i].size() - 1 != len) {
       paths[i].push_back(*(paths[i].end() - 1));
@@ -120,6 +125,7 @@ void Paths::format()
 
 void Paths::shrink()
 {
+  const int paths_size = paths.size();
   while (true) {
     bool shrinkable = true;
     for (auto p : paths) {
@@ -131,7 +137,7 @@ void Paths::shrink()
     if (!shrinkable) break;
 
     // remove additional configuration
-    for (int i = 0; i < paths.size(); ++i) {
+    for (int i = 0; i < paths_size; ++i) {
       paths[i].resize(paths[i].size() - 1);
     }
   }
