@@ -58,7 +58,7 @@ def run(ins, solver):
 
 def get_run_result(ins, solvers):
     table_header = """|solver | solved | comp_time(ms) | sum-of-costs | makespan |
-| --- | --- | ---: | ---: | ---: |
+| ---: | ---: | ---: | ---: | ---: |
 """
     result_str = table_header
     for solver in solvers:

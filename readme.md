@@ -12,11 +12,11 @@ The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], 
 ## Demo
 ![100 agents in arena](/material/arena_100agents.gif)
 
-100 agents in arena, planned by PIBT in 67ms.
+100 agents in arena, planned by PIBT in 7ms.
 
 ![1000 agents in brc202d](/material/brc202d_1000agents.gif)
 
-1000 agents in brc202d, planned by PIBT-Complete in 84sec.
+1000 agents in brc202d, planned by PIBT-Complete in 1683ms.
 The gif shows a part of an MAPF plan.
 
 ## Building
@@ -78,7 +78,7 @@ It takes around 10 minutes.
 ```sh
 git submodule init
 git submodule update
-sh ./openFrameworks/scripts/osx/download_libs.sh
+sh ./third_party/openFrameworks/scripts/osx/download_libs.sh
 cd visualizer/
 make build
 cd ..
@@ -97,6 +97,7 @@ You can manipulate it via your keyboard. See printed info.
 This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 
 ## Notes
+- You can see the performance of each solver from [auto\_record repo](https://github.com/Kei18/mapf-IR/tree/auto_record). The records were created by Github Actions.
 - Maps in `maps/` are from [MAPF benchmarks](https://movingai.com/benchmarks/mapf.html).
   When you add a new map, please place it in the `maps/` directory.
 - The font in `visualizer/bin/data` is from [Google Fonts](https://fonts.google.com/).
