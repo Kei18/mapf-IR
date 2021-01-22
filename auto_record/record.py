@@ -101,6 +101,6 @@ benchmark: {}
     optimal_ins,
     optimal_res)
 
-    record_file = './records/readme.md'
+    record_file = './readme.md'
     with open(record_file, 'w') as f:
         f.write(md_str)

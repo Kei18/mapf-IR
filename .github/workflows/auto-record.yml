@@ -31,7 +31,8 @@ jobs:
 
       - name: auto-record
         working-directory: auto_record
-        run: python record.py
+        run: |
+          python record.py
 
       - name: git setting
         run: |
