@@ -33,15 +33,19 @@ jobs:
         working-directory: auto_record
         run: python record.py
 
+      - uses: actions/checkout@v2
+        with:
+          ref: auto_record
+
       - name: git setting
         run: |
           git config --local user.email keisuke.oku18@gmail.com
           git config --local user.name Kei18
 
       - name: deploy
-        working-directory: auto_record
         run: |
-          git checkout -b auto_record
-          git add ./records/
+          mv auto_recored/readme.md readme.md
+          cp readme.md records/$(date "+%Y-%m-%d-%H-%M-%S")
+          git add readme.md records/
           git commit -m "auto record"
           git push origin auto_record

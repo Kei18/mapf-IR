@@ -3,17 +3,17 @@ import datetime
 import subprocess
 
 optimal_solvers = [
-    # 'CBS',
+    'CBS',
     'ICBS',
 ]
 
 suboptimal_solvers = [
     'PIBT',
     'HCA',
-    # 'WHCA',
-    # 'RevisitPP',
-    # 'ECBS',
-    # 'PIBT_COMPLETE',
+    'WHCA',
+    'RevisitPP',
+    'ECBS',
+    'PIBT_COMPLETE',
 ]
 
 output_file = './result.txt'
@@ -77,7 +77,8 @@ if __name__ == '__main__':
     suboptimal_res = get_run_result(suboptimal_ins, suboptimal_solvers)
     optimal_res = get_run_result(optimal_ins, optimal_solvers)
 
-    md_str = """# auto record by github actions
+    md_str = """auto record by github actions
+===
 date: {}
 
 commit
@@ -100,6 +101,6 @@ benchmark: {}
     optimal_ins,
     optimal_res)
 
-    record_file = './records/{}.md'.format(date_str)
+    record_file = './records/readme.md'
     with open(record_file, 'w') as f:
         f.write(md_str)
