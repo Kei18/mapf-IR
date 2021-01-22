@@ -113,10 +113,10 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
     return false;
   };
 
-  Path path =
-      getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
+  Path path = getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
+  const int path_size = path.size();
   // format
-  if (!path.empty() && path.size() - 1 > window) path.resize(window + 1);
+  if (!path.empty() && path_size - 1 > window) path.resize(window + 1);
   return path;
 }
 

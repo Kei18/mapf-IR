@@ -44,8 +44,9 @@ jobs:
 
       - name: deploy
         run: |
-          mv auto_recored/readme.md readme.md
-          cp readme.md records/$(date "+%Y-%m-%d-%H-%M-%S")
+          ls -all
+          mv auto_record/readme.md readme.md
+          cp readme.md records/$(date "+%Y-%m-%d-%H-%M-%S").md
           git add readme.md records/
           git commit -m "auto record"
           git push origin auto_record

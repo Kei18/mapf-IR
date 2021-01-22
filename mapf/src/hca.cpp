@@ -115,8 +115,7 @@ Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
     return false;
   };
 
-  return getPathBySpaceTimeAstar
-    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
+  return getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
 }
 
 void HCA::setParams(int argc, char* argv[])

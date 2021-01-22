@@ -79,7 +79,8 @@ LibCBS::Constraints ICBS_REFINE::getPrioritizedConflict(HighLevelNode_p h_node)
 Path ICBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
 {
   Path path = ICBS::getConstrainedPath(h_node, id);
-  if (makespan_prioritized && path.size() - 1 > ub_makespan) {
+  const int path_size = path.size();
+  if (makespan_prioritized && path_size - 1 > ub_makespan) {
     return {};
   }
   return path;
