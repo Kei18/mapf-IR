@@ -15,9 +15,12 @@ jobs:
         with:
           python-version: 3.8
 
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
         with:
-          submodules: true
+          submodules: false
+
+      - name: clone-google-tests
+        run: git clone https://github.com/google/googletest.git third_party/googletest
 
       - name: build
         run: |
@@ -31,6 +34,7 @@ jobs:
         run: python record.py
 
       - name: deploy
+        working-directory: auto_record
         run: |
           git checkout -b auto_record
           git add ./records/
