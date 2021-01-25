@@ -2,19 +2,14 @@
 
 const std::string IR_FocusGoals::SOLVER_NAME = "IR_FOCUS_GOALS";
 
-IR_FocusGoals::IR_FocusGoals(Problem* _P)
-  : IR_FOCUS_ONE_AGENT(_P)
+IR_FocusGoals::IR_FocusGoals(Problem* _P) : IR(_P)
 {
   solver_name = IR_FocusGoals::SOLVER_NAME;
 }
 
-void IR_FocusGoals::updatePlanFocusOneAgent(const int i, Plan& plan)
+void IR_FocusGoals::refinePlan()
 {
-  const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P->getGoal(i), pathDist(i));
-  if (modif_list.empty()) return;
-  Problem _P = Problem(P, getRefineTimeLimit());
-  plan = std::get<1>(getOptimalPlan(&_P, plan, modif_list));
-  updateSolution(plan);
+  updatePlanFocusOneAgent(updateByFocusGoals);
 }
 
 void IR_FocusGoals::printHelp()

@@ -116,6 +116,7 @@ public:
   Plan getSolution() const { return solution; };
   bool succeed() const { return solved; };
   std::string getSolverName() { return solver_name; };
+  int getMaxTimestep() const { return max_timestep; };
   Problem* getP() { return P; }
 
   // get path distance for a_i

@@ -65,15 +65,27 @@ protected:
   // success?, solution
   std::tuple<bool, Plan> getOptimalPlan(Problem* _P, const Plan& current_plan,
                                         const std::vector<int>& sample);
-
   virtual void refinePlan();
 
+  // ============================
+  void updateByRandom();
+  // work as macro
+  void updatePlanFocusOneAgent(std::function<void(const int, Plan&, IR*)> fn);
+  // define refinement rules
+  static void updateBySinglePaths(const int i, Plan& plan, IR* solver);
+  static void updateByFixAtGoals(const int i, Plan& plan, IR* solver);
+  static void updateByFocusGoals(const int i, Plan& plan, IR* solver);
+  static void updateByBottleneck(const int i, Plan& plan, IR* solver);
+  static void updateByMDD(const int i, Plan& plan, IR* solver);
+  // ============================
+
   void printProcessInfo();
-  int getRefineTimeLimit() const { return std::min(getRemainedTime(), timeout_refinement); }
 
 public:
   IR(Problem* _P);
   ~IR();
+
+  int getRefineTimeLimit() const { return std::min(getRemainedTime(), timeout_refinement); }
 
   void makeLog(const std::string& logfile);
   virtual void setParams(int argc, char* argv[]);
