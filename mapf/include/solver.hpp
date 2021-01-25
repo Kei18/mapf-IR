@@ -41,9 +41,9 @@ protected:
   std::vector<std::vector<int>> DistanceTable;  // distance table [agent][node_id]
   std::vector<std::vector<int>>* DistanceTable_p;
 
+public:
   void createDistanceTable();  // preprocessing
 
-public:
   // use search of original graph
   Path getPath(Node* const s, Node* const g) const { return G->getPath(s, g); }
   int pathDist(Node* const s, Node* const g) const { return G->pathDist(s, g); }
