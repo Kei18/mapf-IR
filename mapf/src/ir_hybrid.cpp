@@ -11,8 +11,6 @@ void IR_HYBRID::refinePlan()
 {
   info("", "update by FIX_AT_GOALS");
   updatePlanFocusOneAgent(updateByFixAtGoals);
-  info("", "update by SINGLE_PATHS");
-  updatePlanFocusOneAgent(updateBySinglePaths);
   info("", "update by FOCUS_GOALS");
   updatePlanFocusOneAgent(updateByFocusGoals);
   info("", "update by MDD");
