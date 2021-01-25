@@ -131,15 +131,15 @@ std::unique_ptr<Solver> getSolver
   } else if (solver_name == "IR") {
     solver = std::make_unique<IR>(P);
   } else if (solver_name == "IR_SINGLE_PATHS") {
-    solver = std::make_unique<IR_SinglePaths>(P);
+    solver = std::make_unique<IR_SINGLE_PATHS>(P);
   } else if (solver_name == "IR_FIX_AT_GOALS") {
-    solver = std::make_unique<IR_FixAtGoals>(P);
+    solver = std::make_unique<IR_FIX_AT_GOALS>(P);
   } else if (solver_name == "IR_FOCUS_GOALS") {
-    solver = std::make_unique<IR_FocusGoals>(P);
+    solver = std::make_unique<IR_FOCUS_GOALS>(P);
   } else if (solver_name == "IR_MDD") {
     solver = std::make_unique<IR_MDD>(P);
   } else if (solver_name == "IR_BOTTLENECK") {
-    solver = std::make_unique<IR_Bottleneck>(P);
+    solver = std::make_unique<IR_BOTTLENECK>(P);
   } else if (solver_name == "IR_HYBRID") {
     solver = std::make_unique<IR_HYBRID>(P);
   } else {
@@ -173,10 +173,10 @@ void printHelp()
   ICBS::printHelp();
   PIBT_COMPLETE::printHelp();
   IR::printHelp();
-  IR_SinglePaths::printHelp();
-  IR_FixAtGoals::printHelp();
-  IR_FocusGoals::printHelp();
+  IR_SINGLE_PATHS::printHelp();
+  IR_FIX_AT_GOALS::printHelp();
+  IR_FOCUS_GOALS::printHelp();
   IR_MDD::printHelp();
-  IR_Bottleneck::printHelp();
+  IR_BOTTLENECK::printHelp();
   IR_HYBRID::printHelp();
 }

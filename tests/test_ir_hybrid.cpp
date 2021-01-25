@@ -1,11 +1,11 @@
-#include <ecbs.hpp>
+#include <ir_hybrid.hpp>
 
 #include "gtest/gtest.h"
 
-TEST(ECBS, solve)
+TEST(IR_HYBRID, solve)
 {
   Problem P = Problem("../tests/instances/example.txt");
-  std::unique_ptr<Solver> solver = std::make_unique<ECBS>(&P);
+  std::unique_ptr<Solver> solver = std::make_unique<IR_HYBRID>(&P);
   solver->solve();
 
   ASSERT_TRUE(solver->succeed());

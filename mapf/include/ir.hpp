@@ -90,4 +90,7 @@ public:
   void makeLog(const std::string& logfile);
   virtual void setParams(int argc, char* argv[]);
   static void printHelp();
+
+  // for tests
+  void setInitialPlan(const Plan& plan);
 };

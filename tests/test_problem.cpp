@@ -5,7 +5,7 @@
 
 TEST(Problem, loading)
 {
-  Problem P = Problem("../tests/instances/01.txt");
+  Problem P = Problem("../tests/instances/toy_problem.txt");
   Graph* G = P.getG();
 
   ASSERT_EQ(P.getNum(), 2);
@@ -25,7 +25,7 @@ TEST(Problem, loading)
 
 TEST(Problem, plan)
 {
-  Problem P = Problem("../tests/instances/01.txt");
+  Problem P = Problem("../tests/instances/toy_problem.txt");
   Graph* G = P.getG();
 
   Plan plan0;

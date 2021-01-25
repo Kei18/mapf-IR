@@ -1,21 +1,21 @@
 #include "../include/ir_bottleneck.hpp"
 
-const std::string IR_Bottleneck::SOLVER_NAME = "IR_BOTTLENECK";
+const std::string IR_BOTTLENECK::SOLVER_NAME = "IR_BOTTLENECK";
 
-IR_Bottleneck::IR_Bottleneck(Problem* _P) : IR(_P)
+IR_BOTTLENECK::IR_BOTTLENECK(Problem* _P) : IR(_P)
 {
-  solver_name = IR_Bottleneck::SOLVER_NAME;
+  solver_name = IR_BOTTLENECK::SOLVER_NAME;
 }
 
-void IR_Bottleneck::refinePlan()
+void IR_BOTTLENECK::refinePlan()
 {
   updatePlanFocusOneAgent(updateByBottleneck);
 }
 
-void IR_Bottleneck::printHelp()
+void IR_BOTTLENECK::printHelp()
 {
   std::cout
-    << IR_Bottleneck::SOLVER_NAME << "\n"
+    << IR_BOTTLENECK::SOLVER_NAME << "\n"
     << "  (no option)"
     << std::endl;
 }

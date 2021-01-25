@@ -4,7 +4,7 @@
 
 TEST(RevisitPP, solve)
 {
-  Problem P = Problem("../tests/instances/02.txt");
+  Problem P = Problem("../tests/instances/example.txt");
   std::unique_ptr<Solver> solver = std::make_unique<RevisitPP>(&P);
   solver->solve();
 

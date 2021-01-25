@@ -4,7 +4,7 @@
 
 TEST(PIBT_COMPLETE, solve)
 {
-  Problem P = Problem("../tests/instances/02.txt");
+  Problem P = Problem("../tests/instances/example.txt");
   std::unique_ptr<Solver> solver = std::make_unique<PIBT_COMPLETE>(&P);
   solver->solve();
 

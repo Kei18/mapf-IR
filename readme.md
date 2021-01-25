@@ -28,7 +28,7 @@ The gif shows a part of an MAPF plan.
 ## Building
 
 ```
-git clone https://github.com/Kei18/mapf-IR
+git clone --recursive https://github.com/Kei18/mapf-IR
 cd mapf
 mkdir build
 cd build
@@ -82,8 +82,6 @@ solution=
 ### Building
 It takes around 10 minutes.
 ```sh
-git submodule init
-git submodule update
 sh ./third_party/openFrameworks/scripts/osx/download_libs.sh
 cd visualizer/
 make build
@@ -114,19 +112,19 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 ## Reference
 1. Silver, D. (2005).
    Cooperative pathfinding.
-   In AIIDE’05 Proceedings of the First AAAI Conference on Artificial Intelligence and Interactive Digital Entertainment (pp. 117–122).
+   AIIDE’05 Proc. AAAI Conf. on Artificial Intelligence and Interactive Digital Entertainment
 1. Okumura, K., Machida, M., Défago, X., & Tamura, Y. (2019).
    Priority Inheritance with Backtracking for Iterative Multi-agent Path Finding.
-   In Proceedings of the Twenty-Eighth International Joint Conference on Artificial Intelligence (pp. 535–542).
+   Proc. Intel. Joint Conf. on Artificial Intelligence (IJCAI).
 1. Sharon, G., Stern, R., Felner, A., & Sturtevant, N. R. (2015).
    Conflict-based search for optimal multi-agent pathfinding.
-   Artificial Intelligence, 219, 40–66.
-1. Boyarski, E., Felner, A., Stern, R., Sharon, G., Tolpin, D., Betzalel, O., & Shimony, E. (2015, June).
+   Artificial Intelligence
+1. Boyarski, E., Felner, A., Stern, R., Sharon, G., Tolpin, D., Betzalel, O., & Shimony, E. (2015).
    ICBS: improved conflict-based search algorithm for multi-agent pathfinding.
-   In Twenty-Fourth International Joint Conference on Artificial Intelligence.
+   Proc. Intel. Joint Conf. on Artificial Intelligence (IJCAI)
 1. Barer, M., Sharon, G., Stern, R., & Felner, A. (2014).
    Suboptimal Variants of the Conflict-Based Search Algorithm for the Multi-Agent Pathfinding Problem.
-   In Seventh Annual Symposium on Combinatorial Search.
+   Annual Symposium on Combinatorial Search (SoCS)
 1. Čáp, M., Novák, P., Kleiner, A., & Selecký, M. (2015).
    Prioritized planning algorithms for trajectory coordination of multiple mobile robots.
-   IEEE transactions on automation science and engineering, 12(3), 835-849.
+   IEEE transactions on automation science and engineering

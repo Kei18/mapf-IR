@@ -1,7 +1,7 @@
 #pragma once
 #include "ir.hpp"
 
-class IR_FixAtGoals : public IR
+class IR_FIX_AT_GOALS : public IR
 {
 public:
   static const std::string SOLVER_NAME;
@@ -10,7 +10,7 @@ private:
   void refinePlan();
 
 public:
-  IR_FixAtGoals(Problem* _P);
+  IR_FIX_AT_GOALS(Problem* _P);
 
   static void printHelp();
 };

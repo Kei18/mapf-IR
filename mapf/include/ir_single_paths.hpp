@@ -1,7 +1,7 @@
 #pragma once
 #include "ir.hpp"
 
-class IR_SinglePaths : public IR
+class IR_SINGLE_PATHS : public IR
 {
 public:
   static const std::string SOLVER_NAME;
@@ -10,7 +10,7 @@ private:
   void refinePlan();
 
 public:
-  IR_SinglePaths(Problem* _P);
+  IR_SINGLE_PATHS(Problem* _P);
 
   static void printHelp();
 };

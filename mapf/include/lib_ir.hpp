@@ -108,5 +108,4 @@ namespace LibIR
     if (!modif_list.empty()) modif_list.push_back(i);
     return std::make_tuple(score, modif_list);
   }
-
 };

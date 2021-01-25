@@ -105,9 +105,17 @@ void IR::printProcessInfo()
        ", LB: ", getLowerBoundMakespan(), ")");
 }
 
+void IR::setInitialPlan(const Plan& plan)
+{
+  solution = plan;
+}
+
 // failed -> return empty plan
 Plan IR::getInitialPlan()
 {
+  if (!solution.empty()) return solution;
+
+
   // set problem
   Problem _P = Problem(P, max_comp_time);
 
