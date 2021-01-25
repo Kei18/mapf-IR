@@ -56,9 +56,13 @@ struct AstarNode {
   std::string name;
 
   AstarNode(Node* _v, int _g, int _f, AstarNode* _p)
-    : v(_v), g(_g), f(_f), p(_p)
+    : v(_v), g(_g), f(_f), p(_p), name(getName(_v, _g))
   {
-    name = std::to_string(v->id) + "-" + std::to_string(g);
+  }
+
+  static std::string getName(Node* _v, int _g)
+  {
+    return std::to_string(_v->id) + "-" + std::to_string(_g);
   }
 };
 using CompareAstarNode = std::function<bool(AstarNode*, AstarNode*)>;
@@ -151,78 +155,3 @@ static CompareAstarNode compareAstarNodeBasic = [] (AstarNode* a, AstarNode* b) 
   if (a->g != b->g) return a->g < b->g;
   return false;
  };
-
-[[maybe_unused]]
-static Path getBasicPrioritizedPath
-(const int id,
- Node* s,
- Node* g,
- Graph* G,
- const Paths& paths,
- const int time_limit=-1,
- std::vector<std::tuple<Node*, int>> constraints={},  // space-time
- const int upper_bound=-1,
- CompareAstarNode& compare=compareAstarNodeBasic)
-{
-  // max timestep that another agent uses the goal
-  int max_constraint_time = paths.getMaxConstraintTime(id, s, g, G);
-
-  // setup functions
-  AstarHeuristics fValue;
-  if (G->pathDist(s, g) > max_constraint_time) {
-    fValue = [&](AstarNode* n) { return n->g + G->pathDist(n->v, g); };
-  } else {
-    // when someone occupies its goal
-    fValue = [&](AstarNode* n) {
-      return std::max(max_constraint_time + 1, n->g + G->pathDist(n->v, g));
-    };
-  }
-
-  CheckAstarFin checkAstarFin = [&](AstarNode* n) {
-    return n->v == g && n->g > max_constraint_time;
-  };
-
-  const int makespan = paths.getMakespan();
-  const int num_agents = paths.size();
-
-  CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
-    if (upper_bound != -1 && m->g > upper_bound) return true;
-
-    for (int i = 0; i < num_agents; ++i) {
-      if (i == id || paths.empty(i)) continue;
-      // last node
-      if (m->g > makespan) {
-        if (paths.get(i, makespan) == m->v) return true;
-        continue;
-      }
-      // vertex conflict
-      if (paths.get(i, m->g) == m->v) return true;
-      // swap conflict
-      if (paths.get(i, m->g) == m->p->v && paths.get(i, m->g-1) == m->v) return true;
-    }
-
-    // check additional constraints
-    for (auto c : constraints) {
-      const int t = std::get<1>(c);
-      if (m->v == std::get<0>(c) && (t == -1 || t == m->g)) return true;
-    }
-
-    return false;
-  };
-
-  return getPathBySpaceTimeAstar
-    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, time_limit);
-}
-
-[[maybe_unused]]
-static Path getBasicPrioritizedPath
-(const int id,
- Problem* P,
- const Paths& paths,
- const int time_limit=-1,
- const int upper_bound=-1,
- CompareAstarNode& compare=compareAstarNodeBasic)
-{
-  return getBasicPrioritizedPath
-    (id, P->getStart(id), P->getGoal(id), P->getG(), paths, time_limit, {}, upper_bound, compare);
-}

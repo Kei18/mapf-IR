@@ -68,7 +68,7 @@ protected:
   static const float DEFAULT_SUB_OPTIMALITY;
 
   void setInitialHighLevelNode(HighLevelNode_p n);
-  Path getInitialPath(int id);
+  Path getInitialPath(int id, const Paths& paths);
 
   // objective for open list
   CompareHighLevelNode getMainObjective();

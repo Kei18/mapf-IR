@@ -135,7 +135,7 @@ void ECBS::setInitialHighLevelNode(HighLevelNode_p n)
   Paths paths(P->getNum());
   std::vector<int> f_mins;  // vector of costs for respective paths
   for (int i = 0; i < P->getNum(); ++i) {
-    Path path = getInitialPath(i);
+    Path path = getInitialPath(i, paths);
     paths.insert(i, path);
     f_mins.push_back(path.size() - 1);
   }
@@ -149,33 +149,40 @@ void ECBS::setInitialHighLevelNode(HighLevelNode_p n)
   n->LB = n->soc;  // initial lower bound
 }
 
-Path ECBS::getInitialPath(int id)
+Path ECBS::getInitialPath(int id, const Paths& paths)
 {
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
   Nodes config_g = P->getConfigGoal();
 
-  AstarHeuristics fValue = [&](AstarNode* n) {
-    return n->g + pathDist(id, n->v);
-  };
+  Path path = { s };
+  Node* p = s;
+  int t = 1;
+  const int makespan = paths.getMakespan();
+  const int num_agents = P->getNum();
+  while (p != g) {
+    p = *std::min_element(p->neighbor.begin(), p->neighbor.end(),
+                          [&](Node* a, Node* b) {
+                            if (pathDist(id, a) != pathDist(id, b))
+                              return pathDist(id, a) < pathDist(id, b);
+                            if (t <= makespan) {
+                              Node* v;
+                              for (int i = 0; i < num_agents; ++i) {
+                                if (paths.empty(i)) continue;
+                                v = paths.get(i, t);
+                                if (v == a) return false;
+                                if (v == b) return true;
+                              }
+                            }
+                            if (a != g && inArray(a, config_g)) return false;
+                            if (b != g && inArray(b, config_g)) return true;
+                            return false;
+                          });
+    path.push_back(p);
+    ++t;
+  }
 
-  CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
-    if (a->f != b->f) return a->f > b->f;
-    // IMPORTANT! avoid goal locations of others
-    if (a->v != g && inArray(a->v, config_g)) return true;
-    if (b->v != g && inArray(b->v, config_g)) return false;
-    if (a->g != b->g) return a->g < b->g;
-    return false;
-  };
-
-  CheckAstarFin checkAstarFin = [&](AstarNode* n) { return n->v == g; };
-
-  CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
-    return false;
-  };
-
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return path;
 }
 
 void ECBS::invoke(HighLevelNode_p h_node, int id)
@@ -232,8 +239,29 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
   }
 
   // f-value for focal list
+  const int makespan = h_node->paths.getMakespan();
+  const int num_agents = P->getNum();
   FocalHeuristics f2Value = [&](FocalNode* n) {
-    return h_node->paths.countConflict(id, getPathFromFocalNode(n));
+    if (n->g == 0) return 0;
+    int cnt = n->p->f2;
+    for (int i = 0; i < num_agents; ++i) {
+      if (i == id) continue;
+      // last node
+      if (n->g > makespan) {
+        if (h_node->paths.get(i, makespan) == n->v) {
+          ++cnt;
+        }
+      } else {
+        // vertex conflict
+        if (h_node->paths.get(i, n->g) == n->v) {
+          ++cnt;
+          // swap conflict
+        } else if (h_node->paths.get(i, n->g-1) == n->v && h_node->paths.get(i, n->g) == n->p->v) {
+          ++cnt;
+        }
+      }
+    }
+    return cnt;
   };
 
   CompareFocalNode compareOPEN = [&](FocalNode* a, FocalNode* b) {

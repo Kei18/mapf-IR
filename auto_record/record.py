@@ -32,7 +32,7 @@ cmd_app = '../build/app'
 cmd_output = '-o ' + output_file
 
 optimal_ins = './benchrmark/optimal_random-32-32-20_30agents.txt'
-suboptimal_ins = './benchrmark/suboptimal_arena_300agents.txt'
+suboptimal_ins = './benchrmark/suboptimal_den520d_300agents.txt'
 anytime_ins = './benchrmark/anytime_arena_300agents.txt'
 
 def read_data(filename):

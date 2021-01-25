@@ -107,28 +107,21 @@ Path CBS::getInitialPath(int id)
   Node* g = P->getGoal(id);
   Nodes config_g = P->getConfigGoal();
 
-  AstarHeuristics fValue = [&](AstarNode* n) {
-    return n->g + pathDist(id, n->v);
-  };
+  Path path = { s };
+  Node* p = s;
+  while (p != g) {
+    p = *std::min_element(p->neighbor.begin(), p->neighbor.end(),
+                          [&](Node* a, Node* b) {
+                            if (pathDist(id, a) != pathDist(id, b))
+                              return pathDist(id, a) < pathDist(id, b);
+                            if (a != g && inArray(a, config_g)) return false;
+                            if (b != g && inArray(b, config_g)) return true;
+                            return false;
+                          });
+    path.push_back(p);
+  }
 
-  CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
-    if (a->f != b->f) return a->f > b->f;
-    // IMPORTANT! Avoid goal locations of others.
-    // This makes low-level search faster
-    if (a->v != g && inArray(a->v, config_g)) return true;
-    if (b->v != g && inArray(b->v, config_g)) return false;
-    if (a->g != b->g) return a->g < b->g;
-    return false;
-  };
-
-  CheckAstarFin checkAstarFin = [&](AstarNode* n) { return n->v == g; };
-
-  CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
-    return false;
-  };
-
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return path;
 }
 
 void CBS::invoke(HighLevelNode_p h_node, int id)

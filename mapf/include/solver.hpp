@@ -19,9 +19,9 @@ class Solver
 protected:
   std::string solver_name;
 
-  Problem* P;
-  Graph* G;
-  std::mt19937* MT;
+  Problem* P;        // problem instance
+  Graph* G;          // graph
+  std::mt19937* MT;  // seed for randomness
 
   // limitations
   const int max_timestep;
@@ -38,16 +38,20 @@ protected:
   int LB_soc;       // lower bound of soc
   int LB_makespan;  // lower bound of makespan
 
-  std::vector<std::vector<int>> DistanceTable;  // distance table [agent][node_id]
-  std::vector<std::vector<int>>* DistanceTable_p;
-
+protected:
+  std::vector<std::vector<int>> DistanceTable;     // distance table [agent][node_id]
+  std::vector<std::vector<int>>* DistanceTable_p;  // pointer, used in nested solvers
 public:
+  // get path distance for a_i
+  int pathDist(const int i) const;
+  int pathDist(const int i, Node* const s) const;
+  void setDistanceTable(std::vector<std::vector<int>>* p) { DistanceTable_p = p; }
   void createDistanceTable();  // preprocessing
-
-  // use search of original graph
+  // use search of original graph with cache
   Path getPath(Node* const s, Node* const g) const { return G->getPath(s, g); }
   int pathDist(Node* const s, Node* const g) const { return G->pathDist(s, g); }
 
+public:
   // space-time A*
   Path getTimedPath(Node* const s,  // start
                     Node* const g,  // goal
@@ -55,7 +59,7 @@ public:
                     CompareAstarNode& compare,
                     CheckAstarFin& checkAstarFin,
                     CheckInvalidAstarNode& checkInvalidAstarNode);
-
+  // prioritized planning
   Path getPrioritizedPath
   (const int id,  // agent id
    Node* const s,  // initial location
@@ -64,7 +68,7 @@ public:
    const int time_limit=-1,  // time limit
    const int upper_bound=-1,  // upper bound of timesteps
    const std::vector<std::tuple<Node*, int>>& constraints={},  // additional constraints, space-time
-   CompareAstarNode& compare=compareAstarNodeBasic);
+   CompareAstarNode& compare=compareAstarNodeBasic);  // compare two nodes
 
   Path getPrioritizedPath
   (const int id,
@@ -74,15 +78,13 @@ public:
    const std::vector<std::tuple<Node*, int>>& constraints={},
    CompareAstarNode& compare=compareAstarNodeBasic);
 
+public:
   int getSolverElapsedTime() const;  // get elapsed time from start
-  int getRemainedTime() const;  // get remained time
-  bool overCompTime() const;            // check time limit
+  int getRemainedTime() const;       // get remained time
+  bool overCompTime() const;         // check time limit
 
   // print debug info (only when verbose=true)
-  void info() const
-  {
-    if (verbose) std::cout << std::endl;
-  }
+  void info() const { if (verbose) std::cout << std::endl; }
   template <class Head, class... Tail>
   void info(Head&& head, Tail&&... tail) const
   {
@@ -103,7 +105,12 @@ private:
   void start();
   void end();
 
+  // get trivial lower bounds of sum-of-costs and makespan
+private:
   void computeLowerBounds();
+public:
+  int getLowerBoundSOC();
+  int getLowerBoundMakespan();
 
 public:
   Solver(Problem* _P);
@@ -118,15 +125,6 @@ public:
   std::string getSolverName() { return solver_name; };
   int getMaxTimestep() const { return max_timestep; };
   Problem* getP() { return P; }
-
-  // get path distance for a_i
-  int pathDist(const int i) const;
-  int pathDist(const int i, Node* const s) const;
-
-  int getLowerBoundSOC();
-  int getLowerBoundMakespan();
-
-  void setDistanceTable(std::vector<std::vector<int>>* p) { DistanceTable_p = p; }
 
   // for parameters
   virtual void setParams(int argc, char* argv[]){};

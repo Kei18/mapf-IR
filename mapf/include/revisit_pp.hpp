@@ -20,8 +20,6 @@ private:
   bool disable_dist_init = false;  // option
 
   // get one agent path
-  Path getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths,
-                          const std::vector<std::tuple<Node*, int>> constraints);
   Path getPrioritizedPath(int id, const Paths& paths,
                           const std::vector<std::tuple<Node*, int>> constraints);
 
