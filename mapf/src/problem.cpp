@@ -209,6 +209,10 @@ void Problem::setRandomStartsGoals()
   }
 }
 
+/*
+ * Note: it is hard to generate well-formed instances
+ * with dense situations (e.g., ≥300 agents in arena)
+ */
 void Problem::setWellFormedInstance()
 {
   // initialize
@@ -216,9 +220,7 @@ void Problem::setWellFormedInstance()
   config_g.clear();
 
   // get grid size
-  Grid* grid = reinterpret_cast<Grid*>(G);
-  const int N = grid->getWidth() * grid->getHeight();
-
+  const int N = G->getNodesSize();
   Nodes prohibited, starts_goals;
 
   while (config_g.size() < getNum()) {
@@ -242,7 +244,9 @@ void Problem::setWellFormedInstance()
         config_g.push_back(g);
         starts_goals.push_back(s);
         starts_goals.push_back(g);
-        for (auto v : path) prohibited.push_back(v);
+        for (auto v : path) {
+          if (!inArray(v, prohibited)) prohibited.push_back(v);
+        }
         break;
       }
     }

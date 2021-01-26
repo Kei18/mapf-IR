@@ -41,15 +41,17 @@ int main(int argc, char* argv[])
       {"solver", required_argument, 0, 's'},
       {"verbose", no_argument, 0, 'v'},
       {"help", no_argument, 0, 'h'},
+      {"time-limit", required_argument, 0, 'T'},
       {"make-scen", no_argument, 0, 'P'},
       {0, 0, 0, 0},
   };
   bool make_scen = false;
+  int max_comp_time = -1;
 
   // command line args
   int opt, longindex;
   opterr = 0;  // ignore getopt error
-  while ((opt = getopt_long(argc, argv, "i:o:s:vhP", longopts, &longindex)) !=
+  while ((opt = getopt_long(argc, argv, "i:o:s:vhPT:", longopts, &longindex)) !=
          -1) {
     switch (opt) {
       case 'i':
@@ -70,6 +72,9 @@ int main(int argc, char* argv[])
       case 'P':
         make_scen = true;
         break;
+      case 'T':
+        max_comp_time = std::atoi(optarg);
+        break;
       default:
         break;
     }
@@ -84,6 +89,9 @@ int main(int argc, char* argv[])
 
   // set problem
   Problem P = Problem(instance_file);
+
+  // set max computation time (otherwise, use param in instance_file)
+  if (max_comp_time != -1) P.setMaxCompTime(max_comp_time);
 
   // create scenario
   if (make_scen) {
@@ -160,6 +168,7 @@ void printHelp()
             << "  -v --verbose                  print additional info\n"
             << "  -h --help                     help\n"
             << "  -s --solver [SOLVER_NAME]     solver, choose from the below\n"
+            << "  -T --time-limit [INT]         max computation time\n"
             << "  -P --make-scen                make scenario file using "
                "random starts/goals"
             << "\n\nSolver Options:" << std::endl;

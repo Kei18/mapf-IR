@@ -43,6 +43,8 @@ public:
   int getMaxCompTime() { return max_comp_time; };
   std::string getInstanceFileName() { return instance; };
 
+  void setMaxCompTime(const int t) { max_comp_time = t; }
+
   bool isInitializedInstance() const { return instance_initialized; }
 
   // used when making new instance file
