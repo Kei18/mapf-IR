@@ -174,8 +174,9 @@ int Paths::countConflict(const std::vector<int>& sample) const
 {
   int cnt = 0;
   int makespan = getMakespan();
-  for (int i = 0; i < sample.size(); ++i) {
-    for (int j = i + 1; j < sample.size(); ++j) {
+  const int sample_size = sample.size();
+  for (int i = 0; i < sample_size; ++i) {
+    for (int j = i + 1; j < sample_size; ++j) {
       for (int t = 1; t <= makespan; ++t) {
         if (conflicted(sample[i], sample[j], t)) ++cnt;
       }
@@ -189,9 +190,10 @@ int Paths::countConflict(int id, const Path& path) const
   int cnt = 0;
   int makespan = getMakespan();
   int num_agents = size();
+  const int path_size = path.size();
   for (int i = 0; i < num_agents; ++i) {
     if (i == id) continue;
-    for (int t = 1; t < path.size(); ++t) {
+    for (int t = 1; t < path_size; ++t) {
       if (t > makespan) {
         if (path[t] == get(i, makespan)) {
           ++cnt;
