@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -26,7 +26,7 @@ comp_time_limit=30000
 
 for solver in "${solvers[@]}"
 do
-    sh `dirname $0`/run.sh \
+    bash `dirname $0`/run.sh \
        $map \
        "$agents_list" \
        "$solver -n ${refine_cnt} -t ${refine_limit} -T ${comp_time_limit}" \
