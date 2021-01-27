@@ -35,3 +35,16 @@ do
        $well_formed \
        $force
 done
+
+
+# send message
+str_solvers="solvers="
+for solver in "${solvers[@]}"
+do
+    str_solvers=$str_solvers"\n-"$solver
+done
+
+MESSAGE="*-----------------------------------
+fin experiment\nmap=${map}\nagents=${agents_list}\nwell_formed=${well_formed}\n${str_solvers}
+-----------------------------------*"
+bash `dirname $0`/slack_notification.sh "$MESSAGE"
