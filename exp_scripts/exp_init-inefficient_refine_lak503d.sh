@@ -8,7 +8,7 @@ force=0
 
 map="lak503d.map"
 agents_list="500"
-well_formed=0
+well_formed=1
 
 solvers=(
     "IR_SINGLE_PATHS"
@@ -20,7 +20,7 @@ solvers=(
     "IR_BOTTLENECK"
     "IR_HYBRID")
 
-refine_limit=500
+refine_limit=1000
 refine_cnt=10000000
 comp_time_limit=600000
 
