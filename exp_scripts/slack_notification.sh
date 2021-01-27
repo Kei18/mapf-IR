@@ -4,7 +4,7 @@
 MESSAGE=$1
 HOST=`hostname`
 
-if [ ${SLACK_URL} = "" ]
+if [ ${#SLACK_URL} -eq 0 ]
 then
     echo "please setup SLACK_URL"
     exit 0;
