@@ -152,7 +152,7 @@ Problem::~Problem()
 
 Node* Problem::getStart(int i) const
 {
-  if (!(0 <= i && i < config_s.size())) halt("invalid index");
+  if (!(0 <= i && i < (int)config_s.size())) halt("invalid index");
   return config_s[i];
 }
 
@@ -183,7 +183,7 @@ void Problem::setRandomStartsGoals()
       if (i >= N) halt("number of agents is too large.");
     }
     config_s.push_back(G->getNode(starts[i]));
-    if (config_s.size() == num_agents) break;
+    if ((int)config_s.size() == num_agents) break;
     ++i;
   }
 

@@ -10,10 +10,8 @@ Config Plan::get(const int t) const
 Node* Plan::get(const int t, const int i) const
 {
   if (empty()) halt("invalid operation");
-  const int configs_size = configs.size();
-  if (!(0 <= t && t < configs_size)) halt("invalid timestep");
-  const int num_agents = configs[0].size();
-  if (!(0 <= i && i < num_agents)) halt("invalid agent id");
+  if (!(0 <= t && t < (int)configs.size())) halt("invalid timestep");
+  if (!(0 <= i && i < (int)configs[0].size())) halt("invalid agent id");
   return configs[t][i];
 }
 
@@ -33,8 +31,7 @@ Config Plan::last() const
 
 void Plan::add(const Config& c)
 {
-  const int num_agents = configs[0].size();
-  if (!configs.empty() && num_agents != c.size()) {
+  if (!configs.empty() && configs.at(0).size() != c.size()) {
     halt("invalid operation");
   }
   configs.push_back(c);
