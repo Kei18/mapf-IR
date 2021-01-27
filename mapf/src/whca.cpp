@@ -32,7 +32,7 @@ void WHCA::run()
     bool check_goal_cond = true;
     Paths partial_paths(P->getNum());
     bool invalid = false;
-    for (int j = 0; j < ids.size(); ++j) {
+    for (int j = 0; j < P->getNum(); ++j) {
       int i = ids[j];
       Node* s = *(paths.get(i).end() - 1);
       Node* g = P->getGoal(i);
@@ -71,7 +71,8 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
     config_g.push_back(P->getGoal(i));
     Path p = paths.get(i);
     if (p.empty()) continue;
-    for (int t = 0; t < p.size(); ++t) {
+    const int p_size = p.size();
+    for (int t = 0; t < p_size; ++t) {
       if (p[t] == g) {
         max_constraint_time = std::max(t, max_constraint_time);
       }
@@ -101,7 +102,7 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
       Path p = paths.get(i);
       if (p.empty()) continue;
       // last node
-      if (m->g >= p.size()) {
+      if (m->g >= (int)p.size()) {
         if (*(p.end() - 1) == m->v) return true;
         continue;
       }

@@ -2,15 +2,16 @@
 
 Config Plan::get(const int t) const
 {
-  if (!(0 <= t && t < configs.size())) halt("invalid timestep");
+  const int configs_size = configs.size();
+  if (!(0 <= t && t < configs_size)) halt("invalid timestep");
   return configs[t];
 }
 
 Node* Plan::get(const int t, const int i) const
 {
   if (empty()) halt("invalid operation");
-  if (!(0 <= t && t < configs.size())) halt("invalid timestep");
-  if (!(0 <= i && i < configs[0].size())) halt("invalid agent id");
+  if (!(0 <= t && t < (int)configs.size())) halt("invalid timestep");
+  if (!(0 <= i && i < (int)configs[0].size())) halt("invalid agent id");
   return configs[t][i];
 }
 
@@ -66,8 +67,10 @@ Plan Plan::operator+(const Plan& other) const
   // check validity
   Config c1 = last();
   Config c2 = other.get(0);
-  if (c1.size() != c2.size()) halt("invalid operation");
-  for (int i = 0; i < c1.size(); ++i) {
+  const int c1_size = c1.size();
+  const int c2_size = c2.size();
+  if (c1_size != c2_size) halt("invalid operation");
+  for (int i = 0; i < c1_size; ++i) {
     if (c1[i] != c2[i]) halt("invalid operation.");
   }
   // merge
@@ -111,7 +114,7 @@ bool Plan::validate(const Config& starts, const Config& goals) const
   // check conflicts and continuity
   int num_agents = get(0).size();
   for (int t = 1; t <= getMakespan(); ++t) {
-    if (get(t).size() != num_agents) {
+    if ((int)configs[t].size() != num_agents) {
       warn("validation, invalid size");
       return false;
     }

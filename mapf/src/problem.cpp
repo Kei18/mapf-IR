@@ -100,10 +100,11 @@ Problem::Problem(const std::string& _instance)
 
   // check starts/goals
   if (num_agents <= 0) halt("invalid number of agents");
-  if (!config_s.empty() && num_agents > config_s.size()) {
+  const int config_s_size = config_s.size();
+  if (!config_s.empty() && num_agents > config_s_size) {
     warn("given starts/goals are not sufficient\nrandomly create instances");
   }
-  if (num_agents > config_s.size()) {
+  if (num_agents > config_s_size) {
     if (well_formed) {
       setWellFormedInstance();
     } else {
@@ -151,7 +152,7 @@ Problem::~Problem()
 
 Node* Problem::getStart(int i) const
 {
-  if (!(0 <= i && i < config_s.size())) halt("invalid index");
+  if (!(0 <= i && i < (int)config_s.size())) halt("invalid index");
   return config_s[i];
 }
 
@@ -182,7 +183,7 @@ void Problem::setRandomStartsGoals()
       if (i >= N) halt("number of agents is too large.");
     }
     config_s.push_back(G->getNode(starts[i]));
-    if (config_s.size() == num_agents) break;
+    if ((int)config_s.size() == num_agents) break;
     ++i;
   }
 
@@ -204,7 +205,7 @@ void Problem::setRandomStartsGoals()
       continue;
     }
     config_g.push_back(G->getNode(goals[j]));
-    if (config_g.size() == num_agents) break;
+    if ((int)config_g.size() == num_agents) break;
     ++j;
   }
 }
@@ -223,7 +224,7 @@ void Problem::setWellFormedInstance()
   const int N = G->getNodesSize();
   Nodes prohibited, starts_goals;
 
-  while (config_g.size() < getNum()) {
+  while ((int)config_g.size() < getNum()) {
     while (true) {
       // determine start
       Node* s;
