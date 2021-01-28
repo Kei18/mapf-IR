@@ -5,10 +5,10 @@ on:
     branches:
       - dev
     paths:
-      - 'mapf/'
-      - 'tests/'
+      - 'mapf/**'
+      - 'tests/**'
       - 'app.cpp'
-      - 'auto_record/'
+      - 'auto_record/**'
 
 jobs:
   auto-record:

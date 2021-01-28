@@ -1,6 +1,7 @@
 #!/bin/bash
+source `dirname $0`/util.sh
 
-set -e
+start_date=`getDate`
 
 scen_start=1
 scen_end=25
@@ -45,6 +46,6 @@ do
 done
 
 MESSAGE="*-----------------------------------
-fin experiment\nmap=${map}\nagents=${agents_list}\nwell_formed=${well_formed}\n${str_solvers}
+fin experiment\ndate=${start_date}\nmap=${map}\nagents=${agents_list}\nwell_formed=${well_formed}\n${str_solvers}
 -----------------------------------*"
 bash `dirname $0`/slack_notification.sh "$MESSAGE"

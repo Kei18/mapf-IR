@@ -1,4 +1,5 @@
 #!/bin/bash
+source `dirname $0`/util.sh
 
 ## args
 map=$1
@@ -34,11 +35,7 @@ echo "- solver: ${solver}"
 echo "- scen: from ${scen_start} to ${scen_end}"
 
 ## create output directory
-if [ "$(uname)" == "Darwin" ]; then
-   EXP_DATE=`gdate +%Y-%m-%d_%H-%M-%S-%2N`
-else  # linux
-    EXP_DATE=`date +%Y-%m-%d_%H-%M-%S-%2N`
-fi
+EXP_DATE=`getDate`
 OUTPUT_DIR=$PROJECT_DIR/../data/$EXP_DATE/
 mkdir -p $OUTPUT_DIR
 

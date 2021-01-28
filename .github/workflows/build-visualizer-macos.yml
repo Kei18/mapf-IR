@@ -5,7 +5,7 @@ on:
     branches:
       - dev
     paths:
-      - 'visualizer/'
+      - 'visualizer/**'
 
 jobs:
   build-osx:

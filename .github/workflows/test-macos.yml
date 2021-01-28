@@ -5,8 +5,8 @@ on:
     branches:
       - dev
     paths:
-      - 'mapf/'
-      - 'tests/'
+      - 'mapf/**'
+      - 'tests/**'
       - 'app.cpp'
 
 jobs:

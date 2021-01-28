@@ -8,9 +8,9 @@ ofApp::ofApp(MAPFPlan* _P): P(_P)
   flg_loop = true;
   flg_goal = true;
   flg_font = false;
-  flg_line = true;
   flg_focus = false;
   flg_logo_gen = false;
+  line_mode = LINE_MODE::STRAIGHT;
 }
 
 void ofApp::setup()
@@ -138,11 +138,25 @@ void ofApp::draw()
     }
 
     // goal
-    if (flg_line) {
+    if (line_mode == LINE_MODE::STRAIGHT) {
       Pos pos3 = P->config_g[i]->pos * scale;
       ofDrawLine(pos3.x + BufferSize::window_x_buffer + scale/2,
                  pos3.y + BufferSize::window_y_top_buffer + scale/2, x, y);
+    } else if (line_mode == LINE_MODE::PATH) {
+      // next loc
+      ofSetLineWidth(2);
+      Pos pos2(x-BufferSize::window_x_buffer-scale/2, y-BufferSize::window_y_top_buffer-scale/2);
+      for (int t = t1; t < P->makespan; ++t) {
+        Pos pos3 = P->transitions[t+1][i]->pos * scale;
+        ofDrawLine(pos2.x + BufferSize::window_x_buffer + scale/2,
+                   pos2.y + BufferSize::window_y_top_buffer + scale/2,
+                   pos3.x + BufferSize::window_x_buffer + scale/2,
+                   pos3.y + BufferSize::window_y_top_buffer + scale/2);
+        pos2 = pos3;
+      }
+      ofSetLineWidth(1);
     }
+
 
     // agent at goal
     if (v == P->config_g[i] && !flg_logo_gen) {
@@ -183,7 +197,9 @@ void ofApp::keyPressed(int key) {
   if (key == 'r') timestep_slider = 0;  // reset
   if (key == 'p') flg_autoplay = !flg_autoplay;
   if (key == 'l') flg_loop = !flg_loop;
-  if (key == 'v') flg_line = !flg_line;
+  if (key == 'v') {
+    line_mode = static_cast<LINE_MODE>(((int)line_mode + 1)%(int)LINE_MODE::NUM);
+  }
   if (key == 'a') flg_focus = !flg_focus;
   if (key == 'g') flg_goal = !flg_goal;
   if (key == 'f') {
@@ -193,13 +209,12 @@ void ofApp::keyPressed(int key) {
   if (key == 'i') {
     if (!flg_logo_gen) {
       flg_logo_gen = true;
-      flg_line = false;
       flg_focus = false;
       flg_goal = false;
       flg_font = false;
+      line_mode = LINE_MODE::NONE;
     } else {
       flg_logo_gen = false;
-      flg_line = true;
       flg_goal = true;
     }
   }
@@ -256,5 +271,6 @@ void ofApp::printKeys()
   std::cout << "- a : show single agent" << std::endl;
   std::cout << "- + : increment single agent id" << std::endl;
   std::cout << "- - : decrement single agent id" << std::endl;
+  std::cout << "- i : feeling lucky..." << std::endl;
   std::cout << "- esc : terminate" << std::endl;
 }

@@ -23,9 +23,11 @@ class ofApp : public ofBaseApp {
   bool flg_loop;
   bool flg_goal;
   bool flg_font;
-  bool flg_line;
   bool flg_focus;
   bool flg_logo_gen;
+
+  enum struct LINE_MODE { STRAIGHT, PATH, NONE, NUM };
+  LINE_MODE line_mode;
 
   // visual
   ofTrueTypeFont font;
