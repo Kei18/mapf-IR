@@ -22,7 +22,7 @@ solvers=(
 
 refine_limit=500
 refine_cnt=10000000
-comp_time_limit=30000
+comp_time_limit=90000
 
 for solver in "${solvers[@]}"
 do

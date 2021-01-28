@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - 'mapf/'
+      - 'tests/'
+      - 'app.cpp'
+      - 'auto_record/'
 
 jobs:
   auto-record:

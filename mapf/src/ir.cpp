@@ -19,10 +19,8 @@ static void setSolverOption(std::shared_ptr<Solver> solver,
   if (option.empty()) return;
   const int argc = option.size()+1;
   char* argv[argc];
-  argv[0] = "dummy";
   for (int i = 1; i < argc; ++i) {
     char* tmp = const_cast<char*>(option[i-1].c_str());
-    std::cout << i << ": " << tmp << std::endl;
     argv[i] = tmp;
   }
   solver->setParams(argc, argv);

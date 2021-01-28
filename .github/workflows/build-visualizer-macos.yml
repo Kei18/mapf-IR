@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - 'visualizer/'
 
 jobs:
   build-osx:

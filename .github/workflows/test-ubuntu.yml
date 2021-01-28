@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - 'mapf/'
+      - 'tests/'
+      - 'app.cpp'
 
 jobs:
   test-ubuntu:
