@@ -4,18 +4,18 @@ source `dirname $0`/util.sh
 start_date=`getDate`
 
 scen_start=1
-scen_end=10
+scen_end=50
 force=0
 
-map="ost000a.map"
-agents_list="3000"
+map="random-32-32-10.map"
+agents_list="50"
 well_formed=0
 
-solver="IR_HYBRID -v"
+solver="IR_HYBRID"
 
-refine_limit=10000
+refine_limit=100
 refine_cnt=10000000
-comp_time_limit=3600000
+comp_time_limit=1000
 
 
 bash `dirname $0`/run.sh \
