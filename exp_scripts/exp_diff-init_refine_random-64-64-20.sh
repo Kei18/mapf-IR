@@ -21,8 +21,7 @@ options=(
 )
 
 refine_limit=500
-# refine_cnt=10000000
-refine_cnt=1
+refine_cnt=10000000
 comp_time_limit=90000
 
 for option in "${options[@]}"
