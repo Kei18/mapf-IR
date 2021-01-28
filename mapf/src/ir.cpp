@@ -17,11 +17,13 @@ static void setSolverOption(std::shared_ptr<Solver> solver,
                             const std::vector<std::string>& option)
 {
   if (option.empty()) return;
-  int argc = option.size() + 1;
-  char* argv[argc + 1];
-  for (int i = 0; i < argc; ++i) {
-    char* tmp = const_cast<char*>(option[i].c_str());
-    argv[i + 1] = tmp;
+  const int argc = option.size()+1;
+  char* argv[argc];
+  argv[0] = "dummy";
+  for (int i = 1; i < argc; ++i) {
+    char* tmp = const_cast<char*>(option[i-1].c_str());
+    std::cout << i << ": " << tmp << std::endl;
+    argv[i] = tmp;
   }
   solver->setParams(argc, argv);
 }

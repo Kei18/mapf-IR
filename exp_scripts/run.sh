@@ -58,10 +58,11 @@ do
         then
             scen_file="${map_trimed}_${agent_num}agents_well-formed_${scen}.txt"
         fi
-        $PROJECT_DIR/build/app \
+        cmd="$PROJECT_DIR/build/app \
                     -i $PROJECT_DIR/instances/$scen_file \
                     -o $OUTPUT_DIR/$scen_file \
-                    -s $solver
+                    -s $solver"
+        eval $cmd
         scen=`expr $scen + 1`
     done
 done
