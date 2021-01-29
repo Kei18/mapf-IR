@@ -27,6 +27,12 @@ public:
   // last configuration
   Config last() const;
 
+  // last configuration
+  Node* last(const int i) const;
+
+  // become empty
+  void clear();
+
   // add new configuration to the last
   void add(const Config& c);
 

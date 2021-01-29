@@ -17,9 +17,6 @@ public:
   static const std::string SOLVER_NAME;
 
 private:
-  // distance table
-  std::vector<std::vector<int>> D;
-
   // PIBT agent
   struct Agent {
     int id;
@@ -49,8 +46,6 @@ private:
 
   // main
   void run();
-
-  void preprocessing();
 
 public:
   PIBT(Problem* _P);

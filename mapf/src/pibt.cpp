@@ -4,7 +4,6 @@ const std::string PIBT::SOLVER_NAME = "PIBT";
 
 PIBT::PIBT(Problem* _P)
   : Solver(_P),
-    D(P->getNum(), std::vector<int>(P->getG()->getNodesSize(), 0)),
     occupied_now(Agents(P->getG()->getNodesSize(), nullptr)),
     occupied_next(Agents(P->getG()->getNodesSize(), nullptr))
 {
@@ -13,9 +12,6 @@ PIBT::PIBT(Problem* _P)
 
 void PIBT::run()
 {
-  // create distance table
-  // preprocessing();
-
   Plan plan;  // will be solution
 
   // compare priority of agents
@@ -196,28 +192,6 @@ Node* PIBT::chooseNode(Agent* a)
     return false;
   });
   return v;
-}
-
-void PIBT::preprocessing()
-{
-  for (int i = 0; i < P->getNum(); ++i) {
-    // breadth first search
-    std::queue<Node*> OPEN;
-    Node* n = P->getGoal(i);
-    OPEN.push(n);
-
-    while (!OPEN.empty()) {
-      n = OPEN.front();
-      OPEN.pop();
-      const int d_n = D[i][n->id];
-      for (auto m : n->neighbor) {
-        const int d_m = D[i][m->id];
-        if (d_m != 0 && d_n + 1 >= d_m) continue;
-        D[i][m->id] = d_n + 1;
-        OPEN.push(m);
-      }
-    }
-  }
 }
 
 void PIBT::setParams(int argc, char* argv[])

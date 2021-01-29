@@ -21,6 +21,7 @@
 #include <vector>
 #include <whca.hpp>
 #include <revisit_pp.hpp>
+#include <push_and_swap.hpp>
 
 void printHelp();
 std::unique_ptr<Solver> getSolver
@@ -136,6 +137,8 @@ std::unique_ptr<Solver> getSolver
     solver = std::make_unique<ECBS>(P);
   } else if (solver_name == "RevisitPP") {
     solver = std::make_unique<RevisitPP>(P);
+  } else if (solver_name == "PushAndSwap") {
+    solver = std::make_unique<PushAndSwap>(P);
   } else if (solver_name == "IR") {
     solver = std::make_unique<IR>(P);
   } else if (solver_name == "IR_SINGLE_PATHS") {

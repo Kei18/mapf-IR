@@ -29,6 +29,18 @@ Config Plan::last() const
   return configs[getMakespan()];
 }
 
+Node* Plan::last(const int i) const
+{
+  if (empty()) halt("invalid operation");
+  if (i < 0 || (int)configs[0].size() <= i) halt("invalid operation");
+  return configs[getMakespan()][i];
+}
+
+void Plan::clear()
+{
+  configs.clear();
+}
+
 void Plan::add(const Config& c)
 {
   if (!configs.empty() && configs.at(0).size() != c.size()) {
