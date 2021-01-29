@@ -12,12 +12,11 @@ PushAndSwap::PushAndSwap(Problem* _P)
 
 void PushAndSwap::run()
 {
-  Plan plan;
-  plan.add(P->getConfigStart());
+  solution.add(P->getConfigStart());
 
   // occupancy
   std::vector<int> occupied_now(G->getNodesSize(), NIL);
-  for (int i = 0; i < P->getNum(); ++i) occupied_now[plan.last(i)->id] = i;
+  for (int i = 0; i < P->getNum(); ++i) occupied_now[solution.last(i)->id] = i;
 
   // pre-processing
   computeNodesWithManyNeighbors();
@@ -33,28 +32,19 @@ void PushAndSwap::run()
     const int i = ids[j];
     info(" ", "elapsed:", getSolverElapsedTime(),
          ", agent-" + std::to_string(i), "starts planning",
-         ", makespan:", plan.getMakespan(),
+         ", makespan:", solution.getMakespan(),
          ", progress:", j + 1, "/", P->getNum());
-    while (plan.last(i) != P->getGoal(i)) {
-      if (!push(plan, i, U, occupied_now)) {
-        info("   ", "swap required, timestep=", plan.getMakespan());
-        if (!swap(plan, i, U, occupied_now)) {
+    while (solution.last(i) != P->getGoal(i)) {
+      if (!push(solution, i, U, occupied_now)) {
+        info("   ", "swap required, timestep=", solution.getMakespan());
+        if (!swap(solution, i, U, occupied_now)) {
           return;  // failed
         }
       }
     }
-    U.push_back(plan.last(i));
-
-    // error check
-    for (int k = 0; k <= j; ++k) {
-      if (plan.last(ids[k]) != P->getGoal(ids[k])) {
-        halt("agent-" + std::to_string(ids[k]) + " is invalid state");
-      }
-    }
+    U.push_back(solution.last(i));
   }
-
   solved = true;
-  solution = plan;
 }
 
 bool PushAndSwap::push(Plan& plan, const int id, Nodes& U, std::vector<int>& occupied_now)
@@ -104,7 +94,7 @@ bool PushAndSwap::swap(Plan& plan, const int r, Nodes& U, std::vector<int>& occu
   while (!swap_verticies.empty() && !succcess) {
     Node* v = swap_verticies[0];
     swap_verticies.erase(swap_verticies.begin());
-    auto p = getPath(plan.last(r), v);
+    auto p = G->getPath(plan.last(r), v, false);  // no cache
     tmp_plan.clear();
     auto tmp_occupied_now = occupied_now;
     tmp_plan.add(plan.last());

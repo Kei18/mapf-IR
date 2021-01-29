@@ -148,6 +148,7 @@ void ofApp::draw()
       Pos pos2(x-BufferSize::window_x_buffer-scale/2, y-BufferSize::window_y_top_buffer-scale/2);
       for (int t = t1; t < P->makespan; ++t) {
         Pos pos3 = P->transitions[t+1][i]->pos * scale;
+        if (pos3 == pos2) continue;
         ofDrawLine(pos2.x + BufferSize::window_x_buffer + scale/2,
                    pos2.y + BufferSize::window_y_top_buffer + scale/2,
                    pos3.x + BufferSize::window_x_buffer + scale/2,

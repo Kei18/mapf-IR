@@ -6,7 +6,7 @@ A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "
 It is written in C++(17) with [CMake](https://cmake.org/) build and tested on OSX 10.15.
 The visualizer uses [openFrameworks](https://openframeworks.cc).
 
-The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], Revisit Prioritized Planning [6], PIBT-Complete, and IR.
+The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], Revisit Prioritized Planning [6], Push and Swap [7], PIBT-Complete, and IR.
 
 | platform | status |
 | ---: | :--- |
@@ -115,7 +115,7 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
    AIIDE’05 Proc. AAAI Conf. on Artificial Intelligence and Interactive Digital Entertainment
 1. Okumura, K., Machida, M., Défago, X., & Tamura, Y. (2019).
    Priority Inheritance with Backtracking for Iterative Multi-agent Path Finding.
-   Proc. Intel. Joint Conf. on Artificial Intelligence (IJCAI).
+   Proc. Intel. Joint Conf. on Artificial Intelligence (IJCAI)
 1. Sharon, G., Stern, R., Felner, A., & Sturtevant, N. R. (2015).
    Conflict-based search for optimal multi-agent pathfinding.
    Artificial Intelligence
@@ -128,3 +128,6 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 1. Čáp, M., Novák, P., Kleiner, A., & Selecký, M. (2015).
    Prioritized planning algorithms for trajectory coordination of multiple mobile robots.
    IEEE transactions on automation science and engineering
+1. Luna, R., & Bekris, K. E. (2011).
+   Push and swap: Fast cooperative path-finding with completeness guarantees.
+   Proc. Intel. Joint Conf. on Artificial Intelligence (IJCAI)

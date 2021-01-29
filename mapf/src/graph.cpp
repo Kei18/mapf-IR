@@ -18,9 +18,10 @@ Nodes Graph::getV()
   return _V;
 }
 
-Path Graph::getPath(Node* const s, Node* const g)
+Path Graph::getPath(Node* const s, Node* const g, const bool cache)
 {
   if (s == g) return {};
+  if (!cache) return getPathNoCache(s, g);
 
   // check cache
   std::string key = getPathTableKey(s, g);
@@ -38,91 +39,86 @@ Path Graph::getPath(Node* const s, Node* const g)
 
 Path Graph::getPath(Node* const s, Node* const g, Nodes prohibited, std::mt19937* MT)
 {
+  return getPathNoCache(s, g, prohibited, MT);
+}
+
+Path Graph::getPathNoCache(Node* const s, Node* const g, Nodes prohibited, std::mt19937* MT)
+{
   if (s == g) return {};
 
-  struct AstarNode {
-    Node* v;
-    int g;
-    int f;
-    AstarNode* p;  // parent
-
-    AstarNode(Node* _v, int _g, int _f, AstarNode* _p) : v(_v), g(_g), f(_f), p(_p) {}
-  };
-  using AstarNodes = std::vector<AstarNode*>;
-
-  auto compare = [&](AstarNode* a, AstarNode* b) {
-    if (a->f != b->f) return a->f > b->f;
-    if (a->g != b->g) return a->g < b->g;
+  using AstarNode = std::tuple<Node*, int, int>;  // node, g, f
+  auto compare = [&](AstarNode a, AstarNode b) {
+    // f-value
+    if (std::get<2>(a) != std::get<2>(b)) return std::get<2>(a) > std::get<2>(b);
+    // g-value
+    if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);
     return false;
   };
 
-  AstarNodes GC;  // garbage collection
-  auto createNewNode = [&GC](Node* v, int g, int f, AstarNode* p) {
-    AstarNode* new_node = new AstarNode(v, g, f, p);
-    GC.push_back(new_node);
-    return new_node;
-  };
-
   // OPEN and CLOSE list
-  std::priority_queue<AstarNode*, AstarNodes, decltype(compare)> OPEN(compare);
-  std::unordered_map<int, bool> CLOSE;
+  constexpr int NIL = -1;
+  std::priority_queue<AstarNode, std::vector<AstarNode>, decltype(compare)> OPEN(compare);
+  std::vector<int> CLOSE(V.size(), NIL);  // node id, distance
 
   // initial node
-  AstarNode* n = createNewNode(s, 0, dist(s, g), nullptr);
-  OPEN.push(n);
+  OPEN.push(std::make_tuple(s, 0, dist(s, g)));
 
   // main loop
   bool invalid = true;
   while (!OPEN.empty()) {
 
     // minimum node
-    n = OPEN.top();
+    auto n = OPEN.top();
     OPEN.pop();
 
     // check CLOSE list
-    if (CLOSE.find(n->v->id) != CLOSE.end()) continue;
-    CLOSE[n->v->id] = true;
+    Node* n_v = std::get<0>(n);
+    const int n_g = std::get<1>(n);
+    if (CLOSE[n_v->id] != NIL) continue;
+    CLOSE[n_v->id] = n_g;
 
     // check goal condition
-    if (n->v == g) {
+    if (n_v == g) {
       invalid = false;
       break;
     }
 
     // expand
-    Nodes C = n->v->neighbor;
-    C.push_back(n->v);
+    Nodes C = n_v->neighbor;
     if (MT != nullptr) std::shuffle(C.begin(), C.end(), *MT);
     for (auto u : C) {
-      int g_cost = n->g + 1;
-      AstarNode* m = createNewNode(u, g_cost, g_cost + dist(u, g), n);
+      int g_cost = n_g + 1;
       // already searched?
-      if (CLOSE.find(m->v->id) != CLOSE.end()) continue;
+      if (CLOSE[u->id] != NIL) continue;
       // check constraints
-      if (inArray(m->v, prohibited)) continue;
-      OPEN.push(m);
+      if (inArray(u, prohibited)) continue;
+      OPEN.push(std::make_tuple(u, g_cost, g_cost + dist(u, g)));
     }
   }
 
-  Path path;
-  if (!invalid) {  // success
-    while (n != nullptr) {
-      path.push_back(n->v);
-      n = n->p;
-    }
-    std::reverse(path.begin(), path.end());
-  }
+  if (invalid) return {};
 
-  // free
-  for (auto p : GC) delete p;
+  // success
+  Path path = { g };
+  auto n = g;
+  while (n != s) {
+    for (auto m : n->neighbor) {
+      if (CLOSE[m->id] == CLOSE[n->id] - 1) {
+        n = m;
+        path.push_back(n);
+        break;
+      }
+    }
+  }
+  std::reverse(path.begin(), path.end());
 
   return path;
-
 }
 
-int Graph::pathDist(Node* const s, Node* const g)
+int Graph::pathDist(Node* const s, Node* const g, const bool cache)
 {
   if (s == g) return 0;
+  if (!cache) return getPath(s, g, cache).size() - 1;
 
   // check cache
   std::string key = getPathTableKey(s, g);
@@ -158,8 +154,6 @@ void Graph::registerPath(const Path& path)
 
 /*
  * A* search using cache (already known paths) as much as possible.
- *
- * Note: I tried smart pointer but it was slow.
  */
 Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
 {
@@ -181,7 +175,8 @@ Path Graph::AstarSearchWithCache(Node* const s, Node* const g)
   std::function<void(Node*)> setClosed;
 
   // change data structure by graph size
-  bool is_small_graph = (V.size() <= 300000);
+  constexpr int huge_graph_size = 300000;
+  bool is_small_graph = (V.size() <= huge_graph_size);
 
   // for allocating memory, for small field
   const int MEMORY_SIZE = is_small_graph ? V.size() : 1;

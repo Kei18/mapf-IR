@@ -43,6 +43,14 @@ TEST(Graph, huge_field)
   ASSERT_EQ(G.pathDist(v, u), 863);
 }
 
+TEST(Graph, huge_field_no_cache)
+{
+  Grid G("ost000a.map");
+  Node* v = G.getNode(273, 721);
+  Node* u = G.getNode(84, 461);
+  ASSERT_EQ(G.pathDist(v, u, false), 863);
+}
+
 TEST(Graph, cost)
 {
   Grid G("8x8.map");
