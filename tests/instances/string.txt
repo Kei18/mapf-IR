@@ -1,0 +1,11 @@
+map_file=string.map
+agents=5
+seed=0
+random_problem=0
+max_timestep=200
+max_comp_time=3000
+0,5,2,4
+2,4,0,3
+0,3,2,2
+2,2,0,1
+0,1,0,5

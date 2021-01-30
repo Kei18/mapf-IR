@@ -1,0 +1,13 @@
+map_file=loop-chain.map
+agents=7
+seed=0
+random_problem=0
+max_timestep=1000
+max_comp_time=3000
+2,2,0,2
+2,1,0,1
+2,0,0,0
+1,0,1,0
+0,0,2,0
+0,1,2,1
+0,2,2,2

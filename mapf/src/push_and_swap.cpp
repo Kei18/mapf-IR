@@ -43,6 +43,9 @@ void PushAndSwap::run()
       }
     }
     U.push_back(solution.last(i));
+
+    // check limitation
+    if (overCompTime() || solution.getMakespan() > max_timestep) return;
   }
   solved = true;
 }
@@ -103,7 +106,6 @@ bool PushAndSwap::swap(Plan& plan, const int r, Nodes& U, std::vector<int>& occu
     }
   }
   if (!succcess) return false;
-
 
   // update occupancy
   for (int i = 0; i < P->getNum(); ++i) occupied_now[plan.last(i)->id] = NIL;
@@ -292,7 +294,7 @@ bool PushAndSwap::clear(Plan& plan, Node* v, const int r, const int s, std::vect
         obs2.push_back(v);
         obs2.push_back(last_loc_s);
         if (pushTowardEmptyNode(w, plan, occupied_now, obs2)) {
-          if (unoccupied_nodes.size() >= 2) return true;
+          if (getUnoccupiedNodes().size() >= 2) return true;
           break;
         }
       }
@@ -410,6 +412,7 @@ Node* PushAndSwap::getNearestEmptyNode(Node* v, std::vector<int>& occupied_now, 
               [&](Node* a, Node* b) { return pathDist(id, a) < pathDist(id, b); });
     for (auto w : C) OPEN.push(w->id);
   }
+
   return v_empty;
 }
 
