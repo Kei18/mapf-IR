@@ -11,6 +11,11 @@ private:
   // time required to complement plan, default zero
   double comp_time_complement;
 
+  // complement-solver
+  enum struct COMP_SOLVER_TYPE { PUSH_AND_SWAP, ICBS, ECBS };
+  COMP_SOLVER_TYPE comp_solver_type;
+  std::vector<std::string> option_comp_solver;
+
 public:
   static const std::string SOLVER_NAME;
 
@@ -21,5 +26,6 @@ public:
   ~PIBT_COMPLETE() {}
 
   void makeLog(const std::string& logfile);
+  void setParams(int argc, char* argv[]);
   static void printHelp();
 };

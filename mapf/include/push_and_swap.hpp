@@ -16,6 +16,9 @@ public:
   static const std::string SOLVER_NAME;
 
 private:
+  bool flg_compress;
+  bool disable_dist_init;
+
   const int NIL = -1;
   Nodes nodes_with_many_neighbors;
 
@@ -23,6 +26,9 @@ private:
   void run();
   bool push(Plan& plan, const int i, Nodes& U, std::vector<int>& occupied_now);
   bool swap(Plan& plan, const int i, Nodes& U, std::vector<int>& occupied_now);
+
+  // improve solution quality
+  Plan compress(const Plan& plan);
 
   // sub procedures
   bool multiPush(Plan& plan, const int r, const int s, const Path& p, std::vector<int>& occupied_now);
@@ -42,5 +48,6 @@ public:
   PushAndSwap(Problem* _P);
   ~PushAndSwap() {}
 
+  void setParams(int argc, char* argv[]);
   static void printHelp();
 };

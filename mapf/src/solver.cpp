@@ -211,6 +211,19 @@ int Solver::pathDist(const int i) const {
   return pathDist(i, P->getStart(i));
 }
 
+void Solver::setSolverOption(std::shared_ptr<Solver> solver,
+                             const std::vector<std::string>& option)
+{
+  if (option.empty()) return;
+  const int argc = option.size()+1;
+  char* argv[argc];
+  for (int i = 1; i < argc; ++i) {
+    char* tmp = const_cast<char*>(option[i-1].c_str());
+    argv[i] = tmp;
+  }
+  solver->setParams(argc, argv);
+}
+
 void Solver::printResult()
 {
   std::cout << "solved=" << solved << ", solver=" << std::right << std::setw(8)

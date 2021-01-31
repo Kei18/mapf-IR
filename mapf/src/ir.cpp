@@ -12,20 +12,6 @@ const int IR::DEFAULT_MAX_ITERATION = 100;
 const int IR::DEFAULT_TIMEOUT_REFINEMENT = 3000;
 const int IR::DEFAULT_SAMPLING_NUM = 10;
 
-// used for set underlying solver options
-static void setSolverOption(std::shared_ptr<Solver> solver,
-                            const std::vector<std::string>& option)
-{
-  if (option.empty()) return;
-  const int argc = option.size()+1;
-  char* argv[argc];
-  for (int i = 1; i < argc; ++i) {
-    char* tmp = const_cast<char*>(option[i-1].c_str());
-    argv[i] = tmp;
-  }
-  solver->setParams(argc, argv);
-}
-
 IR::IR(Problem* _P)
   : Solver(_P),
     init_solver(DEFAULT_INIT_SOLVER),

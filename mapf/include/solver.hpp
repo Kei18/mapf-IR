@@ -101,6 +101,10 @@ protected:
   void makeLogBasicInfo(std::ofstream& log);
   void makeLogSolution(std::ofstream& log);
 
+  // used for set underlying solver options
+  static void setSolverOption(std::shared_ptr<Solver> solver,
+                              const std::vector<std::string>& option);
+
 private:
   void start();
   void end();

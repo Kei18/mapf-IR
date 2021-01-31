@@ -52,8 +52,7 @@ int main(int argc, char* argv[])
   // command line args
   int opt, longindex;
   opterr = 0;  // ignore getopt error
-  while ((opt = getopt_long(argc, argv, "i:o:s:vhPT:", longopts, &longindex)) !=
-         -1) {
+  while ((opt = getopt_long(argc, argv, "i:o:s:vhPT:", longopts, &longindex)) != -1) {
     switch (opt) {
       case 'i':
         instance_file = std::string(optarg);
@@ -180,6 +179,7 @@ void printHelp()
   HCA::printHelp();
   WHCA::printHelp();
   RevisitPP::printHelp();
+  PushAndSwap::printHelp();
   CBS::printHelp();
   ECBS::printHelp();
   ICBS::printHelp();

@@ -5,7 +5,9 @@
 const std::string PushAndSwap::SOLVER_NAME = "PushAndSwap";
 
 PushAndSwap::PushAndSwap(Problem* _P)
-  : Solver(_P)
+  : Solver(_P),
+    flg_compress(true),
+    disable_dist_init(false)
 {
   solver_name = PushAndSwap::SOLVER_NAME;
 }
@@ -25,8 +27,10 @@ void PushAndSwap::run()
 
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
-  std::sort(ids.begin(), ids.end(),
-            [&](int a, int b) { return pathDist(a) > pathDist(b); });
+  if (!disable_dist_init) {
+    std::sort(ids.begin(), ids.end(),
+              [&](int a, int b) { return pathDist(a) > pathDist(b); });
+  }
 
   for (int j = 0; j < P->getNum(); ++j) {
     const int i = ids[j];
@@ -45,9 +49,27 @@ void PushAndSwap::run()
     U.push_back(solution.last(i));
 
     // check limitation
-    if (overCompTime() || solution.getMakespan() > max_timestep) return;
+    if (overCompTime()) return;
   }
-  solved = true;
+
+  if (flg_compress) {
+    info("  ---");
+    info(" ", "elapsed:", getSolverElapsedTime(),
+         ", compress solution",
+         ", soc (before):", solution.getSOC(),
+         ", makespan (before):", solution.getMakespan());
+    solution = compress(solution);
+    info(" ", "elapsed:", getSolverElapsedTime(),
+         ", finish compression",
+         ", soc (before):", solution.getSOC(),
+         ", makespan (before):", solution.getMakespan());
+  }
+
+  if (solution.getMakespan() <= max_timestep) {
+    solved = true;
+  } else {
+    warn("over max_timestep:" + std::to_string(max_timestep));
+  }
 }
 
 bool PushAndSwap::push(Plan& plan, const int id, Nodes& U, std::vector<int>& occupied_now)
@@ -425,9 +447,95 @@ void PushAndSwap::computeNodesWithManyNeighbors()
     if (v->getDegree() >= 3) nodes_with_many_neighbors.push_back(v);
 }
 
+/*
+ * compress solution while preserving temporal dependencies of the original plan
+ *
+ * c.f. MCPs
+ * 1. Ma, H., Kumar, T. K., & Koenig, S. (2017).
+ * Multi-agent path finding with delay probabilities.
+ * Proc. AAAI Conf. on Artificial Intelligence
+ */
+Plan PushAndSwap::compress(const Plan& plan)
+{
+  // create table
+  std::vector<std::queue<int>> temp_orders(G->getNodesSize());
+  const int makespan = plan.getMakespan();
+  for (int t = 0; t <= makespan; ++t) {
+    for (int i = 0; i < P->getNum(); ++i) {
+      auto v = plan.get(t, i);
+      if (temp_orders[v->id].empty() || v != plan.get(t-1, i))
+        temp_orders[v->id].push(i);
+    }
+  }
+  Plan new_plan;
+  new_plan.add(plan.get(0));
+  std::vector<int> internal_clocks(P->getNum(), 0);
+
+  while (!sameConfig(new_plan.last(), P->getConfigGoal())) {
+    Config config;
+    for (int i = 0; i < P->getNum(); ++i) {
+      int t = internal_clocks[i];
+      // already reach its goal
+      if (t == makespan) {
+        config.push_back(new_plan.last(i));
+        continue;
+      }
+      Node* v_current = plan.get(t, i);
+      // update internal clocks
+      while (t < makespan && v_current == plan.get(t+1, i)) ++t;
+      internal_clocks[i] = t;
+      // already reach its goal
+      if (t == makespan) {
+        config.push_back(new_plan.last(i));
+        continue;
+      }
+
+      Node* v_next = plan.get(t+1, i);
+      if (temp_orders[v_next->id].front() == i) {  // move to v_next
+        config.push_back(v_next);
+        temp_orders[v_current->id].pop();
+        internal_clocks[i] = t+1;  // update internal clocks
+      } else {  // stay
+        config.push_back(new_plan.last(i));
+      }
+    }
+    new_plan.add(config);
+  }
+  return new_plan;
+}
+
+void PushAndSwap::setParams(int argc, char* argv[])
+{
+  struct option longopts[] = {
+    {"no-compress", no_argument, 0, 'c'},
+    {"disable-dist-init", no_argument, 0, 'd'},
+    {0, 0, 0, 0},
+  };
+  optind = 1;  // reset
+  int opt, longindex;
+  while ((opt = getopt_long(argc, argv, "cd", longopts, &longindex)) != -1) {
+    switch (opt) {
+    case 'c':
+      flg_compress = false;
+      break;
+    case 'd':
+      disable_dist_init = true;
+      break;
+    default:
+      break;
+    }
+  }
+}
+
 void PushAndSwap::printHelp()
 {
   std::cout << PushAndSwap::SOLVER_NAME << "\n"
-            << "  (no option)"
+            << "  -c --no-compress"
+            << "              "
+            << "no compressing solution\n"
+            << "  -d --disable-dist-init"
+            << "        "
+            << "disable initialization of priorities "
+            << "using distance from starts to goals"
             << std::endl;
 }
