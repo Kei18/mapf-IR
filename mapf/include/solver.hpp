@@ -5,6 +5,7 @@
 #include <functional>
 #include <queue>
 #include <unordered_map>
+#include <memory>
 
 #include "default_params.hpp"
 #include "graph.hpp"
