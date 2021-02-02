@@ -19,7 +19,7 @@ public:
 private:
   int window;
 
-  static const int NIL = -1;
+  static constexpr int NIL = -1;
   std::vector<int> occupied_t;  // node-id -> timestep
   std::vector<int> occupied_a;  // node-id -> agent
 
