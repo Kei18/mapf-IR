@@ -244,6 +244,7 @@ void IR::updateBySinglePaths(const int i, Plan& plan, IR* solver)
 
 void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
 {
+  auto t_s = Time::now();
   const auto P = solver->getP();
   Node* g = P->getGoal(i);
   const int cost = plan.getPathCost(i);
