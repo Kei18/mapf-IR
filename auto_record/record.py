@@ -9,6 +9,7 @@ optimal_solvers = [
 
 suboptimal_solvers = [
     'PIBT',
+    'winPIBT',
     'PushAndSwap',
     'HCA',
     'WHCA',
