@@ -15,6 +15,7 @@
 #include <ir_hybrid.hpp>
 #include <pibt.hpp>
 #include <pibt_complete.hpp>
+#include <winpibt.hpp>
 #include <problem.hpp>
 #include <random>
 #include <util.hpp>
@@ -122,6 +123,8 @@ std::unique_ptr<Solver> getSolver
   std::unique_ptr<Solver> solver;
   if (solver_name == "PIBT") {
     solver = std::make_unique<PIBT>(P);
+  } else if (solver_name == "winPIBT") {
+    solver = std::make_unique<winPIBT>(P);
   } else if (solver_name == "HCA") {
     solver = std::make_unique<HCA>(P);
   } else if (solver_name == "WHCA") {
@@ -176,6 +179,7 @@ void printHelp()
             << "\n\nSolver Options:" << std::endl;
   // each solver
   PIBT::printHelp();
+  winPIBT::printHelp();
   HCA::printHelp();
   WHCA::printHelp();
   RevisitPP::printHelp();
