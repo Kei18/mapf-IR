@@ -111,8 +111,8 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 
 ## Reference
 1. Silver, D. (2005).
-   Cooperative pathfinding.
-   AIIDE’05 Proc. AAAI Conf. on Artificial Intelligence and Interactive Digital Entertainment
+    Cooperative pathfinding.
+    Proc. AAAI Conf. on Artificial Intelligence and Interactive Digital Entertainment (AIIDE-05)
 1. Okumura, K., Machida, M., Défago, X., & Tamura, Y. (2019).
    Priority Inheritance with Backtracking for Iterative Multi-agent Path Finding.
    Proc. Intel. Joint Conf. on Artificial Intelligence (IJCAI)
@@ -127,10 +127,10 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
    Annual Symposium on Combinatorial Search (SoCS)
 1. Čáp, M., Novák, P., Kleiner, A., & Selecký, M. (2015).
    Prioritized planning algorithms for trajectory coordination of multiple mobile robots.
-   IEEE transactions on automation science and engineering
+   IEEE Trans. on automation science and engineering
 1. Luna, R., & Bekris, K. E. (2011).
    Push and swap: Fast cooperative path-finding with completeness guarantees.
    Proc. Intel. Joint Conf. on Artificial Intelligence (IJCAI)
 1. Okumura, K., Tamura, Y. & Défago, X. (2020).
-   winPIBT: Extended Prioritized Algorithm for Iterative Multi-agent Path Finding
+   winPIBT: Extended Prioritized Algorithm for Iterative Multi-agent Path Finding.
    IJCAI Workshop on Multi-Agent Path Finidng (WoMAPF)

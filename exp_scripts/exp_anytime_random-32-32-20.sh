@@ -15,7 +15,7 @@ solver="IR_HYBRID"
 
 refine_limit=100
 refine_cnt=10000000
-comp_time_limit=1000
+comp_time_limit=30000
 
 
 bash `dirname $0`/run.sh \

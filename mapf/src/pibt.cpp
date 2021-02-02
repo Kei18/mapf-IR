@@ -4,16 +4,14 @@ const std::string PIBT::SOLVER_NAME = "PIBT";
 
 PIBT::PIBT(Problem* _P)
   : Solver(_P),
-    occupied_now(Agents(P->getG()->getNodesSize(), nullptr)),
-    occupied_next(Agents(P->getG()->getNodesSize(), nullptr))
+    occupied_now(Agents(G->getNodesSize(), nullptr)),
+    occupied_next(Agents(G->getNodesSize(), nullptr))
 {
   solver_name = PIBT::SOLVER_NAME;
 }
 
 void PIBT::run()
 {
-  Plan plan;  // will be solution
-
   // compare priority of agents
   auto compare = [](Agent* a, const Agent* b) {
     if (a->elapsed != b->elapsed) return a->elapsed < b->elapsed;
@@ -43,7 +41,7 @@ void PIBT::run()
     undecided.push(a);
     occupied_now[s->id] = a;
   }
-  plan.add(P->getConfigStart());
+  solution.add(P->getConfigStart());
 
   // main loop
   int timestep = 0;
@@ -88,7 +86,7 @@ void PIBT::run()
     decided.clear();
 
     // update plan
-    plan.add(config);
+    solution.add(config);
 
     ++timestep;
 
@@ -109,8 +107,6 @@ void PIBT::run()
     delete undecided.top();
     undecided.pop();
   }
-
-  solution = plan;
 }
 
 bool PIBT::funcPIBT(Agent* ai)

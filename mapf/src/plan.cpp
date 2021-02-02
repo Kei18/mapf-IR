@@ -144,7 +144,8 @@ bool Plan::validate(const Config& starts, const Config& goals) const
         Node* v_j_t = get(t, j);
         Node* v_j_t_1 = get(t - 1, j);
         if (v_i_t == v_j_t) {
-          warn("validation, vertex conflict");
+          warn("validation, vertex conflict at v=" + std::to_string(v_i_t->id)
+               + ", t=" + std::to_string(t));
           return false;
         }
         if (v_i_t == v_j_t_1 && v_i_t_1 == v_j_t) {

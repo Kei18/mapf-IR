@@ -84,26 +84,35 @@ Path Solver::getPrioritizedPath
     return n->v == g && n->g > max_constraint_time;
   };
 
-  Nodes config_s = P->getConfigStart();
-  Nodes config_g = P->getConfigGoal();
-
   const int makespan = paths.getMakespan();
   const int num_agents = paths.size();
 
+  // update PATH_TABLE
+  {
+    const int nodes_size = G->getNodesSize();
+    // extend PATH_TABLE
+    while (PATH_TABLE.size() < makespan + 1)
+      PATH_TABLE.push_back(std::vector<int>(nodes_size, NIL));
+    // update locations
+    for (int i = 0; i < num_agents; ++i) {
+      if (i == id || paths.empty(i)) continue;
+      auto p = paths.get(i);
+      for (int t = 0; t <= makespan; ++t) PATH_TABLE[t][p[t]->id] = i;
+    }
+  }
+
+  // fast collision checking
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
     if (upper_bound != -1 && m->g > upper_bound) return true;
 
-    for (int i = 0; i < num_agents; ++i) {
-      if (i == id || paths.empty(i)) continue;
-      // last node
-      if (m->g > makespan) {
-        if (paths.get(i, makespan) == m->v) return true;
-        continue;
-      }
+    if (m->g > makespan) {
+      if (PATH_TABLE[makespan][m->v->id] != NIL) return true;
+    } else {
       // vertex conflict
-      if (paths.get(i, m->g) == m->v) return true;
+      if (PATH_TABLE[m->g][m->v->id] != NIL) return true;
       // swap conflict
-      if (paths.get(i, m->g) == m->p->v && paths.get(i, m->g-1) == m->v) return true;
+      if (PATH_TABLE[m->g][m->p->v->id] != NIL &&
+          PATH_TABLE[m->g-1][m->v->id] == PATH_TABLE[m->g][m->p->v->id]) return true;
     }
 
     // check additional constraints
@@ -111,12 +120,22 @@ Path Solver::getPrioritizedPath
       const int t = std::get<1>(c);
       if (m->v == std::get<0>(c) && (t == -1 || t == m->g)) return true;
     }
-
     return false;
   };
 
-  return getPathBySpaceTimeAstar
+  auto p = getPathBySpaceTimeAstar
     (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, time_limit);
+
+  // clear used path table
+  {
+    for (int i = 0; i < num_agents; ++i) {
+      if (paths.empty(i)) continue;
+      auto p = paths.get(i);
+      for (int t = 0; t <= makespan; ++t) PATH_TABLE[t][p[t]->id] = NIL;
+    }
+  }
+
+  return p;
 }
 
 Path Solver::getPrioritizedPath
