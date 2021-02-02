@@ -6,7 +6,7 @@ A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "
 It is written in C++(17) with [CMake](https://cmake.org/) build and tested on OSX 10.15.
 The visualizer uses [openFrameworks](https://openframeworks.cc).
 
-The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], Revisit Prioritized Planning [6], Push and Swap [7], PIBT-Complete, and IR.
+The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], Revisit Prioritized Planning [6], Push and Swap [7], winPIBT [8], PIBT-Complete, and IR.
 
 | platform | status |
 | ---: | :--- |
@@ -131,3 +131,6 @@ This software is released under the MIT License, see [LICENSE.txt](LICENCE.txt).
 1. Luna, R., & Bekris, K. E. (2011).
    Push and swap: Fast cooperative path-finding with completeness guarantees.
    Proc. Intel. Joint Conf. on Artificial Intelligence (IJCAI)
+1. Okumura, K., Tamura, Y. & Défago, X. (2020).
+   winPIBT: Extended Prioritized Algorithm for Iterative Multi-agent Path Finding
+   IJCAI Workshop on Multi-Agent Path Finidng (WoMAPF)

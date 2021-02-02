@@ -4,22 +4,18 @@ const std::string winPIBT::SOLVER_NAME = "winPIBT";
 
 winPIBT::winPIBT(Problem* _P)
   : Solver(_P),
+    window(5),
     occupied_t(G->getNodesSize(), NIL),
     occupied_a(G->getNodesSize(), NIL)
 {
-  solver_name = winPIBT::SOLVER_NAME;
+  solver_name = winPIBT::SOLVER_NAME + "-" + std::to_string(window);
 }
 
 void winPIBT::run()
 {
-
-  // near agent is prioritized
+  // prepare
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
-  std::sort(ids.begin(), ids.end(),
-            [&](int a, int b) { return pathDist(a) < pathDist(b); });
-
-  // prepare
   std::vector<Path> paths;
   for (int i = 0; i < P->getNum(); ++i) {
     Node* s = P->getStart(i);
@@ -28,34 +24,51 @@ void winPIBT::run()
     occupied_a[s->id] = i;
   }
 
+  // the maximum length of paths
   int max_len = 0;
 
   // start planning
   while (true) {
     if (overCompTime() || max_len > max_timestep) return;
 
+    // far agent is prioritized
+    std::sort(ids.begin(), ids.end(),
+              [&](int a, int b)
+              { return pathDist(a, *(paths[a].end()-1)) > pathDist(b, *(paths[b].end()-1)); });
+
     for (int j = 0; j < P->getNum(); ++j) {
       const int i = ids[j];
-      const int buf = paths[i].size() - 1;
-      info(" ", "elapsed:", getSolverElapsedTime(),
-           ", agent-" + std::to_string(i), "starts planning at t=", buf,
-           ", progress:", j + 1, "/", P->getNum());
       // trivial case
       if (*(paths[i].end()-1) == P->getGoal(i)) continue;
-      Path path = getSinglePath(i, paths);
 
+      const int buf = paths[i].size() - 1;
+      info(" ", "elapsed:", getSolverElapsedTime(),
+           ", agent-" + std::to_string(i), "starts planning at t=", buf);
+
+      // get single path
+      Path path = getSinglePath(i, paths);
+      if (path.empty()) {
+        info(" ", "failed to find path");
+        return;  // failed
+      }
+
+      // reserve paths sequentially
       int t = buf + 1;
       while (t-buf < path.size()) {
         Node* v_now  = path[t-buf-1];
         Node* v_next = path[t-buf];
         // occupied by someone -> priority inheritance
         if (occupied_a[v_next->id] != NIL) {
+
+          // retroactive priority inheritance
           while (occupied_a[v_next->id] != NIL && occupied_t[v_next->id] < t-1) {
             auto k = occupied_a[v_next->id];
             info("   ", "retroactive priority inheritance from", i, "->", k,
                  "at v=", v_next->id, ", t=", occupied_t[v_next->id]+1);
             funcPIBT(k, paths, v_next);
           }
+
+          // priority inheritance with backtracking
           auto k = occupied_a[v_next->id];
           if (k != i && k != NIL) {
             info("   ", "priority inheritance with backtracking from", i, "->", k,
@@ -64,10 +77,15 @@ void winPIBT::run()
               info("  ", "failed, replanning");
               // replanning
               auto p = getSinglePath(i, paths);
+              if (p.empty()) {
+                info("  ", "failed to replan the path");
+                return;
+              }
               // update current path
               path.resize(t-buf);
               for (auto v : p) path.push_back(v);
-              if (overCompTime() || max_len > max_timestep) return;
+              // check condition
+              if (overCompTime() || path.size()-1 + buf > max_timestep) return;
               continue;
             }
           }
@@ -75,10 +93,13 @@ void winPIBT::run()
 
         // secure next step
         updateLoc(i, t, v_now, v_next, paths);
+        // check window size
+        if (window != -1 && t-buf >= window) break;
         ++t;
       }
     }
 
+    // check goal condition
     bool check_goal_cond = true;
     for (int i = 0; i < P->getNum(); ++i) {
       int path_size = paths[i].size();
@@ -122,6 +143,7 @@ bool winPIBT::funcPIBT(const int id, std::vector<Path>& paths, Node* v_other_to,
            "at v=", v->id, ", t=", occupied_t[v->id]);
       funcPIBT(k, paths, v);
     }
+    // priority inheritance with backtracking
     auto k = occupied_a[v->id];
     if (k != id && k != NIL) {
       info("     ", "[one-step] priority inheritance with backtracking from", id, "->", k,
@@ -184,8 +206,8 @@ Path winPIBT::getSinglePath(const int id, std::vector<Path>& paths)
   auto g = P->getGoal(id);
   auto s = *(paths[id].end()-1);
   const int buf = paths[id].size() - 1;
-  AstarHeuristics fValue = [&](AstarNode* n) { return n->g + buf + pathDist(id, n->v); };
-  CheckAstarFin checkAstarFin = [&](AstarNode* n) { return n->v == g; };
+  AstarHeuristics fValue = [&](AstarNode* n) { return n->g + pathDist(id, n->v); };
+  CheckAstarFin checkAstarFin = [&](AstarNode* n) { return n->v == g || n->g >= window; };
 
   Nodes config_g = P->getConfigGoal();
   CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
@@ -194,23 +216,14 @@ Path winPIBT::getSinglePath(const int id, std::vector<Path>& paths)
     // tie-break, avoid goal locations of others
     if (a->v != g && inArray(a->v, config_g)) return true;
     if (b->v != g && inArray(b->v, config_g)) return false;
-    // occupancy, not used yet
-    // if (occupied_t[a->v->id] == NIL) return false;
-    // if (occupied_t[b->v->id] == NIL) return true;
     // usual g-value
     if (a->g != b->g) return a->g < b->g;
     return false;
   };
 
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
-    const int t = m->g + buf;
     // future and vertex conflict
-    if (occupied_t[m->v->id] >= t) return true;
-    // check swap conflict
-    for (int i = 0; i < P->getNum(); ++i) {
-      if (paths[i].size()-1 < t) continue;
-      if (paths[i][t] == m->p->v && paths[i][t-1] == m->v) return true;
-    }
+    if (occupied_t[m->v->id] >= m->g + buf) return true;
     return false;
   };
   return getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
@@ -219,11 +232,29 @@ Path winPIBT::getSinglePath(const int id, std::vector<Path>& paths)
 
 void winPIBT::setParams(int argc, char* argv[])
 {
+  struct option longopts[] = {
+    {"window", required_argument, 0, 'w'},
+    {0, 0, 0, 0},
+  };
+  optind = 1;  // reset
+  int opt, longindex;
+  while ((opt = getopt_long(argc, argv, "w:", longopts, &longindex)) != -1) {
+    switch (opt) {
+    case 'w':
+      window = std::atoi(optarg);
+      if (window <= 0 && window != -1) halt("invalid window size.");
+      solver_name = SOLVER_NAME + "-" + std::to_string(window);
+      break;
+    default:
+      break;
+    }
+  }
 }
 
 void winPIBT::printHelp()
 {
   std::cout << winPIBT::SOLVER_NAME << "\n"
-            << "  (no option)"
+            << "  -w --window [INT]             "
+            << "window size, default: 5, no window: -1"
             << std::endl;
 }

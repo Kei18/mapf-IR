@@ -1,5 +1,6 @@
 /*
  * Implementation of Windowed Priority Inheritance with Backtracking (winPIBT)
+ * (with a lot of minor changes)
  *
  * - ref
  * Okumura, K., Tamura, Y. & Défago, X. (2020).
@@ -16,6 +17,8 @@ public:
   static const std::string SOLVER_NAME;
 
 private:
+  int window;
+
   static const int NIL = -1;
   std::vector<int> occupied_t;  // node-id -> timestep
   std::vector<int> occupied_a;  // node-id -> agent
