@@ -9,7 +9,7 @@
 #include <iostream>
 
 // for computation time
-using Time = std::chrono::system_clock;
+using Time = std::chrono::steady_clock;
 
 [[maybe_unused]]
 static void halt(const std::string& msg)
@@ -64,8 +64,7 @@ static T randomChoose(std::vector<T>& arr, std::mt19937* MT)
 
 // get elapsed time
 [[maybe_unused]]
-static double getElapsedTime(
-    const std::chrono::system_clock::time_point& t_start)
+static double getElapsedTime(const Time::time_point& t_start)
 {
   Time::time_point t_end = Time::now();
   return std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start)

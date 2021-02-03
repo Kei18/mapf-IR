@@ -152,7 +152,7 @@ Path Solver::getPrioritizedPath
 void Solver::start()
 {
   info("  start solving MAPF by", solver_name);
-  t_start = std::chrono::system_clock::now();
+  t_start = Time::now();
 }
 
 // failed & solution is empty -> add solution the initial configuration
