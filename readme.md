@@ -29,7 +29,7 @@ The gif shows a part of an MAPF plan.
 
 ```
 git clone --recursive https://github.com/Kei18/mapf-IR
-cd mapf
+cd mapf-IR
 mkdir build
 cd build
 cmake ..
