@@ -3,7 +3,9 @@
 const std::string WHCA::SOLVER_NAME = "WHCA";
 const int WHCA::DEFAULT_WINDOW = 10;
 
-WHCA::WHCA(Problem* _P) : Solver(_P)
+WHCA::WHCA(Problem* _P)
+  : Solver(_P),
+    table_goals(G->getNodesSize(), false)
 {
   window = DEFAULT_WINDOW;
   solver_name = SOLVER_NAME + "-" + std::to_string(window);
@@ -13,7 +15,10 @@ void WHCA::run()
 {
   // initialize
   Paths paths(P->getNum());
-  for (int i = 0; i < P->getNum(); ++i) paths.insert(i, {P->getStart(i)});
+  for (int i = 0; i < P->getNum(); ++i) {
+    paths.insert(i, {P->getStart(i)});
+    table_goals[P->getGoal(i)->id] = true;
+  }
 
   // initial prioritization, far agent is prioritized
   std::vector<int> ids(P->getNum());
@@ -39,6 +44,7 @@ void WHCA::run()
       Path path = getPrioritizedPartialPath(i, s, g, partial_paths);
       if (path.empty()) {  // failed
         invalid = true;
+        info("  ", "failed to find a path");
         break;
       }
       partial_paths.insert(i, path);
@@ -64,16 +70,15 @@ void WHCA::run()
 
 Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& paths)
 {
+  const int makespan = paths.getMakespan();
+
   // pre processing
-  Nodes config_g;
   int max_constraint_time = 0;
   for (int i = 0; i < P->getNum(); ++i) {
-    config_g.push_back(P->getGoal(i));
     Path p = paths.get(i);
-    if (p.empty()) continue;
-    const int p_size = p.size();
-    for (int t = 0; t < p_size; ++t) {
-      if (p[t] == g) {
+    if (p.empty() || i == id) continue;
+    for (int t = 0; t <= makespan; ++t) {
+      if (paths.get(i, t) == g) {
         max_constraint_time = std::max(t, max_constraint_time);
       }
     }
@@ -85,31 +90,34 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
 
   CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
     if (a->f != b->f) return a->f > b->f;
-    // avoid goal locations of others
-    if (a->v != g && inArray(a->v, config_g)) return true;
-    if (b->v != g && inArray(b->v, config_g)) return false;
+    // tie-break, avoid goal locations of others
+    if (a->v != g && table_goals[a->v->id]) return true;
+    if (b->v != g && table_goals[b->v->id]) return false;
     if (a->g != b->g) return a->g < b->g;
     return false;
   };
 
   // different from HCA*
   CheckAstarFin checkAstarFin = [&](AstarNode* n) {
-    return n->g > max_constraint_time && (n->v == g || n->g >= window);
+    // return n->g > max_constraint_time && (n->v == g || n->g >= window);
+    return (n->v == g && n->g > max_constraint_time) || n->g >= window;
   };
 
+  // update PATH_TABLE
+  updatePathTable(paths, id);
+
+  // fast collision checking
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
-    for (int i = 0; i < P->getNum(); ++i) {
-      Path p = paths.get(i);
-      if (p.empty()) continue;
-      // last node
-      if (m->g >= (int)p.size()) {
-        if (*(p.end() - 1) == m->v) return true;
-        continue;
-      }
+    if (m->g > window) return true;
+    // last node
+    if (m->g > makespan) {
+      if (PATH_TABLE[makespan][m->v->id] != Solver::NIL) return true;
+    } else {
       // vertex conflict
-      if (p[m->g] == m->v) return true;
+      if (PATH_TABLE[m->g][m->v->id] != Solver::NIL) return true;
       // swap conflict
-      if (p[m->g] == m->p->v && p[m->g - 1] == m->v) return true;
+      if (PATH_TABLE[m->g][m->p->v->id] != Solver::NIL &&
+          PATH_TABLE[m->g-1][m->v->id] == PATH_TABLE[m->g][m->p->v->id]) return true;
     }
     return false;
   };
@@ -118,6 +126,10 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
   const int path_size = path.size();
   // format
   if (!path.empty() && path_size - 1 > window) path.resize(window + 1);
+
+  // clear used path table
+  clearPathTable(paths);
+
   return path;
 }
 

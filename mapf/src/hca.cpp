@@ -2,11 +2,23 @@
 
 const std::string HCA::SOLVER_NAME = "HCA";
 
-HCA::HCA(Problem* _P) : Solver(_P) { solver_name = HCA::SOLVER_NAME; }
+HCA::HCA(Problem* _P)
+  : Solver(_P),
+    table_starts(G->getNodesSize(), false),
+    table_goals(G->getNodesSize(), false)
+{
+  solver_name = HCA::SOLVER_NAME;
+}
 
 void HCA::run()
 {
   Paths paths(P->getNum());
+
+  // create tables for tie-break
+  for (int i = 0; i < P->getNum(); ++i) {
+    table_starts[P->getStart(i)->id] = true;
+    table_goals[P->getGoal(i)->id] = true;
+  }
 
   // prioritization, far agent is prioritized
   std::vector<int> ids(P->getNum());
@@ -64,11 +76,11 @@ Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
   CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
     if (a->f != b->f) return a->f > b->f;
     // tie-break, avoid goal locations of others
-    if (a->v != g && inArray(a->v, config_g)) return true;
-    if (b->v != g && inArray(b->v, config_g)) return false;
+    if (a->v != g && table_goals[a->v->id]) return true;
+    if (b->v != g && table_goals[b->v->id]) return false;
     // tie-break, avoid start locations
-    if (a->v != s && inArray(a->v, config_s)) return true;
-    if (b->v != s && inArray(b->v, config_s)) return false;
+    if (a->v != s && table_starts[a->v->id]) return true;
+    if (b->v != s && table_starts[b->v->id]) return false;
     if (a->g != b->g) return a->g < b->g;
     return false;
   };

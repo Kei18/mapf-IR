@@ -28,6 +28,9 @@ private:
 
   void run();
 
+  // used for tie-break
+  std::vector<bool> table_goals;
+
 public:
   WHCA(Problem* _P);
   ~WHCA(){};

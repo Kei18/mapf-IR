@@ -88,18 +88,7 @@ Path Solver::getPrioritizedPath
   const int num_agents = paths.size();
 
   // update PATH_TABLE
-  {
-    const int nodes_size = G->getNodesSize();
-    // extend PATH_TABLE
-    while (PATH_TABLE.size() < makespan + 1)
-      PATH_TABLE.push_back(std::vector<int>(nodes_size, NIL));
-    // update locations
-    for (int i = 0; i < num_agents; ++i) {
-      if (i == id || paths.empty(i)) continue;
-      auto p = paths.get(i);
-      for (int t = 0; t <= makespan; ++t) PATH_TABLE[t][p[t]->id] = i;
-    }
-  }
+  updatePathTable(paths, id);
 
   // fast collision checking
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
@@ -127,15 +116,36 @@ Path Solver::getPrioritizedPath
     (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, time_limit);
 
   // clear used path table
-  {
-    for (int i = 0; i < num_agents; ++i) {
-      if (paths.empty(i)) continue;
-      auto p = paths.get(i);
-      for (int t = 0; t <= makespan; ++t) PATH_TABLE[t][p[t]->id] = NIL;
-    }
-  }
+  clearPathTable(paths);
 
   return p;
+}
+
+void Solver::updatePathTable(const Paths& paths, const int id)
+{
+  const int makespan = paths.getMakespan();
+  const int num_agents = paths.size();
+  const int nodes_size = G->getNodesSize();
+  // extend PATH_TABLE
+  while (PATH_TABLE.size() < makespan + 1)
+    PATH_TABLE.push_back(std::vector<int>(nodes_size, NIL));
+  // update locations
+  for (int i = 0; i < num_agents; ++i) {
+    if (i == id || paths.empty(i)) continue;
+    auto p = paths.get(i);
+    for (int t = 0; t <= makespan; ++t) PATH_TABLE[t][p[t]->id] = i;
+  }
+}
+
+void Solver::clearPathTable(const Paths& paths)
+{
+  const int makespan = paths.getMakespan();
+  const int num_agents = paths.size();
+  for (int i = 0; i < num_agents; ++i) {
+    if (paths.empty(i)) continue;
+    auto p = paths.get(i);
+    for (int t = 0; t <= makespan; ++t) PATH_TABLE[t][p[t]->id] = NIL;
+  }
 }
 
 Path Solver::getPrioritizedPath

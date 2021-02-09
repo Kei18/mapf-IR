@@ -78,8 +78,11 @@ public:
    const int upper_bound=-1,
    const std::vector<std::tuple<Node*, int>>& constraints={},
    CompareAstarNode& compare=compareAstarNodeBasic);
+
   // for prioritized planning
-private:
+protected:
+  void updatePathTable(const Paths& paths, const int id);
+  void clearPathTable(const Paths& paths);
   static constexpr int NIL = -1;
   std::vector<std::vector<int>> PATH_TABLE;
 

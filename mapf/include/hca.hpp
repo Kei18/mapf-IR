@@ -34,6 +34,10 @@ private:
 
   void run();
 
+  // used for tie-break
+  std::vector<bool> table_starts;
+  std::vector<bool> table_goals;
+
 public:
   HCA(Problem* _P);
   ~HCA(){};
