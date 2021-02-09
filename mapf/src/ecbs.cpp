@@ -238,30 +238,28 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
     };
   }
 
-  // f-value for focal list
-  const int makespan = h_node->paths.getMakespan();
-  const int num_agents = P->getNum();
+  const auto paths = h_node->paths;
+  const int makespan = paths.getMakespan();
+
+  // update PATH_TABLE
+  updatePathTable(paths, id);
   FocalHeuristics f2Value = [&](FocalNode* n) {
     if (n->g == 0) return 0;
-    int cnt = n->p->f2;
-    for (int i = 0; i < num_agents; ++i) {
-      if (i == id) continue;
-      // last node
-      if (n->g > makespan) {
-        if (h_node->paths.get(i, makespan) == n->v) {
-          ++cnt;
-        }
-      } else {
-        // vertex conflict
-        if (h_node->paths.get(i, n->g) == n->v) {
-          ++cnt;
-          // swap conflict
-        } else if (h_node->paths.get(i, n->g-1) == n->v && h_node->paths.get(i, n->g) == n->p->v) {
-          ++cnt;
-        }
+    // last node
+    if (n->g > makespan) {
+      if (PATH_TABLE[makespan][n->v->id] != Solver::NIL) return n->p->f2 + 1;
+    } else {
+      // vertex conflict
+      if (PATH_TABLE[n->g][n->v->id] != Solver::NIL) {
+        return n->p->f2 + 1;
+
+        // swap conflict
+      } else if (PATH_TABLE[n->g][n->p->v->id] != Solver::NIL &&
+                 PATH_TABLE[n->g-1][n->v->id] == PATH_TABLE[n->g][n->p->v->id]) {
+        return n->p->f2 + 1;
       }
     }
-    return cnt;
+    return n->p->f2;
   };
 
   CompareFocalNode compareOPEN = [&](FocalNode* a, FocalNode* b) {
@@ -290,9 +288,13 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
     return false;
   };
 
-  return getTimedPathByFocalSearch(s, g, sub_optimality, f1Value, f2Value,
-                                   compareOPEN, compareFOCAL, checkFocalFin,
-                                   checkInvalidFocalNode);
+  auto p = getTimedPathByFocalSearch(s, g, sub_optimality, f1Value, f2Value,
+                                     compareOPEN, compareFOCAL, checkFocalFin,
+                                     checkInvalidFocalNode);
+  // clear used path table
+  clearPathTable(paths);
+
+  return p;
 }
 
 // return path and f_min
