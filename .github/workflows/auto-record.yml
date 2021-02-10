@@ -12,7 +12,7 @@ on:
 
 jobs:
   auto-record:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: setup-python
@@ -52,6 +52,7 @@ jobs:
           ls -all
           mv auto_record/readme.md readme.md
           cp readme.md records/$(date "+%Y-%m-%d-%H-%M-%S").md
-          git add readme.md records/
+          python create_fig.py
+          git add readme.md records/ fig/
           git commit -m "auto record"
           git push origin auto_record
