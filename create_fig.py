@@ -1,7 +1,6 @@
 import os
 import re
 import glob
-import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 
@@ -36,6 +35,11 @@ def read_data(filename):
                 results.append((mode, solver_name, comp_time))
     return (date, results)
 
+def argsort(arr):
+    arr2 = list(range(len(arr)))
+    arr2.sort(key=lambda x:arr[x])
+    return arr2
+
 if __name__ == '__main__':
     # read data
     all_data = []
@@ -57,7 +61,7 @@ if __name__ == '__main__':
         solvers = list(formatted_data[s].keys())
         for solver in solvers:
             arr = formatted_data[s][solver][0]
-            index = np.argsort(arr)
+            index = argsort(arr)
             y_raw_data = [formatted_data[s][solver][1][i] for i in index]
             x_raw_data = [formatted_data[s][solver][0][i] for i in index]
             y_data = [ y_raw_data[0]/1000 ]
