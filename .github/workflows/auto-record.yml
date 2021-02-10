@@ -9,6 +9,7 @@ on:
       - 'tests/**'
       - 'app.cpp'
       - 'auto_record/**'
+      - '.github/workflows/auto-record.yml'
 
 jobs:
   auto-record:
