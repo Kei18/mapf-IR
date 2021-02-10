@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: 3.8
 
+      - name: install-dependencies
+        run: pip install matplotlib
+
       - uses: actions/checkout@v2
         with:
           submodules: false
