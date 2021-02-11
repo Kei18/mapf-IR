@@ -169,35 +169,32 @@ Node* winPIBT::chooseNode(const int id, std::vector<Path>& paths, Node* v_other_
 {
   const int t = paths[id].size()-1;
   Node* v_now = paths[id][t];
-  Nodes C;
-  Nodes C_pre = v_now->neighbor;
-  C_pre.push_back(v_now);
-  for (auto v : C_pre) {
-    // avoid future or vertex conflict
-    if (occupied_t[v->id] >= t) continue;
-    // avoid swap conflict
-    if (v == v_other_from && v_now == v_other_to) continue;
-    C.push_back(v);
-  }
-
-  // correspond to stuck
-  if (C.empty()) return nullptr;
+  Nodes C = v_now->neighbor;
+  C.push_back(v_now);
 
   // randomize
   std::shuffle(C.begin(), C.end(), *MT);
 
-  // pickup one node
-  Node* v = *std::min_element(C.begin(), C.end(), [&](Node* v, Node* u) {
-    // path distance
-    int c_v = pathDist(id, v);
-    int c_u = pathDist(id, u);
-    if (c_v != c_u) return c_v < c_u;
-    // occupancy
-    int o_v = (int)(occupied_a[v->id] != NIL);
-    int o_u = (int)(occupied_a[u->id] != NIL);
-    if (o_v != o_u) return o_v < o_u;
-    return false;
-  });
+  Node* v = nullptr;
+  for (auto u : C) {
+    // avoid future or vertex conflict
+    if (occupied_t[u->id] >= t) continue;
+    // avoid swap conflict
+    if (u == v_other_from && v_now == v_other_to) continue;
+    // goal exists -> return immediately
+    if (u == P->getGoal(id)) return u;
+    // determine the next node
+    if (v == nullptr) {
+      v = u;
+    } else {
+      int c_v = pathDist(id, v);
+      int c_u = pathDist(id, u);
+      if ((c_u < c_v) ||
+          (c_u == c_v && occupied_a[v->id] != NIL && occupied_a[u->id] == NIL)) {
+        v = u;
+      }
+    }
+  }
   return v;
 }
 

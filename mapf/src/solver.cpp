@@ -85,10 +85,10 @@ Path Solver::getPrioritizedPath
     return n->v == g && n->g > max_constraint_time;
   };
 
-  const int makespan = paths.getMakespan();
-
   // update PATH_TABLE
   if (manage_path_table) updatePathTable(paths, id);
+
+  const int makespan = PATH_TABLE.size()-1;
 
   // fast collision checking
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
@@ -152,7 +152,9 @@ void Solver::clearPathTable(const Paths& paths)
 
 void Solver::updatePathTableWithoutClear(const int id, const Path& p, const Paths& paths)
 {
-  const int makespan = paths.getMakespan();
+  if (p.empty()) return;
+
+  const int makespan = PATH_TABLE.size()-1;
   const int nodes_size = G->getNodesSize();
   const int p_makespan = p.size() - 1;
 

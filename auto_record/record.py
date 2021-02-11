@@ -18,6 +18,17 @@ suboptimal_solvers = [
     'PIBT_COMPLETE',
 ]
 
+suboptimal_solvers_option = [
+    '',    # PIBT
+    '',    # winPIBT
+    '-c',  # PushAndSwap
+    '',    # HCA
+    '',    # WHCA
+    '',    # RevisitPP
+    '',    # ECBS
+    '',    # PIBT_COMPLETE
+]
+
 anytime_solvers = [
     'IR',
     'IR_SINGLE_PATHS',
@@ -90,7 +101,7 @@ if __name__ == '__main__':
                         shell=True, encoding='utf-8', stdout=subprocess.PIPE)
     git_log = cp.stdout
 
-    suboptimal_res = get_run_result(suboptimal_ins, suboptimal_solvers)
+    suboptimal_res = get_run_result(suboptimal_ins, suboptimal_solvers, suboptimal_solvers_option)
     optimal_res = get_run_result(optimal_ins, optimal_solvers)
     anytime_res = get_run_result(anytime_ins, anytime_solvers,
                                  [anytime_solvers_option]*len(anytime_solvers))

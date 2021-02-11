@@ -152,41 +152,40 @@ Node* PIBT::planOneStep(Agent* a)
 // no candidate node -> return nullptr
 Node* PIBT::chooseNode(Agent* a)
 {
-  Nodes C;                           // candidates
-  Nodes C_pre = a->v_now->neighbor;  // all possible node
-  C_pre.push_back(a->v_now);
-
-  for (auto v : C_pre) {
-    // avoid vertex conflict
-    if (occupied_next[v->id] != nullptr) continue;
-    // avoid swap conflict
-    auto a_j = occupied_now[v->id];
-    if (a_j != nullptr && a_j->v_next == a->v_now) continue;
-
-    // goal exists -> return immediately
-    if (v == a->g) return v;
-
-    C.push_back(v);
-  }
-
-  // correspond to stuck
-  if (C.empty()) return nullptr;
+  // candidates
+  Nodes C = a->v_now->neighbor;
+  C.push_back(a->v_now);
 
   // randomize
   std::shuffle(C.begin(), C.end(), *MT);
 
+  // desired node
+  Node* v = nullptr;
+
   // pickup one node
-  Node* v = *std::min_element(C.begin(), C.end(), [&](Node* v, Node* u) {
-    // path distance
-    int c_v = pathDist(a->id, v);
-    int c_u = pathDist(a->id, u);
-    if (c_v != c_u) return c_v < c_u;
-    // occupancy
-    int o_v = (int)(occupied_now[v->id] != nullptr);
-    int o_u = (int)(occupied_now[u->id] != nullptr);
-    if (o_v != o_u) return o_v < o_u;
-    return false;
-  });
+  for (auto u : C) {
+    // avoid vertex conflict
+    if (occupied_next[u->id] != nullptr) continue;
+    // avoid swap conflict
+    auto a_j = occupied_now[u->id];
+    if (a_j != nullptr && a_j->v_next == a->v_now) continue;
+
+    // goal exists -> return immediately
+    if (u == a->g) return u;
+
+    // determine the next node
+    if (v == nullptr) {
+      v = u;
+    } else {
+      int c_v = pathDist(a->id, v);
+      int c_u = pathDist(a->id, u);
+      if ((c_u < c_v) ||
+          (c_u == c_v && occupied_now[v->id] != nullptr && occupied_now[u->id] == nullptr)) {
+        v = u;
+      }
+    }
+  }
+
   return v;
 }
 
