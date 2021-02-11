@@ -53,6 +53,9 @@ void WHCA::run()
     if (invalid) break;
     paths += partial_paths;
 
+    // clear cache
+    clearPathTable(partial_paths);
+
     // check goal condition
     if (check_goal_cond) {
       solved = true;
@@ -99,25 +102,23 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
 
   // different from HCA*
   CheckAstarFin checkAstarFin = [&](AstarNode* n) {
-    // return n->g > max_constraint_time && (n->v == g || n->g >= window);
     return (n->v == g && n->g > max_constraint_time) || n->g >= window;
   };
-
-  // update PATH_TABLE
-  updatePathTable(paths, id);
 
   // fast collision checking
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
     if (m->g > window) return true;
     // last node
-    if (m->g > makespan) {
-      if (PATH_TABLE[makespan][m->v->id] != Solver::NIL) return true;
-    } else {
-      // vertex conflict
-      if (PATH_TABLE[m->g][m->v->id] != Solver::NIL) return true;
-      // swap conflict
-      if (PATH_TABLE[m->g][m->p->v->id] != Solver::NIL &&
-          PATH_TABLE[m->g-1][m->v->id] == PATH_TABLE[m->g][m->p->v->id]) return true;
+    if (makespan > 0) {
+      if (m->g > makespan) {
+        if (PATH_TABLE[makespan][m->v->id] != Solver::NIL) return true;
+      } else {
+        // vertex conflict
+        if (PATH_TABLE[m->g][m->v->id] != Solver::NIL) return true;
+        // swap conflict
+        if (PATH_TABLE[m->g][m->p->v->id] != Solver::NIL &&
+            PATH_TABLE[m->g-1][m->v->id] == PATH_TABLE[m->g][m->p->v->id]) return true;
+      }
     }
     return false;
   };
@@ -127,8 +128,8 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
   // format
   if (!path.empty() && path_size - 1 > window) path.resize(window + 1);
 
-  // clear used path table
-  clearPathTable(paths);
+  // update path table
+  updatePathTableWithoutClear(id, path, paths);
 
   return path;
 }

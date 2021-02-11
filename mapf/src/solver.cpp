@@ -62,7 +62,8 @@ Path Solver::getPrioritizedPath
  const int time_limit,
  const int upper_bound,
  const std::vector<std::tuple<Node*, int>>& constraints,
- CompareAstarNode& compare)
+ CompareAstarNode& compare,
+ const bool manage_path_table)
 {
   const int ideal_dist = pathDist(id);
 
@@ -85,23 +86,24 @@ Path Solver::getPrioritizedPath
   };
 
   const int makespan = paths.getMakespan();
-  const int num_agents = paths.size();
 
   // update PATH_TABLE
-  updatePathTable(paths, id);
+  if (manage_path_table) updatePathTable(paths, id);
 
   // fast collision checking
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
     if (upper_bound != -1 && m->g > upper_bound) return true;
 
-    if (m->g > makespan) {
-      if (PATH_TABLE[makespan][m->v->id] != NIL) return true;
-    } else {
-      // vertex conflict
-      if (PATH_TABLE[m->g][m->v->id] != NIL) return true;
-      // swap conflict
-      if (PATH_TABLE[m->g][m->p->v->id] != NIL &&
-          PATH_TABLE[m->g-1][m->v->id] == PATH_TABLE[m->g][m->p->v->id]) return true;
+    if (makespan > 0) {
+      if (m->g > makespan) {
+        if (PATH_TABLE[makespan][m->v->id] != NIL) return true;
+      } else {
+        // vertex conflict
+        if (PATH_TABLE[m->g][m->v->id] != NIL) return true;
+        // swap conflict
+        if (PATH_TABLE[m->g][m->p->v->id] != NIL &&
+            PATH_TABLE[m->g-1][m->v->id] == PATH_TABLE[m->g][m->p->v->id]) return true;
+      }
     }
 
     // check additional constraints
@@ -116,7 +118,7 @@ Path Solver::getPrioritizedPath
     (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, time_limit);
 
   // clear used path table
-  clearPathTable(paths);
+  if (manage_path_table) clearPathTable(paths);
 
   return p;
 }
@@ -145,6 +147,31 @@ void Solver::clearPathTable(const Paths& paths)
     if (paths.empty(i)) continue;
     auto p = paths.get(i);
     for (int t = 0; t <= makespan; ++t) PATH_TABLE[t][p[t]->id] = NIL;
+  }
+}
+
+void Solver::updatePathTableWithoutClear(const int id, const Path& p, const Paths& paths)
+{
+  const int makespan = paths.getMakespan();
+  const int nodes_size = G->getNodesSize();
+  const int p_makespan = p.size() - 1;
+
+  // extend PATH_TABLE
+  if (p_makespan > makespan) {
+    while (PATH_TABLE.size() < p_makespan + 1)
+      PATH_TABLE.push_back(std::vector<int>(nodes_size, NIL));
+    for (int i = 0; i < P->getNum(); ++i) {
+      if (paths.empty(i)) continue;
+      auto v_id = paths.get(i, makespan)->id;
+      for (int t = makespan + 1; t <= p_makespan; ++t) PATH_TABLE[t][v_id] = i;
+    }
+  }
+
+  // register new path
+  for (int t = 0; t <= p_makespan; ++t) PATH_TABLE[t][p[t]->id] = id;
+  if (makespan > p_makespan) {
+    auto v_id = p[p_makespan]->id;
+    for (int t = p_makespan + 1; t <= makespan; ++t) PATH_TABLE[t][v_id] = id;
   }
 }
 

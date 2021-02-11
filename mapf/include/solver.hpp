@@ -69,7 +69,9 @@ public:
    const int time_limit=-1,  // time limit
    const int upper_bound=-1,  // upper bound of timesteps
    const std::vector<std::tuple<Node*, int>>& constraints={},  // additional constraints, space-time
-   CompareAstarNode& compare=compareAstarNodeBasic);  // compare two nodes
+   CompareAstarNode& compare=compareAstarNodeBasic,  // compare two nodes
+   const bool manage_path_table=true  // manage path table automatically, conflict check
+   );
 
   Path getPrioritizedPath
   (const int id,
@@ -83,6 +85,7 @@ public:
 protected:
   void updatePathTable(const Paths& paths, const int id);
   void clearPathTable(const Paths& paths);
+  void updatePathTableWithoutClear(const int id, const Path& p, const Paths& paths);
   static constexpr int NIL = -1;
   std::vector<std::vector<int>> PATH_TABLE;
 

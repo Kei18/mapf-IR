@@ -59,8 +59,15 @@ void RevisitPP::run()
 Path RevisitPP::getPrioritizedPath(int id, const Paths& paths,
                                    const std::vector<std::tuple<Node*, int>> constraints)
 {
-  return Solver::getPrioritizedPath(id, P->getStart(id), P->getGoal(id),
-                                    paths, getRemainedTime(), max_timestep, constraints);
+  const auto p = Solver::getPrioritizedPath
+    (id, P->getStart(id), P->getGoal(id), paths,
+     getRemainedTime(), max_timestep, constraints,
+     compareAstarNodeBasic, false);
+
+  // update path table
+  updatePathTableWithoutClear(id, p, paths);
+
+  return p;
 }
 
 void RevisitPP::setParams(int argc, char* argv[])

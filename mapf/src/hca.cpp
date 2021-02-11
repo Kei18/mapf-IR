@@ -85,7 +85,13 @@ Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
     return false;
   };
 
-  return Solver::getPrioritizedPath(id, s, g, paths, getRemainedTime(), max_timestep, {}, compare);
+  const auto p = Solver::getPrioritizedPath
+    (id, s, g, paths, getRemainedTime(), max_timestep, {}, compare, false);
+
+  // update path table
+  updatePathTableWithoutClear(id, p, paths);
+
+  return p;
 }
 
 void HCA::setParams(int argc, char* argv[])
