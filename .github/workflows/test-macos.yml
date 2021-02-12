@@ -1,0 +1,37 @@
+name: test_macos
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'mapf/**'
+      - 'tests/**'
+      - 'app.cpp'
+
+jobs:
+  test-macos:
+    runs-on: macos-10.15
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: clone-google-tests
+        run: git clone https://github.com/google/googletest.git third_party/googletest
+
+      - name: build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+
+      - name: test
+        working-directory: build
+        run: ./test
+
+      - name: run-app
+        working-directory: build
+        run: ./app -i ../instances/sample.txt -s PIBT -o result.txt -v

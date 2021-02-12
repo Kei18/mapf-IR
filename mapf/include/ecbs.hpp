@@ -3,18 +3,20 @@
  *
  * - ref
  * Barer, M., Sharon, G., Stern, R., & Felner, A. (2014).
- * Suboptimal Variants of the Conflict-Based Search Algorithm for the Multi-Agent Pathfinding Problem.
- * In Seventh Annual Symposium on Combinatorial Search.
+ * Suboptimal Variants of the Conflict-Based Search Algorithm for the
+ * Multi-Agent Pathfinding Problem. In Seventh Annual Symposium on Combinatorial
+ * Search.
  */
 
 #pragma once
-#include "solver.hpp"
-#include "lib_cbs.hpp"
-#include <tuple>
 #include <memory>
+#include <tuple>
 
+#include "lib_cbs.hpp"
+#include "solver.hpp"
 
-class ECBS : public Solver {
+class ECBS : public Solver
+{
 public:
   static const std::string SOLVER_NAME;
 
@@ -26,22 +28,27 @@ protected:
     int makespan;
     int soc;
     int f;
-    int LB;                    // lower bound
-    std::vector<int> f_mins;   // f_mins value in the low-level search
+    int LB;                   // lower bound
+    std::vector<int> f_mins;  // f_mins value in the low-level search
     bool valid;
 
     HighLevelNode() {}
-    HighLevelNode(Paths _paths, LibCBS::Constraints _c,
-                  int _m, int _soc, int _f,
-                  int _LB, std::vector<int> _f_mins,
-                  bool _valid)
-      : paths(_paths), constraints(_c),
-        makespan(_m), soc(_soc), f(_f),
-        LB(_LB), f_mins(_f_mins), valid(_valid) {}
+    HighLevelNode(Paths _paths, LibCBS::Constraints _c, int _m, int _soc,
+                  int _f, int _LB, std::vector<int> _f_mins, bool _valid)
+        : paths(_paths),
+          constraints(_c),
+          makespan(_m),
+          soc(_soc),
+          f(_f),
+          LB(_LB),
+          f_mins(_f_mins),
+          valid(_valid)
+    {
+    }
   };
   using HighLevelNode_p = std::shared_ptr<HighLevelNode>;
-  using CompareHighLevelNode = std::function<bool(HighLevelNode_p,
-                                                  HighLevelNode_p)>;
+  using CompareHighLevelNode =
+      std::function<bool(HighLevelNode_p, HighLevelNode_p)>;
 
   // used in the low-level search
   struct FocalNode {
@@ -61,7 +68,7 @@ protected:
   static const float DEFAULT_SUB_OPTIMALITY;
 
   void setInitialHighLevelNode(HighLevelNode_p n);
-  Path getInitialPath(int id);
+  Path getInitialPath(int id, const Paths& paths);
 
   // objective for open list
   CompareHighLevelNode getMainObjective();
@@ -72,14 +79,12 @@ protected:
 
   // return path and f-min value
   std::tuple<Path, int> getFocalPath(HighLevelNode_p h_node, int id);
-  std::tuple<Path, int> getTimedPathByFocalSearch
-  (Node* const s, Node* const g, float w,  // sub-optimality
-   FocalHeuristics& f1Value,
-   FocalHeuristics& f2Value,
-   CompareFocalNode& compareOPEN,
-   CompareFocalNode& compareFOCAL,
-   CheckFocalFin& checkFocalFin,
-   CheckInvalidFocalNode& checkInvalidFocalNode);
+  std::tuple<Path, int> getTimedPathByFocalSearch(
+      Node* const s, Node* const g, float w,  // sub-optimality
+      FocalHeuristics& f1Value, FocalHeuristics& f2Value,
+      CompareFocalNode& compareOPEN, CompareFocalNode& compareFOCAL,
+      CheckFocalFin& checkFocalFin,
+      CheckInvalidFocalNode& checkInvalidFocalNode);
 
   // make path from focal node
   Path getPathFromFocalNode(FocalNode* _n);
@@ -89,8 +94,8 @@ protected:
 
 public:
   ECBS(Problem* _P);
-  ~ECBS() {};
+  ~ECBS(){};
 
-  void setParams(int argc, char *argv[]);
+  void setParams(int argc, char* argv[]);
   static void printHelp();
 };

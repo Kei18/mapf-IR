@@ -1,0 +1,21 @@
+name: build_visualizer_macos
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'visualizer/**'
+      - '.github/workflows/build-visualizer-macos.yml'
+
+jobs:
+  build-osx:
+    runs-on: macos-10.15
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: build
+        run: bash ./visualizer/scripts/build_macos.sh

@@ -17,12 +17,10 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  MAPFPlan* solution = new MAPFPlan;
+  MAPFPlan* solution = new MAPFPlan;  // deleted in ofApp destructor
   readSetResult(argv[1], solution);
   ofSetupOpenGL(100, 100, OF_WINDOW);
   ofRunApp(new ofApp(solution));
-
-  delete solution;
   return 0;
 }
 
@@ -63,7 +61,7 @@ void readSetResult(const std::string& result_file, MAPFPlan* plan)
   while (getline(file, line)) {
     // read map
     if (std::regex_match(line, results, r_map)) {
-      plan->G = new Grid(results[1].str());
+      plan->G = new Grid(results[1].str());  // deleted in destructor of MAPFPlan
       continue;
     }
     // set agent num

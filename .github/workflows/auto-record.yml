@@ -1,0 +1,62 @@
+name: auto-record
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'mapf/**'
+      - 'tests/**'
+      - 'app.cpp'
+      - 'auto_record/**'
+      - '.github/workflows/auto-record.yml'
+
+jobs:
+  auto-record:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: setup-python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: install-dependencies
+        run: pip install matplotlib
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: clone-google-tests
+        run: git clone https://github.com/google/googletest.git third_party/googletest
+
+      - name: build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+
+      - name: auto-record
+        working-directory: auto_record
+        run: |
+          python record.py
+
+      - name: git setting
+        run: |
+          git config --local user.email keisuke.oku18@gmail.com
+          git config --local user.name Kei18
+
+      - name: deploy
+        run: |
+          git branch -r
+          git fetch --prune
+          git checkout -b auto_record origin/auto_record
+          ls -all
+          mv auto_record/readme.md readme.md
+          cp readme.md records/$(date "+%Y-%m-%d-%H-%M-%S").md
+          python create_fig.py
+          git add readme.md records/ fig/
+          git commit -m "auto record"
+          git push origin auto_record

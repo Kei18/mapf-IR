@@ -1,0 +1,10 @@
+map_file=corners.map
+agents=4
+seed=0
+random_problem=0
+max_timestep=200
+max_comp_time=3000
+0,0,4,4
+0,1,4,3
+4,3,0,1
+4,4,0,0

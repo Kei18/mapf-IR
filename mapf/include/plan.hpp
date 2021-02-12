@@ -13,13 +13,25 @@ public:
   ~Plan() {}
 
   // timestep -> configuration
-  Config get(int t) const;
+  Config get(const int t) const;
 
   // timestep, agent -> location
-  Node* get(int t, int i) const;
+  Node* get(const int t, const int i) const;
+
+  // path
+  Path getPath(const int i) const;
+
+  // path cost
+  int getPathCost(const int i) const;
 
   // last configuration
   Config last() const;
+
+  // last configuration
+  Node* last(const int i) const;
+
+  // become empty
+  void clear();
 
   // add new configuration to the last
   void add(const Config& c);
@@ -42,6 +54,12 @@ public:
 
   // check the plan is valid or not
   bool validate(Problem* P) const;
+  bool validate(const Config& starts, const Config& goals) const;
+
+  // when updating a single path,
+  // the path should be longer than this value to avoid conflicts
+  int getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const;
+  int getMaxConstraintTime(const int id, Problem* P) const;
 };
 
 using Plans = std::vector<Plan>;

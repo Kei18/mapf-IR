@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 static const std::string DEFAULT_OUTPUT_FILE = "./result.txt";
 static const int DEFAULT_SEED = 0;

@@ -2,8 +2,10 @@
 
 const std::string HCA::SOLVER_NAME = "HCA";
 
-
-HCA::HCA(Problem* _P) : Solver(_P)
+HCA::HCA(Problem* _P)
+  : Solver(_P),
+    table_starts(G->getNodesSize(), false),
+    table_goals(G->getNodesSize(), false)
 {
   solver_name = HCA::SOLVER_NAME;
 }
@@ -12,25 +14,27 @@ void HCA::run()
 {
   Paths paths(P->getNum());
 
+  // create tables for tie-break
+  for (int i = 0; i < P->getNum(); ++i) {
+    table_starts[P->getStart(i)->id] = true;
+    table_goals[P->getGoal(i)->id] = true;
+  }
+
   // prioritization, far agent is prioritized
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
   if (!disable_dist_init) {
     std::sort(ids.begin(), ids.end(),
-              [&] (int a, int b)
-              { return pathDist(a) > pathDist(b); });
+              [&](int a, int b) { return pathDist(a) > pathDist(b); });
   }
 
   // start planning
   bool invalid = false;
-  for (int j = 0; j < ids.size(); ++j) {
-    int i = ids[j];
-    info(" ",
-         "elapsed:", getSolverElapsedTime(),
-         ", agent-" + std::to_string(i),
-         "starts planning,",
-         "init-dist:", pathDist(i),
-         ", progress:", j+1, "/", P->getNum());
+  for (int j = 0; j < P->getNum(); ++j) {
+    const int i = ids[j];
+    info(" ", "elapsed:", getSolverElapsedTime(),
+         ", agent-" + std::to_string(i), "starts planning,",
+         "init-dist:", pathDist(i), ", progress:", j + 1, "/", P->getNum());
 
     // get path
     Nodes path = getPrioritizedPath(i, paths);
@@ -64,95 +68,47 @@ Path HCA::getPrioritizedPath(int id, const Paths& paths)
 
 // get single agent path
 // failed -> return {}
-Path HCA::getPrioritizedPath(int id,
-                             Node* s,
-                             Node* g,
-                             const Paths& paths)
+Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
 {
-  // pre processing
   Nodes config_s = P->getConfigStart();
   Nodes config_g = P->getConfigGoal();
-  int max_constraint_time = 0;  // from when the agent stays its goal
-  for (int i = 0; i < P->getNum(); ++i) {
-    Path p = paths.get(i);
-    if (p.empty()) continue;
-    for (int t = 0; t < p.size(); ++t) {
-      if (p[t] == g) {
-        max_constraint_time = std::max(t, max_constraint_time);
-      }
-    }
-  }
 
-  AstarHeuristics fValue;
-  if (pathDist(id) > max_constraint_time) {
-    fValue = [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
-  } else {
-    // when someone occupies its goal
-    fValue = [&] (AstarNode* n) {
-               return std::max(max_constraint_time + 1,
-                               n->g + pathDist(n->v, g));
-             };
-  }
+  CompareAstarNode compare = [&](AstarNode* a, AstarNode* b) {
+    if (a->f != b->f) return a->f > b->f;
+    // tie-break, avoid goal locations of others
+    if (a->v != g && table_goals[a->v->id]) return true;
+    if (b->v != g && table_goals[b->v->id]) return false;
+    // tie-break, avoid start locations
+    if (a->v != s && table_starts[a->v->id]) return true;
+    if (b->v != s && table_starts[b->v->id]) return false;
+    if (a->g != b->g) return a->g < b->g;
+    return false;
+  };
 
-  CompareAstarNode compare =
-    [&] (AstarNode* a, AstarNode* b) {
-      if (a->f != b->f) return a->f > b->f;
-      // tie-break, avoid goal locations of others
-      if (a->v != g && inArray(a->v, config_g)) return true;
-      if (b->v != g && inArray(b->v, config_g)) return false;
-      // tie-break, avoid start locations
-      if (a->v != s && inArray(a->v, config_s)) return true;
-      if (b->v != s && inArray(b->v, config_s)) return false;
-      if (a->g != b->g) return a->g < b->g;
-      return false;
-    };
+  const auto p = Solver::getPrioritizedPath
+    (id, s, g, paths, getRemainedTime(), max_timestep, {}, compare, false);
 
-  CheckAstarFin checkAstarFin =
-    [&] (AstarNode* n) {
-      return n->v == g && n->g > max_constraint_time;
-    };
+  // update path table
+  updatePathTableWithoutClear(id, p, paths);
 
-  CheckInvalidAstarNode checkInvalidAstarNode =
-    [&] (AstarNode* m) {
-      for (int i = 0; i < P->getNum(); ++i) {
-        Path p = paths.get(i);
-        if (p.empty()) continue;
-        // last node
-        if (m->g >= p.size()) {
-          if (*(p.end()-1) == m->v) return true;
-          continue;
-        }
-        // vertex conflict
-        if (p[m->g] == m->v) return true;
-        // swap conflict
-        if (p[m->g] == m->p->v && p[m->g-1] == m->v) return true;
-      }
-      return false;
-    };
-
-  return getTimedPath(s, g,
-                      fValue,
-                      compare,
-                      checkAstarFin,
-                      checkInvalidAstarNode);
+  return p;
 }
 
-void HCA::setParams(int argc, char *argv[])
+void HCA::setParams(int argc, char* argv[])
 {
   struct option longopts[] = {
-    { "disable-dist-init", no_argument, 0, 'd' },
-    { 0, 0, 0, 0 },
+      {"disable-dist-init", no_argument, 0, 'd'},
+      {0, 0, 0, 0},
   };
   optind = 1;  // reset
   int opt, longindex;
-  while ((opt = getopt_long(argc, argv, "d",
-                            longopts, &longindex)) != -1) {
+  while ((opt = getopt_long(argc, argv, "d", longopts, &longindex)) != -1) {
     switch (opt) {
-    case 'd':
-      disable_dist_init = true;
-      break;
-    default:
-      break;
+      case 'd':
+        disable_dist_init = true;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -163,6 +119,5 @@ void HCA::printHelp()
             << "  -d --disable-dist-init"
             << "        "
             << "disable initialization of priorities "
-            << "using distance from starts to goals"
-            << std::endl;
+            << "using distance from starts to goals" << std::endl;
 }

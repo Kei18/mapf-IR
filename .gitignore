@@ -1,4 +1,4 @@
 .DS_Store
 /build/
-test.sh
-/instance/map/sample.map
+/instances/toy.txt
+/third_party/openFrameworks/

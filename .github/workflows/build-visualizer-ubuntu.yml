@@ -1,0 +1,27 @@
+name: build_visualizer_ubuntu
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'visualizer/**'
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: build
+        run: |
+          cd ./third_party/openFrameworks/scripts/linux/ubuntu/
+          sh ./install_dependencies.sh
+          cd ..
+          sh ./download_libs.sh
+          sh ./compileOF.sh
+          cd ../../../../visualizer
+          make build

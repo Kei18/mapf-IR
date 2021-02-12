@@ -16,12 +16,12 @@ void ECBS::run()
   CompareHighLevelNode compareFOCAL = getFocalObjective();
 
   // OPEN, FOCAL
-  std::priority_queue<HighLevelNode_p,
-                      std::vector<HighLevelNode_p>,
-                      CompareHighLevelNode> OPEN(compareOPEN);
-  using FocalList = std::priority_queue<HighLevelNode_p,
-                                         std::vector<HighLevelNode_p>,
-                                         CompareHighLevelNode>;
+  std::priority_queue<HighLevelNode_p, std::vector<HighLevelNode_p>,
+                      CompareHighLevelNode>
+      OPEN(compareOPEN);
+  using FocalList =
+      std::priority_queue<HighLevelNode_p, std::vector<HighLevelNode_p>,
+                          CompareHighLevelNode>;
   FocalList FOCAL(compareFOCAL);
 
   // initial node
@@ -72,7 +72,7 @@ void ECBS::run()
         FOCAL.push(top);
       }
       // back
-      for (auto ele: tmp) OPEN.push(ele);
+      for (auto ele : tmp) OPEN.push(ele);
     }
 
     // pickup one node
@@ -80,17 +80,13 @@ void ECBS::run()
     FOCAL.pop();
     n->valid = false;  // closed
 
-    info(" ",
-         "elapsed:", getSolverElapsedTime(),
-         ", explored_node_num:", iteration,
-         ", nodes_num:", h_node_num,
-         ", conflicts:", n->f,
-         ", constraints:", n->constraints.size(),
+    info(" ", "elapsed:", getSolverElapsedTime(),
+         ", explored_node_num:", iteration, ", nodes_num:", h_node_num,
+         ", conflicts:", n->f, ", constraints:", n->constraints.size(),
          ", soc:", n->soc);
 
     // check conflict
-    LibCBS::Constraints constraints =
-      LibCBS::getFirstConstraints(n->paths);
+    LibCBS::Constraints constraints = LibCBS::getFirstConstraints(n->paths);
     if (constraints.empty()) {
       solved = true;
       break;
@@ -101,14 +97,8 @@ void ECBS::run()
       LibCBS::Constraints new_constraints = n->constraints;
       new_constraints.push_back(c);
       HighLevelNode_p m = std::make_shared<HighLevelNode>(
-          n->paths,
-          new_constraints,
-          n->makespan,
-          n->soc,
-          n->f,
-          n->LB,
-          n->f_mins,
-          true );
+          n->paths, new_constraints, n->makespan, n->soc, n->f, n->LB,
+          n->f_mins, true);
       invoke(m, c->id);
       if (!m->valid) continue;
       OPEN.push(m);
@@ -123,22 +113,20 @@ void ECBS::run()
 
 ECBS::CompareHighLevelNode ECBS::getMainObjective()
 {
-  CompareHighLevelNode compare =
-    [&] (HighLevelNode_p a, HighLevelNode_p b) {
-      if (a->LB != b->LB) return a->LB > b->LB;
-      return false;
-    };
+  CompareHighLevelNode compare = [&](HighLevelNode_p a, HighLevelNode_p b) {
+    if (a->LB != b->LB) return a->LB > b->LB;
+    return false;
+  };
   return compare;
 }
 
 ECBS::CompareHighLevelNode ECBS::getFocalObjective()
 {
-  CompareHighLevelNode compare =
-    [&] (HighLevelNode_p a, HighLevelNode_p b) {
-      if (a->f != b->f) return a->f > b->f;
-      if (a->soc != b->soc) return a->soc > b->soc;
-      return false;
-    };
+  CompareHighLevelNode compare = [&](HighLevelNode_p a, HighLevelNode_p b) {
+    if (a->f != b->f) return a->f > b->f;
+    if (a->soc != b->soc) return a->soc > b->soc;
+    return false;
+  };
   return compare;
 }
 
@@ -147,9 +135,9 @@ void ECBS::setInitialHighLevelNode(HighLevelNode_p n)
   Paths paths(P->getNum());
   std::vector<int> f_mins;  // vector of costs for respective paths
   for (int i = 0; i < P->getNum(); ++i) {
-    Path path = getInitialPath(i);
+    Path path = getInitialPath(i, paths);
     paths.insert(i, path);
-    f_mins.push_back(path.size()-1);
+    f_mins.push_back(path.size() - 1);
   }
   n->paths = paths;
   n->constraints = {};
@@ -161,35 +149,40 @@ void ECBS::setInitialHighLevelNode(HighLevelNode_p n)
   n->LB = n->soc;  // initial lower bound
 }
 
-Path ECBS::getInitialPath(int id)
+Path ECBS::getInitialPath(int id, const Paths& paths)
 {
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
   Nodes config_g = P->getConfigGoal();
 
-  AstarHeuristics fValue =
-    [&] (AstarNode* n) { return n->g + pathDist(n->v, g); };
+  Path path = { s };
+  Node* p = s;
+  int t = 1;
+  const int makespan = paths.getMakespan();
+  const int num_agents = P->getNum();
+  while (p != g) {
+    p = *std::min_element(p->neighbor.begin(), p->neighbor.end(),
+                          [&](Node* a, Node* b) {
+                            if (pathDist(id, a) != pathDist(id, b))
+                              return pathDist(id, a) < pathDist(id, b);
+                            if (t <= makespan) {
+                              Node* v;
+                              for (int i = 0; i < num_agents; ++i) {
+                                if (paths.empty(i)) continue;
+                                v = paths.get(i, t);
+                                if (v == a) return false;
+                                if (v == b) return true;
+                              }
+                            }
+                            if (a != g && inArray(a, config_g)) return false;
+                            if (b != g && inArray(b, config_g)) return true;
+                            return false;
+                          });
+    path.push_back(p);
+    ++t;
+  }
 
-  CompareAstarNode compare =
-    [&] (AstarNode* a, AstarNode* b) {
-      if (a->f != b->f) return a->f > b->f;
-      // IMPORTANT! avoid goal locations of others
-      if (a->v != g && inArray(a->v, config_g)) return true;
-      if (b->v != g && inArray(b->v, config_g)) return false;
-      if (a->g != b->g) return a->g < b->g;
-      return false;
-    };
-
-  CheckAstarFin checkAstarFin = [&] (AstarNode* n) { return n->v == g; };
-
-  CheckInvalidAstarNode checkInvalidAstarNode =
-    [&] (AstarNode* m) {  return false; };
-
-  return getTimedPath(s, g,
-                      fValue,
-                      compare,
-                      checkAstarFin,
-                      checkInvalidAstarNode);
+  return path;
 }
 
 void ECBS::invoke(HighLevelNode_p h_node, int id)
@@ -207,9 +200,9 @@ void ECBS::invoke(HighLevelNode_p h_node, int id)
   Paths paths = h_node->paths;
   paths.insert(id, path);
   // it is efficient to reuse past data
-  h_node->f = h_node->f
-    - h_node->paths.countConflict(id, h_node->paths.get(id))
-    + h_node->paths.countConflict(id, paths.get(id));
+  h_node->f = h_node->f -
+              h_node->paths.countConflict(id, h_node->paths.get(id)) +
+              h_node->paths.countConflict(id, paths.get(id));
   h_node->paths = paths;
   h_node->makespan = h_node->paths.getMakespan();
   h_node->soc = h_node->paths.getSOC();
@@ -238,92 +231,96 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
   // f-value for online list
   FocalHeuristics f1Value;
   if (pathDist(id) > max_constraint_time) {
-    f1Value = [&] (FocalNode* n) { return n->g + pathDist(n->v, g); };
+    f1Value = [&](FocalNode* n) { return n->g + pathDist(id, n->v); };
   } else {
-    f1Value = [&] (FocalNode* n) {
-                return std::max(max_constraint_time + 1,
-                                n->g + pathDist(n->v, g)); };
+    f1Value = [&](FocalNode* n) {
+      return std::max(max_constraint_time + 1, n->g + pathDist(id, n->v));
+    };
   }
 
-  // f-value for focal list
-  FocalHeuristics f2Value =
-    [&] (FocalNode* n) {
-      return h_node->paths.countConflict(id, getPathFromFocalNode(n));
-    };
+  const auto paths = h_node->paths;
+  const int makespan = paths.getMakespan();
 
-  CompareFocalNode compareOPEN =
-    [&] (FocalNode* a, FocalNode* b) {
-      if (a->f1 != b->f1) return a->f1 > b->f1;
-      return false;
-    };
+  // update PATH_TABLE
+  updatePathTable(paths, id);
+  FocalHeuristics f2Value = [&](FocalNode* n) {
+    if (n->g == 0) return 0;
+    // last node
+    if (n->g > makespan) {
+      if (PATH_TABLE[makespan][n->v->id] != Solver::NIL) return n->p->f2 + 1;
+    } else {
+      // vertex conflict
+      if (PATH_TABLE[n->g][n->v->id] != Solver::NIL) {
+        return n->p->f2 + 1;
 
-  CompareFocalNode compareFOCAL =
-    [&] (FocalNode* a, FocalNode* b) {
-      if (a->f2 != b->f2) return a->f2 > b->f2;
-      if (a->f1 != b->f1) return a->f1 > b->f1;
-      if (a->g != b->g) return a->g < b->g;
-      return false;
-    };
-
-  CheckFocalFin checkFocalFin =
-    [&] (FocalNode* n) {
-      return n->v == g && n->g > max_constraint_time;
-    };
-
-  CheckInvalidFocalNode checkInvalidFocalNode =
-    [&] (FocalNode* m) {
-      for (auto c : constraints) {
-        if (m->g == c->t && m->v == c->v) {
-          // vertex or swap conflict
-          if (c->u == nullptr || c->u == m->p->v) return true;
-        }
+        // swap conflict
+      } else if (PATH_TABLE[n->g][n->p->v->id] != Solver::NIL &&
+                 PATH_TABLE[n->g-1][n->v->id] == PATH_TABLE[n->g][n->p->v->id]) {
+        return n->p->f2 + 1;
       }
-      return false;
-    };
+    }
+    return n->p->f2;
+  };
 
-  return getTimedPathByFocalSearch(s,
-                                   g,
-                                   sub_optimality,
-                                   f1Value,
-                                   f2Value,
-                                   compareOPEN,
-                                   compareFOCAL,
-                                   checkFocalFin,
-                                   checkInvalidFocalNode);
+  CompareFocalNode compareOPEN = [&](FocalNode* a, FocalNode* b) {
+    if (a->f1 != b->f1) return a->f1 > b->f1;
+    return false;
+  };
+
+  CompareFocalNode compareFOCAL = [&](FocalNode* a, FocalNode* b) {
+    if (a->f2 != b->f2) return a->f2 > b->f2;
+    if (a->f1 != b->f1) return a->f1 > b->f1;
+    if (a->g != b->g) return a->g < b->g;
+    return false;
+  };
+
+  CheckFocalFin checkFocalFin = [&](FocalNode* n) {
+    return n->v == g && n->g > max_constraint_time;
+  };
+
+  CheckInvalidFocalNode checkInvalidFocalNode = [&](FocalNode* m) {
+    for (auto c : constraints) {
+      if (m->g == c->t && m->v == c->v) {
+        // vertex or swap conflict
+        if (c->u == nullptr || c->u == m->p->v) return true;
+      }
+    }
+    return false;
+  };
+
+  auto p = getTimedPathByFocalSearch(s, g, sub_optimality, f1Value, f2Value,
+                                     compareOPEN, compareFOCAL, checkFocalFin,
+                                     checkInvalidFocalNode);
+  // clear used path table
+  clearPathTable(paths);
+
+  return p;
 }
 
 // return path and f_min
-std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
-(Node* const s,
- Node* const g,
- float w,  // sub-optimality
- FocalHeuristics& f1Value,
- FocalHeuristics& f2Value,
- CompareFocalNode& compareOPEN,
- CompareFocalNode& compareFOCAL,
- CheckFocalFin& checkFocalFin,
- CheckInvalidFocalNode& checkInvalidFocalNode)
+std::tuple<Path, int> ECBS::getTimedPathByFocalSearch(
+    Node* const s, Node* const g,
+    float w,  // sub-optimality
+    FocalHeuristics& f1Value, FocalHeuristics& f2Value,
+    CompareFocalNode& compareOPEN, CompareFocalNode& compareFOCAL,
+    CheckFocalFin& checkFocalFin, CheckInvalidFocalNode& checkInvalidFocalNode)
 {
-  auto getNodeName = [] (FocalNode* n)
-                     { return std::to_string(n->v->id)
-                         + "-" + std::to_string(n->g); };
+  auto getNodeName = [](FocalNode* n) {
+    return std::to_string(n->v->id) + "-" + std::to_string(n->g);
+  };
 
   std::vector<FocalNode*> GC;  // garbage collection
-  auto createNewNode =
-    [&] (Node* v, int g, int f1, int f2, FocalNode* p)
-    {
-      FocalNode* new_node = new FocalNode{ v, g, f1, f2, p };
-      GC.push_back(new_node);
-      return new_node;
-    };
+  auto createNewNode = [&](Node* v, int g, int f1, int f2, FocalNode* p) {
+    FocalNode* new_node = new FocalNode{v, g, f1, f2, p};
+    GC.push_back(new_node);
+    return new_node;
+  };
 
   // OPEN, FOCAL, CLOSE
-  std::priority_queue<FocalNode*,
-                      std::vector<FocalNode*>,
-                      CompareFocalNode> OPEN(compareOPEN);
+  std::priority_queue<FocalNode*, std::vector<FocalNode*>, CompareFocalNode>
+      OPEN(compareOPEN);
   std::unordered_map<std::string, bool> CLOSE;
-  using FocalList = std::priority_queue<FocalNode*,
-                                        std::vector<FocalNode*>,
+  using FocalList = std::priority_queue<FocalNode*, std::vector<FocalNode*>,
                                         CompareFocalNode>;
   FocalList FOCAL(compareFOCAL);
 
@@ -346,13 +343,12 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
      * update FOCAL list
      * see the high-level search
      */
-    while (!OPEN.empty()
-           && CLOSE.find(getNodeName(OPEN.top())) != CLOSE.end())
+    while (!OPEN.empty() && CLOSE.find(getNodeName(OPEN.top())) != CLOSE.end())
       OPEN.pop();
     if (OPEN.empty()) break;  // failed
     if (f1_min != OPEN.top()->f1) {
       f1_min = OPEN.top()->f1;
-      float f1_bound = f1_min*w;
+      float f1_bound = f1_min * w;
       std::vector<FocalNode*> tmp;
       FocalList EMPTY(compareFOCAL);
       FOCAL = EMPTY;
@@ -361,11 +357,11 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
         OPEN.pop();
         // already searched by focal
         if (CLOSE.find(getNodeName(top)) != CLOSE.end()) continue;
-        tmp.push_back(top);  // escape
+        tmp.push_back(top);                    // escape
         if ((float)top->f1 > f1_bound) break;  // higher than f1_bound
-        FOCAL.push(top);  // lower than f1_bound
+        FOCAL.push(top);                       // lower than f1_bound
       }
-      for (auto ele: tmp) OPEN.push(ele);   // back
+      for (auto ele : tmp) OPEN.push(ele);  // back
     }
 
     // focal minimum node
@@ -384,7 +380,7 @@ std::tuple<Path, int> ECBS::getTimedPathByFocalSearch
     Nodes C = n->v->neighbor;
     C.push_back(n->v);
     for (auto u : C) {
-      int g_cost = n->g+1;
+      int g_cost = n->g + 1;
       FocalNode* m = createNewNode(u, g_cost, 0, 0, n);
       // set heuristics
       m->f1 = f1Value(m);
@@ -423,25 +419,23 @@ Path ECBS::getPathFromFocalNode(FocalNode* _n)
   return path;
 }
 
-void ECBS::setParams(int argc, char *argv[])
+void ECBS::setParams(int argc, char* argv[])
 {
   struct option longopts[] = {
-    { "sub-optimality", required_argument, 0, 'w' },
-    { 0, 0, 0, 0 },
+      {"sub-optimality", required_argument, 0, 'w'},
+      {0, 0, 0, 0},
   };
   optind = 1;  // reset
   int opt, longindex;
-  while ((opt = getopt_long(argc, argv, "w:",
-                            longopts, &longindex)) != -1) {
+  while ((opt = getopt_long(argc, argv, "w:", longopts, &longindex)) != -1) {
     switch (opt) {
-    case 'w':
-      sub_optimality = std::atof(optarg);
-      if (sub_optimality < 1) halt("sub-optimality should be >= 1");
-      solver_name = ECBS::SOLVER_NAME
-        + "-" + std::to_string(sub_optimality);
-      break;
-    default:
-      break;
+      case 'w':
+        sub_optimality = std::atof(optarg);
+        if (sub_optimality < 1) halt("sub-optimality should be >= 1");
+        solver_name = ECBS::SOLVER_NAME + "-" + std::to_string(sub_optimality);
+        break;
+      default:
+        break;
     }
   }
 }
@@ -451,6 +445,5 @@ void ECBS::printHelp()
   std::cout << ECBS::SOLVER_NAME << "\n"
             << "  -w --sub-optimality [NUMBER]"
             << "  "
-            << "sub-optimality >= 1"
-            << std::endl;
+            << "sub-optimality >= 1" << std::endl;
 }

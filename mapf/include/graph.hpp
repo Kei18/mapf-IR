@@ -1,16 +1,17 @@
 #pragma once
 #include <cmath>
-#include <vector>
-#include <iostream>
 #include <iomanip>
-#include <unordered_map>
+#include <iostream>
 #include <queue>
+#include <unordered_map>
+#include <vector>
+
 #include "util.hpp"
 
 struct Node;
-using Nodes   = std::vector<Node*>;
-using Path    = std::vector<Node*>;  // < loc_i[0], loc_i[1], ... >
-using Config  = std::vector<Node*>;  // < loc_0[t], loc_1[t], ... >
+using Nodes = std::vector<Node*>;
+using Path = std::vector<Node*>;    // < loc_i[0], loc_i[1], ... >
+using Config = std::vector<Node*>;  // < loc_0[t], loc_1[t], ... >
 using Configs = std::vector<Config>;
 
 // locations of node
@@ -18,48 +19,56 @@ struct Pos {
   int x;
   int y;
 
-  Pos(int _x, int _y): x(_x), y(_y) {}
+  Pos(int _x, int _y) : x(_x), y(_y) {}
 
-  void print() {
-    std::cout << "("
-              << std::right << std::setw(3) << x
-              << ", "
-              << std::right << std::setw(3) << y
-              << ")";
+  void print()
+  {
+    std::cout << "(" << std::right << std::setw(3) << x << ", " << std::right
+              << std::setw(3) << y << ")";
   }
-  void println() {
+  void println()
+  {
     print();
     std::cout << std::endl;
   }
 
-  int manhattanDist(const Pos& pos) const {
+  int manhattanDist(const Pos& pos) const
+  {
     return std::abs(x - pos.x) + std::abs(y - pos.y);
   }
 
-  float euclideanDist(const Pos& pos) const {
+  float euclideanDist(const Pos& pos) const
+  {
     float dx = x - pos.x;
     float dy = y - pos.y;
-    return std::sqrt(dx*dx + dy*dy);
+    return std::sqrt(dx * dx + dy * dy);
   }
 
-  Pos operator+(const Pos& other) const {
-    return Pos { x + other.x, y + other.y };
+  bool operator==(const Pos& other) const
+  {
+    return x == other.x && y == other.y;
   }
-  Pos operator-(const Pos& other) const {
-    return Pos { x - other.x, y - other.y };
+  Pos operator+(const Pos& other) const
+  {
+    return Pos(x + other.x, y + other.y);
   }
-  Pos operator*(const int i) const {
-    return Pos { x * i, y * i };
+  Pos operator-(const Pos& other) const
+  {
+    return Pos(x - other.x, y - other.y);
   }
-  void operator+=(const Pos& other) {
+  Pos operator*(const int i) const { return Pos(x * i, y * i); }
+  void operator+=(const Pos& other)
+  {
     x = x + other.x;
     y = y + other.y;
   }
-  void operator-=(const Pos& other) {
+  void operator-=(const Pos& other)
+  {
     x = x - other.x;
     y = y - other.y;
   }
-  void operator*=(const int i) {
+  void operator*=(const int i)
+  {
     x = x * i;
     y = y * i;
   }
@@ -72,26 +81,27 @@ struct Node {
 
   Node(int _id, int x, int y) : id(_id), pos(Pos(x, y)) {}
 
-  int getDegree() const {
-    return neighbor.size();
-  }
-  float manhattanDist(const Node& node) const {
+  int getDegree() const { return neighbor.size(); }
+  float manhattanDist(const Node& node) const
+  {
     return pos.manhattanDist(node.pos);
   }
-  float manhattanDist(Node* const node) const {
+  float manhattanDist(Node* const node) const
+  {
     return pos.manhattanDist(node->pos);
   }
-  float euclideanDist(const Node& node) const {
+  float euclideanDist(const Node& node) const
+  {
     return pos.euclideanDist(node.pos);
   }
-  float euclideanDist(Node* const node) const {
+  float euclideanDist(Node* const node) const
+  {
     return pos.euclideanDist(node->pos);
   }
 
-  void print() {
-    std::cout << "node["
-              << std::right << std::setw(6) << id
-              << "]=<pos:";
+  void print()
+  {
+    std::cout << "node[" << std::right << std::setw(6) << id << "]=<pos:";
     pos.print();
     std::cout << ", neigh: d=" << std::setw(1) << getDegree() << ", ";
     for (auto v : neighbor) {
@@ -100,30 +110,44 @@ struct Node {
     }
     std::cout << ">";
   }
-  void println() {
+  void println()
+  {
     print();
     std::cout << std::endl;
   }
 
-  bool operator==(const Node& v) { return v.id  == id; };
-  bool operator!=(const Node& v) { return v.id  != id; };
+  bool operator==(const Node& v) { return v.id == id; };
+  bool operator!=(const Node& v) { return v.id != id; };
   bool operator==(Node* const v) { return v->id == id; };
   bool operator!=(Node* const v) { return v->id != id; };
 };
 
 // check two configurations are same or not
-[[maybe_unused]]
-static bool sameConfig(const Config& config_i, const Config& config_j)
+[[maybe_unused]] static bool sameConfig(const Config& config_i,
+                                        const Config& config_j)
 {
   if (config_i.size() != config_j.size()) return false;
-  for (int k = 0; k < config_i.size(); ++k) {
+  const int size_i = config_i.size();
+  for (int k = 0; k < size_i; ++k) {
     if (config_i[k] != config_j[k]) return false;
   }
   return true;
 }
 
+[[maybe_unused]] static int getPathCost(const Path& path)
+{
+  int cost = path.size() - 1;
+  auto itr = path.end() - 1;
+  while (itr != path.begin() && *itr == *(itr-1)) {
+    --cost;
+    --itr;
+  }
+  return cost;
+}
+
 // Pure graph. Base class of Grid class.
-class Graph {
+class Graph
+{
 private:
   // cache for finding a path between two nodes
   std::unordered_map<std::string, Path> PATH_TABLE;
@@ -134,6 +158,9 @@ private:
   // register already searched path to cache
   void registerPath(const Path& path);
 
+  // get path avoiding several nodes, used for creating well-formed instance
+  Path getPathNoCache(Node* const s, Node* const g, Nodes prohibited={}, std::mt19937* MT=nullptr);
+
   // find a path using cache, if failed then return empty
   Path AstarSearchWithCache(Node* const s, Node* const g);
 
@@ -143,7 +170,7 @@ protected:
   Nodes V;
 
 public:
-  Graph() {};
+  Graph(){};
   virtual ~Graph();
 
   // in grid, id = y * width + x
@@ -158,22 +185,31 @@ public:
   virtual int dist(Node* const v, Node* const u) { return 0; }
 
   // get path between two nodes
-  Path getPath(Node* const s, Node* const g);
+  Path getPath(Node* const s, Node* const g, const bool cache=true);
 
   // get path length between two nodes
-  int pathDist(Node* const s, Node* const g);
+  int pathDist(Node* const s, Node* const g, const bool cache=true);
+
+  // get path avoiding several nodes, used for creating well-formed instance
+  Path getPath(Node* const s, Node* const g, Nodes prohibited, std::mt19937* MT=nullptr);
+
+  // get all nodes
+  Nodes getV();
+
+  int getNodesSize() const { return V.size(); }
 };
 
-class Grid : public Graph {
+class Grid : public Graph
+{
 private:
   std::string map_file;
   int width;
   int height;
 
 public:
-  Grid() {};
+  Grid(){};
   Grid(const std::string& _map_file);
-  ~Grid() {};
+  ~Grid(){};
 
   bool existNode(int id) const;
   bool existNode(int x, int y) const;

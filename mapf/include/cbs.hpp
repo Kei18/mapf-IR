@@ -8,17 +8,18 @@
  */
 
 #pragma once
-#include "solver.hpp"
 #include "lib_cbs.hpp"
+#include "solver.hpp"
 
-class CBS : public Solver {
+class CBS : public Solver
+{
 public:
   static const std::string SOLVER_NAME;
 
 protected:
   // for high-level search
   struct HighLevelNode {
-    int id;        // id
+    int id;  // id
     Paths paths;
     LibCBS::Constraints constraints;
     int makespan;  // makespan
@@ -27,15 +28,22 @@ protected:
     bool valid;
 
     HighLevelNode() {}
-    HighLevelNode(int _id, Paths _paths, LibCBS::Constraints _c,
-                  int _m, int _soc, int _f, bool _valid)
-      : id(_id), paths(_paths), constraints(_c),
-        makespan(_m), soc(_soc), f(_f), valid(_valid) {}
+    HighLevelNode(int _id, Paths _paths, LibCBS::Constraints _c, int _m,
+                  int _soc, int _f, bool _valid)
+        : id(_id),
+          paths(_paths),
+          constraints(_c),
+          makespan(_m),
+          soc(_soc),
+          f(_f),
+          valid(_valid)
+    {
+    }
   };
   using HighLevelNode_p = std::shared_ptr<HighLevelNode>;
   using HighLevelNodes = std::vector<HighLevelNode_p>;
-  using CompareHighLevelNodes = std::function<bool(HighLevelNode_p,
-                                                   HighLevelNode_p)>;
+  using CompareHighLevelNodes =
+      std::function<bool(HighLevelNode_p, HighLevelNode_p)>;
 
   // get single-agent path for the initial node
   Path getInitialPath(int id);
@@ -57,7 +65,7 @@ protected:
 
 public:
   CBS(Problem* _P);
-  virtual ~CBS() {};
+  virtual ~CBS(){};
 
   static void printHelp();
 };
