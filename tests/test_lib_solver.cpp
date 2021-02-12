@@ -11,8 +11,8 @@ TEST(planToPaths, convert)
   Node* x = G.getNode(3);
 
   Plan plan1;
-  plan1.add({ v, w });
-  plan1.add({ u, x });
+  plan1.add({v, w});
+  plan1.add({u, x});
 
   Paths paths = planToPaths(plan1);
   ASSERT_EQ(paths.get(0, 0), v);

@@ -1,5 +1,5 @@
-#include <lib_ir.hpp>
 #include <ir.hpp>
+#include <lib_ir.hpp>
 
 #include "gtest/gtest.h"
 
@@ -11,11 +11,11 @@ TEST(LibIR, identifyInteractingSetByMDD)
   solver.createDistanceTable();
 
   Config starts = P.getConfigStart();
-  Config goals =  P.getConfigGoal();
+  Config goals = P.getConfigGoal();
   Plan plan;
   plan.add(starts);
-  plan.add({ G->getNode(0, 1), G->getNode(1, 1), G->getNode(2, 1) });
-  plan.add({ G->getNode(1, 1), G->getNode(1, 2), G->getNode(2, 2) });
+  plan.add({G->getNode(0, 1), G->getNode(1, 1), G->getNode(2, 1)});
+  plan.add({G->getNode(1, 1), G->getNode(1, 2), G->getNode(2, 2)});
   plan.add(goals);
   ASSERT_TRUE(plan.validate(starts, goals));
 
@@ -33,14 +33,14 @@ TEST(libIR, identifyInteractingSetByMDD_Advanced)
   solver.createDistanceTable();
 
   Config starts = P.getConfigStart();
-  Config goals =  P.getConfigGoal();
+  Config goals = P.getConfigGoal();
   Plan plan;
-  plan.add({ G->getNode(0,3), G->getNode(1,2), G->getNode(2,0) });
-  plan.add({ G->getNode(0,3), G->getNode(1,3), G->getNode(2,1) });
-  plan.add({ G->getNode(1,3), G->getNode(1,4), G->getNode(2,2) });
-  plan.add({ G->getNode(1,3), G->getNode(1,4), G->getNode(2,3) });
-  plan.add({ G->getNode(2,3), G->getNode(1,4), G->getNode(2,4) });
-  plan.add({ G->getNode(3,3), G->getNode(1,4), G->getNode(2,4) });
+  plan.add({G->getNode(0, 3), G->getNode(1, 2), G->getNode(2, 0)});
+  plan.add({G->getNode(0, 3), G->getNode(1, 3), G->getNode(2, 1)});
+  plan.add({G->getNode(1, 3), G->getNode(1, 4), G->getNode(2, 2)});
+  plan.add({G->getNode(1, 3), G->getNode(1, 4), G->getNode(2, 3)});
+  plan.add({G->getNode(2, 3), G->getNode(1, 4), G->getNode(2, 4)});
+  plan.add({G->getNode(3, 3), G->getNode(1, 4), G->getNode(2, 4)});
   ASSERT_TRUE(plan.validate(starts, goals));
 
   auto modif_list1 = LibIR::identifyInteractingSetByMDD(0, plan, &solver);
@@ -60,14 +60,14 @@ TEST(libIR, identifyAgentsAtGoal)
   Node* e = G.getNode(4);
   Node* x = G.getNode(3, 1);
 
-  Config starts = { c, a };
-  Config goals  = { d, e };
+  Config starts = {c, a};
+  Config goals = {d, e};
   Plan plan;
-  plan.add({ c, a });
-  plan.add({ d, b });
-  plan.add({ d, c });
-  plan.add({ x, d });
-  plan.add({ d, e });
+  plan.add({c, a});
+  plan.add({d, b});
+  plan.add({d, c});
+  plan.add({x, d});
+  plan.add({d, e});
   ASSERT_TRUE(plan.validate(starts, goals));
 
   auto modif_list1 = LibIR::identifyAgentsAtGoal(0, plan, d, G.pathDist(c, d));
@@ -84,13 +84,13 @@ TEST(libIR, identifyBottleneckAgents)
   solver.createDistanceTable();
 
   const auto starts = P.getConfigStart();
-  const auto goals  = P.getConfigGoal();
+  const auto goals = P.getConfigGoal();
 
   Plan plan;
   plan.add(starts);
-  plan.add({ G->getNode(0, 3), G->getNode(0, 1) });
-  plan.add({ G->getNode(0, 3), G->getNode(0, 2) });
-  plan.add({ G->getNode(1, 3), G->getNode(0, 3) });
+  plan.add({G->getNode(0, 3), G->getNode(0, 1)});
+  plan.add({G->getNode(0, 3), G->getNode(0, 2)});
+  plan.add({G->getNode(1, 3), G->getNode(0, 3)});
   plan.add(goals);
   ASSERT_TRUE(plan.validate(starts, goals));
 

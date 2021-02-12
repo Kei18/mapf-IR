@@ -3,8 +3,9 @@
  *
  * - ref
  * Čáp, M., Novák, P., Kleiner, A., & Selecký, M. (2015).
- * Prioritized planning algorithms for trajectory coordination of multiple mobile robots.
- * IEEE transactions on automation science and engineering, 12(3), 835-849.
+ * Prioritized planning algorithms for trajectory coordination of multiple
+ * mobile robots. IEEE transactions on automation science and engineering,
+ * 12(3), 835-849.
  *
  */
 
@@ -20,8 +21,9 @@ private:
   bool disable_dist_init = false;  // option
 
   // get one agent path
-  Path getPrioritizedPath(int id, const Paths& paths,
-                          const std::vector<std::tuple<Node*, int>> constraints);
+  Path getPrioritizedPath(
+      int id, const Paths& paths,
+      const std::vector<std::tuple<Node*, int>> constraints);
 
   void run();
 

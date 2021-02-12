@@ -3,9 +3,9 @@
 const std::string HCA::SOLVER_NAME = "HCA";
 
 HCA::HCA(Problem* _P)
-  : Solver(_P),
-    table_starts(G->getNodesSize(), false),
-    table_goals(G->getNodesSize(), false)
+    : Solver(_P),
+      table_starts(G->getNodesSize(), false),
+      table_goals(G->getNodesSize(), false)
 {
   solver_name = HCA::SOLVER_NAME;
 }
@@ -85,8 +85,8 @@ Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
     return false;
   };
 
-  const auto p = Solver::getPrioritizedPath
-    (id, s, g, paths, getRemainedTime(), max_timestep, {}, compare, false);
+  const auto p = Solver::getPrioritizedPath(id, s, g, paths, getRemainedTime(),
+                                            max_timestep, {}, compare, false);
 
   // update path table
   updatePathTableWithoutClear(id, p, paths);

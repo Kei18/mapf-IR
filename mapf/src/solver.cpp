@@ -12,7 +12,8 @@ Solver::Solver(Problem* _P)
       max_comp_time(P->getMaxCompTime()),
       LB_soc(0),
       LB_makespan(0),
-      DistanceTable(P->getNum(), std::vector<int>(G->getNodesSize(), max_timestep)),
+      DistanceTable(P->getNum(),
+                    std::vector<int>(G->getNodesSize(), max_timestep)),
       DistanceTable_p(nullptr)
 {
   solved = false;
@@ -42,28 +43,20 @@ void Solver::solve()
   end();
 }
 
-Path Solver::getTimedPath
-(Node* const s,
- Node* const g,
- AstarHeuristics& fValue,
- CompareAstarNode& compare,
- CheckAstarFin& checkAstarFin,
- CheckInvalidAstarNode& checkInvalidAstarNode)
+Path Solver::getTimedPath(Node* const s, Node* const g, AstarHeuristics& fValue,
+                          CompareAstarNode& compare,
+                          CheckAstarFin& checkAstarFin,
+                          CheckInvalidAstarNode& checkInvalidAstarNode)
 {
-  return getPathBySpaceTimeAstar
-    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
+  return getPathBySpaceTimeAstar(s, g, fValue, compare, checkAstarFin,
+                                 checkInvalidAstarNode, getRemainedTime());
 }
 
-Path Solver::getPrioritizedPath
-(const int id,
- Node* const s,
- Node* const g,
- const Paths& paths,
- const int time_limit,
- const int upper_bound,
- const std::vector<std::tuple<Node*, int>>& constraints,
- CompareAstarNode& compare,
- const bool manage_path_table)
+Path Solver::getPrioritizedPath(
+    const int id, Node* const s, Node* const g, const Paths& paths,
+    const int time_limit, const int upper_bound,
+    const std::vector<std::tuple<Node*, int>>& constraints,
+    CompareAstarNode& compare, const bool manage_path_table)
 {
   const int ideal_dist = pathDist(id);
 
@@ -88,7 +81,7 @@ Path Solver::getPrioritizedPath
   // update PATH_TABLE
   if (manage_path_table) updatePathTable(paths, id);
 
-  const int makespan = PATH_TABLE.size()-1;
+  const int makespan = PATH_TABLE.size() - 1;
 
   // fast collision checking
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
@@ -102,7 +95,8 @@ Path Solver::getPrioritizedPath
         if (PATH_TABLE[m->g][m->v->id] != NIL) return true;
         // swap conflict
         if (PATH_TABLE[m->g][m->p->v->id] != NIL &&
-            PATH_TABLE[m->g-1][m->v->id] == PATH_TABLE[m->g][m->p->v->id]) return true;
+            PATH_TABLE[m->g - 1][m->v->id] == PATH_TABLE[m->g][m->p->v->id])
+          return true;
       }
     }
 
@@ -114,8 +108,8 @@ Path Solver::getPrioritizedPath
     return false;
   };
 
-  auto p = getPathBySpaceTimeAstar
-    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, time_limit);
+  auto p = getPathBySpaceTimeAstar(s, g, fValue, compare, checkAstarFin,
+                                   checkInvalidAstarNode, time_limit);
 
   // clear used path table
   if (manage_path_table) clearPathTable(paths);
@@ -150,11 +144,12 @@ void Solver::clearPathTable(const Paths& paths)
   }
 }
 
-void Solver::updatePathTableWithoutClear(const int id, const Path& p, const Paths& paths)
+void Solver::updatePathTableWithoutClear(const int id, const Path& p,
+                                         const Paths& paths)
 {
   if (p.empty()) return;
 
-  const int makespan = PATH_TABLE.size()-1;
+  const int makespan = PATH_TABLE.size() - 1;
   const int nodes_size = G->getNodesSize();
   const int p_makespan = p.size() - 1;
 
@@ -177,15 +172,13 @@ void Solver::updatePathTableWithoutClear(const int id, const Path& p, const Path
   }
 }
 
-Path Solver::getPrioritizedPath
-(const int id,
- const Paths& paths,
- const int t,
- const int ub,
- const std::vector<std::tuple<Node*, int>>& c,
- CompareAstarNode& compare)
+Path Solver::getPrioritizedPath(const int id, const Paths& paths, const int t,
+                                const int ub,
+                                const std::vector<std::tuple<Node*, int>>& c,
+                                CompareAstarNode& compare)
 {
-  return getPrioritizedPath(id, P->getStart(id), P->getGoal(id), paths, t, ub, c, compare);
+  return getPrioritizedPath(id, P->getStart(id), P->getGoal(id), paths, t, ub,
+                            c, compare);
 }
 
 void Solver::start()
@@ -203,7 +196,8 @@ void Solver::end()
 }
 
 int Solver::getSolverElapsedTime() const { return getElapsedTime(t_start); }
-int Solver::getRemainedTime() const {
+int Solver::getRemainedTime() const
+{
   return std::max(0, max_comp_time - getSolverElapsedTime());
 }
 
@@ -258,25 +252,24 @@ void Solver::createDistanceTable()
   }
 }
 
-int Solver::pathDist(const int i, Node* const s) const {
+int Solver::pathDist(const int i, Node* const s) const
+{
   if (DistanceTable_p != nullptr) {
     return DistanceTable_p->operator[](i)[s->id];
   }
   return DistanceTable[i][s->id];
 }
 
-int Solver::pathDist(const int i) const {
-  return pathDist(i, P->getStart(i));
-}
+int Solver::pathDist(const int i) const { return pathDist(i, P->getStart(i)); }
 
 void Solver::setSolverOption(std::shared_ptr<Solver> solver,
                              const std::vector<std::string>& option)
 {
   if (option.empty()) return;
-  const int argc = option.size()+1;
+  const int argc = option.size() + 1;
   char* argv[argc];
   for (int i = 1; i < argc; ++i) {
-    char* tmp = const_cast<char*>(option[i-1].c_str());
+    char* tmp = const_cast<char*>(option[i - 1].c_str());
     argv[i] = tmp;
   }
   solver->setParams(argc, argv);

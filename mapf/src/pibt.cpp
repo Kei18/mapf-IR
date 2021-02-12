@@ -3,9 +3,9 @@
 const std::string PIBT::SOLVER_NAME = "PIBT";
 
 PIBT::PIBT(Problem* _P)
-  : Solver(_P),
-    occupied_now(Agents(G->getNodesSize(), nullptr)),
-    occupied_next(Agents(G->getNodesSize(), nullptr))
+    : Solver(_P),
+      occupied_now(Agents(G->getNodesSize(), nullptr)),
+      occupied_next(Agents(G->getNodesSize(), nullptr))
 {
   solver_name = PIBT::SOLVER_NAME;
 }
@@ -21,8 +21,7 @@ void PIBT::run()
   };
 
   // agents have not decided their next locations
-  std::priority_queue<Agent*, Agents, decltype(compare)> undecided(
-      compare);
+  std::priority_queue<Agent*, Agents, decltype(compare)> undecided(compare);
   // agents have already decided their next locations
   std::vector<Agent*> decided;
 
@@ -179,8 +178,8 @@ Node* PIBT::chooseNode(Agent* a)
     } else {
       int c_v = pathDist(a->id, v);
       int c_u = pathDist(a->id, u);
-      if ((c_u < c_v) ||
-          (c_u == c_v && occupied_now[v->id] != nullptr && occupied_now[u->id] == nullptr)) {
+      if ((c_u < c_v) || (c_u == c_v && occupied_now[v->id] != nullptr &&
+                          occupied_now[u->id] == nullptr)) {
         v = u;
       }
     }

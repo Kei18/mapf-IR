@@ -138,7 +138,7 @@ struct Node {
 {
   int cost = path.size() - 1;
   auto itr = path.end() - 1;
-  while (itr != path.begin() && *itr == *(itr-1)) {
+  while (itr != path.begin() && *itr == *(itr - 1)) {
     --cost;
     --itr;
   }
@@ -159,7 +159,8 @@ private:
   void registerPath(const Path& path);
 
   // get path avoiding several nodes, used for creating well-formed instance
-  Path getPathNoCache(Node* const s, Node* const g, Nodes prohibited={}, std::mt19937* MT=nullptr);
+  Path getPathNoCache(Node* const s, Node* const g, Nodes prohibited = {},
+                      std::mt19937* MT = nullptr);
 
   // find a path using cache, if failed then return empty
   Path AstarSearchWithCache(Node* const s, Node* const g);
@@ -185,13 +186,14 @@ public:
   virtual int dist(Node* const v, Node* const u) { return 0; }
 
   // get path between two nodes
-  Path getPath(Node* const s, Node* const g, const bool cache=true);
+  Path getPath(Node* const s, Node* const g, const bool cache = true);
 
   // get path length between two nodes
-  int pathDist(Node* const s, Node* const g, const bool cache=true);
+  int pathDist(Node* const s, Node* const g, const bool cache = true);
 
   // get path avoiding several nodes, used for creating well-formed instance
-  Path getPath(Node* const s, Node* const g, Nodes prohibited, std::mt19937* MT=nullptr);
+  Path getPath(Node* const s, Node* const g, Nodes prohibited,
+               std::mt19937* MT = nullptr);
 
   // get all nodes
   Nodes getV();

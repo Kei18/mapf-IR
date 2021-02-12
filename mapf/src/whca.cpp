@@ -3,9 +3,7 @@
 const std::string WHCA::SOLVER_NAME = "WHCA";
 const int WHCA::DEFAULT_WINDOW = 10;
 
-WHCA::WHCA(Problem* _P)
-  : Solver(_P),
-    table_goals(G->getNodesSize(), false)
+WHCA::WHCA(Problem* _P) : Solver(_P), table_goals(G->getNodesSize(), false)
 {
   window = DEFAULT_WINDOW;
   solver_name = SOLVER_NAME + "-" + std::to_string(window);
@@ -24,7 +22,8 @@ void WHCA::run()
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
   if (!disable_dist_init) {
-    std::sort(ids.begin(), ids.end(), [&](int a, int b) { return pathDist(a) > pathDist(b); });
+    std::sort(ids.begin(), ids.end(),
+              [&](int a, int b) { return pathDist(a) > pathDist(b); });
   }
 
   // start planning
@@ -71,7 +70,8 @@ void WHCA::run()
   solution = pathsToPlan(paths);
 }
 
-Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& paths)
+Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g,
+                                     const Paths& paths)
 {
   const int makespan = paths.getMakespan();
 
@@ -117,13 +117,15 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g, const Paths& path
         if (PATH_TABLE[m->g][m->v->id] != Solver::NIL) return true;
         // swap conflict
         if (PATH_TABLE[m->g][m->p->v->id] != Solver::NIL &&
-            PATH_TABLE[m->g-1][m->v->id] == PATH_TABLE[m->g][m->p->v->id]) return true;
+            PATH_TABLE[m->g - 1][m->v->id] == PATH_TABLE[m->g][m->p->v->id])
+          return true;
       }
     }
     return false;
   };
 
-  Path path = getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
+  Path path =
+      getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
   const int path_size = path.size();
   // format
   if (!path.empty() && path_size - 1 > window) path.resize(window + 1);

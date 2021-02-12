@@ -14,8 +14,6 @@ void IR_FOCUS_GOALS::refinePlan()
 
 void IR_FOCUS_GOALS::printHelp()
 {
-  std::cout
-    << IR_FOCUS_GOALS::SOLVER_NAME << "\n"
-    << "  (no option)"
-    << std::endl;
+  std::cout << IR_FOCUS_GOALS::SOLVER_NAME << "\n"
+            << "  (no option)" << std::endl;
 }

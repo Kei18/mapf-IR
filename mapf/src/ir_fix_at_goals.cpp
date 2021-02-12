@@ -14,8 +14,6 @@ void IR_FIX_AT_GOALS::refinePlan()
 
 void IR_FIX_AT_GOALS::printHelp()
 {
-  std::cout
-    << IR_FIX_AT_GOALS::SOLVER_NAME << "\n"
-    << "  (no option)"
-    << std::endl;
+  std::cout << IR_FIX_AT_GOALS::SOLVER_NAME << "\n"
+            << "  (no option)" << std::endl;
 }

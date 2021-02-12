@@ -4,8 +4,8 @@
  *
  * - ref
  * Okumura, K., Tamura, Y. & Défago, X. (2020).
- * winPIBT: Extended Prioritized Algorithm for Iterative Multi-agent Path Finding
- * IJCAI Workshop on Multi-Agent Path Finidng (WoMAPF)
+ * winPIBT: Extended Prioritized Algorithm for Iterative Multi-agent Path
+ * Finding IJCAI Workshop on Multi-Agent Path Finidng (WoMAPF)
  */
 
 #pragma once
@@ -28,10 +28,11 @@ private:
 
   Path getSinglePath(const int id, std::vector<Path>& paths);
   bool funcPIBT(const int id, std::vector<Path>& paths,
-                Node* v_other_to=nullptr, Node* v_other_from=nullptr);
+                Node* v_other_to = nullptr, Node* v_other_from = nullptr);
   Node* chooseNode(const int id, std::vector<Path>& paths,
-                   Node* v_other_to=nullptr, Node* v_other_from=nullptr);
-  void updateLoc(const int id, const int t, Node* v_now, Node* v_next, std::vector<Path>& paths);
+                   Node* v_other_to = nullptr, Node* v_other_from = nullptr);
+  void updateLoc(const int id, const int t, Node* v_now, Node* v_next,
+                 std::vector<Path>& paths);
 
 public:
   winPIBT(Problem* _P);

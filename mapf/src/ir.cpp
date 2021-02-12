@@ -13,16 +13,16 @@ const int IR::DEFAULT_TIMEOUT_REFINEMENT = 3000;
 const int IR::DEFAULT_SAMPLING_NUM = 10;
 
 IR::IR(Problem* _P)
-  : Solver(_P),
-    init_solver(DEFAULT_INIT_SOLVER),
-    refine_solver(DEFAULT_REFINE_SOLVER),
-    current_iteration(0),
-    max_iteration(DEFAULT_MAX_ITERATION),
-    output_file(DEFAULT_OUTPUT_FILE),
-    make_log_every_itr(false),
-    timeout_refinement(DEFAULT_TIMEOUT_REFINEMENT),
-    verbose_underlying_solver(false),
-    sampling_num(std::min(DEFAULT_SAMPLING_NUM, P->getNum()))
+    : Solver(_P),
+      init_solver(DEFAULT_INIT_SOLVER),
+      refine_solver(DEFAULT_REFINE_SOLVER),
+      current_iteration(0),
+      max_iteration(DEFAULT_MAX_ITERATION),
+      output_file(DEFAULT_OUTPUT_FILE),
+      make_log_every_itr(false),
+      timeout_refinement(DEFAULT_TIMEOUT_REFINEMENT),
+      verbose_underlying_solver(false),
+      sampling_num(std::min(DEFAULT_SAMPLING_NUM, P->getNum()))
 {
   solver_name = IR::SOLVER_NAME;
 }
@@ -37,11 +37,10 @@ void IR::run()
   if (!solved) return;  // failure
   const int init_plan_soc = solution.getSOC();
   const int init_plan_makespan = solution.getMakespan();
-  HIST.push_back(std::make_tuple(getSolverElapsedTime(), init_plan_soc, init_plan_makespan));
-  info("  init plan",
-       ", comp_time:", getSolverElapsedTime(),
-       ", soc:", init_plan_soc,
-       ", makespan:", init_plan_makespan);
+  HIST.push_back(std::make_tuple(getSolverElapsedTime(), init_plan_soc,
+                                 init_plan_makespan));
+  info("  init plan", ", comp_time:", getSolverElapsedTime(),
+       ", soc:", init_plan_soc, ", makespan:", init_plan_makespan);
   last_soc = init_plan_soc;
   last_makespan = init_plan_makespan;
 
@@ -53,12 +52,10 @@ void IR::run()
   // print final info
   const int soc = solution.getSOC();
   const int makespan = solution.getMakespan();
-  info("  refinement results, soc:",
-       init_plan_soc, "->", soc,
-       " (improved:" , init_plan_soc - soc, ")",
-       ", makespan:",
-       init_plan_makespan, "->", solution.getMakespan(),
-       " (improved:" , init_plan_makespan - makespan, ")");
+  info("  refinement results, soc:", init_plan_soc, "->", soc,
+       " (improved:", init_plan_soc - soc, ")",
+       ", makespan:", init_plan_makespan, "->", solution.getMakespan(),
+       " (improved:", init_plan_makespan - makespan, ")");
 }
 
 void IR::updateSolution(const Plan& plan)
@@ -83,24 +80,19 @@ void IR::printProcessInfo()
   const int soc = solution.getSOC();
   const int makespan = solution.getMakespan();
 
-  info("  iter: ", current_iteration,
-       ", comp_time:", getSolverElapsedTime(),
+  info("  iter: ", current_iteration, ", comp_time:", getSolverElapsedTime(),
        ", soc:", soc, "(improved: ", last_soc - soc,
-       ", LB: ", getLowerBoundSOC(), ")",
-       ", makespan:", makespan, "(improved: ", last_makespan - makespan,
+       ", LB: ", getLowerBoundSOC(), ")", ", makespan:", makespan,
+       "(improved: ", last_makespan - makespan,
        ", LB: ", getLowerBoundMakespan(), ")");
 }
 
-void IR::setInitialPlan(const Plan& plan)
-{
-  solution = plan;
-}
+void IR::setInitialPlan(const Plan& plan) { solution = plan; }
 
 // failed -> return empty plan
 Plan IR::getInitialPlan()
 {
   if (!solution.empty()) return solution;
-
 
   // set problem
   Problem _P = Problem(P, max_comp_time);
@@ -147,10 +139,7 @@ Plan IR::getInitialPlan()
   return plan;
 }
 
-void IR::refinePlan()
-{
-  updateByRandom();
-}
+void IR::refinePlan() { updateByRandom(); }
 
 std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,
                                           const std::vector<int>& sample)
@@ -222,7 +211,8 @@ void IR::updatePlanFocusOneAgent(std::function<void(const int, Plan&, IR*)> fn)
       if (plan.getPathCost(i) - pathDist(i) == 0) continue;
       fn(i, plan, this);
     }
-  } while (last_itr_soc != plan.getSOC() && !overCompTime() && current_iteration < max_iteration);
+  } while (last_itr_soc != plan.getSOC() && !overCompTime() &&
+           current_iteration < max_iteration);
 }
 
 // refinement rules
@@ -234,9 +224,8 @@ void IR::updateBySinglePaths(const int i, Plan& plan, IR* solver)
 
   // get new path
   auto paths = planToPaths(plan);
-  const auto path = solver->getPrioritizedPath(i, paths,
-                                               solver->getRefineTimeLimit(),
-                                               solver->getMaxTimestep());
+  const auto path = solver->getPrioritizedPath(
+      i, paths, solver->getRefineTimeLimit(), solver->getMaxTimestep());
   if (path.empty() || getPathCost(path) >= cost) return;
 
   // update paths
@@ -260,14 +249,14 @@ void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
 
   for (int t = cost - 1; t > dist; --t) {
     if (path[t] == g) continue;
-    if (path[t-1] != g || path[t+1] != g) break;
+    if (path[t - 1] != g || path[t + 1] != g) break;
 
     for (int j = 0; j < P->getNum(); ++j) {
       if (i == j) continue;
       if (paths.get(j, t) != g) continue;
 
       // create temporal paths
-      auto tmp_path  = path;
+      auto tmp_path = path;
       auto tmp_paths = paths;
       tmp_path.resize(t);
       tmp_paths.insert(i, tmp_path);
@@ -279,12 +268,9 @@ void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
       std::tuple<Node*, int> constraint = std::make_tuple(g, t);
 
       // get refined plan for j
-      const auto refined_path_j = solver->getPrioritizedPath
-        (j,
-         tmp_paths,
-         solver->getRefineTimeLimit() - getElapsedTime(t_s),
-         upper_bound,
-         { constraint });
+      const auto refined_path_j = solver->getPrioritizedPath(
+          j, tmp_paths, solver->getRefineTimeLimit() - getElapsedTime(t_s),
+          upper_bound, {constraint});
       if (refined_path_j.empty()) {
         stop_flg = true;
         break;
@@ -306,7 +292,8 @@ void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
 void IR::updateByFocusGoals(const int i, Plan& plan, IR* solver)
 {
   const auto P = solver->getP();
-  const auto modif_list = LibIR::identifyAgentsAtGoal(i, plan, P->getGoal(i), solver->pathDist(i));
+  const auto modif_list =
+      LibIR::identifyAgentsAtGoal(i, plan, P->getGoal(i), solver->pathDist(i));
   if (modif_list.empty()) return;
   Problem _P = Problem(P, solver->getRefineTimeLimit());
   plan = std::get<1>(solver->getOptimalPlan(&_P, plan, modif_list));
@@ -315,8 +302,8 @@ void IR::updateByFocusGoals(const int i, Plan& plan, IR* solver)
 
 void IR::updateByBottleneck(const int i, Plan& plan, IR* solver)
 {
-  const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore
-                                      (i, plan, solver, solver->getRefineTimeLimit()));
+  const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore(
+      i, plan, solver, solver->getRefineTimeLimit()));
   if (modif_list.empty()) return;
   Problem _P = Problem(solver->getP(), solver->getRefineTimeLimit());
   plan = std::get<1>(solver->getOptimalPlan(&_P, plan, modif_list));
@@ -326,15 +313,14 @@ void IR::updateByBottleneck(const int i, Plan& plan, IR* solver)
 void IR::updateByMDD(const int i, Plan& plan, IR* solver)
 {
   const auto P = solver->getP();
-  const auto modif_list =
-    LibIR::identifyInteractingSetByMDD(i, plan, solver, true, solver->getRefineTimeLimit(), P->getMT());
+  const auto modif_list = LibIR::identifyInteractingSetByMDD(
+      i, plan, solver, true, solver->getRefineTimeLimit(), P->getMT());
   if (modif_list.empty()) return;
   Problem _P = Problem(P, solver->getRefineTimeLimit());
   plan = std::get<1>(solver->getOptimalPlan(&_P, plan, modif_list));
   solver->updateSolution(plan);
 }
 // ============================
-
 
 void IR::setParams(int argc, char* argv[])
 {

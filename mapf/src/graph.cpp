@@ -37,27 +37,32 @@ Path Graph::getPath(Node* const s, Node* const g, const bool cache)
   return path;
 }
 
-Path Graph::getPath(Node* const s, Node* const g, Nodes prohibited, std::mt19937* MT)
+Path Graph::getPath(Node* const s, Node* const g, Nodes prohibited,
+                    std::mt19937* MT)
 {
   return getPathNoCache(s, g, prohibited, MT);
 }
 
-Path Graph::getPathNoCache(Node* const s, Node* const g, Nodes prohibited, std::mt19937* MT)
+Path Graph::getPathNoCache(Node* const s, Node* const g, Nodes prohibited,
+                           std::mt19937* MT)
 {
   if (s == g) return {};
 
   using AstarNode = std::tuple<Node*, int, int>;  // node, g, f
   auto compare = [&](AstarNode a, AstarNode b) {
     // f-value
-    if (std::get<2>(a) != std::get<2>(b)) return std::get<2>(a) > std::get<2>(b);
+    if (std::get<2>(a) != std::get<2>(b))
+      return std::get<2>(a) > std::get<2>(b);
     // g-value
-    if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);
+    if (std::get<1>(a) != std::get<1>(b))
+      return std::get<1>(a) < std::get<1>(b);
     return false;
   };
 
   // OPEN and CLOSE list
   constexpr int NIL = -1;
-  std::priority_queue<AstarNode, std::vector<AstarNode>, decltype(compare)> OPEN(compare);
+  std::priority_queue<AstarNode, std::vector<AstarNode>, decltype(compare)>
+      OPEN(compare);
   std::vector<int> CLOSE(V.size(), NIL);  // node id, distance
 
   // initial node
@@ -66,7 +71,6 @@ Path Graph::getPathNoCache(Node* const s, Node* const g, Nodes prohibited, std::
   // main loop
   bool invalid = true;
   while (!OPEN.empty()) {
-
     // minimum node
     auto n = OPEN.top();
     OPEN.pop();
@@ -99,7 +103,7 @@ Path Graph::getPathNoCache(Node* const s, Node* const g, Nodes prohibited, std::
   if (invalid) return {};
 
   // success
-  Path path = { g };
+  Path path = {g};
   auto n = g;
   while (n != s) {
     for (auto m : n->neighbor) {
@@ -313,7 +317,7 @@ Grid::Grid(const std::string& _map_file) : Graph(), map_file(_map_file)
   // fundamental graph params
   while (getline(file, line)) {
     // for CRLF coding
-    if (*(line.end()-1) == 0x0d) line.pop_back();
+    if (*(line.end() - 1) == 0x0d) line.pop_back();
 
     if (std::regex_match(line, results, r_height)) {
       height = std::stoi(results[1].str());
@@ -330,7 +334,7 @@ Grid::Grid(const std::string& _map_file) : Graph(), map_file(_map_file)
   V = Nodes(width * height, nullptr);
   while (getline(file, line)) {
     // for CRLF coding
-    if (*(line.end()-1) == 0x0d) line.pop_back();
+    if (*(line.end() - 1) == 0x0d) line.pop_back();
 
     if ((int)line.size() != width) halt("map format is invalid");
     for (int x = 0; x < width; ++x) {

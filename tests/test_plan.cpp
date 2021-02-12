@@ -1,5 +1,5 @@
-#include <plan.hpp>
 #include <graph.hpp>
+#include <plan.hpp>
 
 #include "gtest/gtest.h"
 
@@ -10,8 +10,8 @@ TEST(Plan, basic)
   Node* u = G.getNode(1);
   Node* w = G.getNode(2);
 
-  Config c0 = { v, u };
-  Config c1 = { v, w };
+  Config c0 = {v, u};
+  Config c1 = {v, w};
 
   Plan plan;
 
@@ -49,10 +49,10 @@ TEST(Plan, add)
   Node* w = G.getNode(2);
   Node* x = G.getNode(3);
 
-  Config c1_0 = { v, u };
-  Config c1_1 = { v, w };
-  Config c2_0 = { v, w };
-  Config c2_1 = { v, x };
+  Config c1_0 = {v, u};
+  Config c1_1 = {v, w};
+  Config c2_0 = {v, w};
+  Config c2_1 = {v, x};
 
   Plan plan1;
   plan1.add(c1_0);
@@ -80,40 +80,40 @@ TEST(Plan, validate)
 
   // normal
   Plan plan0;
-  plan0.add({ v, u });
-  plan0.add({ u, w });
-  ASSERT_TRUE(plan0.validate({ v, u }, { u, w }));
+  plan0.add({v, u});
+  plan0.add({u, w});
+  ASSERT_TRUE(plan0.validate({v, u}, {u, w}));
 
   // different starts
   Plan plan1;
-  plan1.add({ v, w });
-  plan1.add({ u, w });
-  ASSERT_FALSE(plan1.validate({ v, u }, { u, w }));
+  plan1.add({v, w});
+  plan1.add({u, w});
+  ASSERT_FALSE(plan1.validate({v, u}, {u, w}));
 
   // different goals
   Plan plan2;
-  plan2.add({ v, u });
-  plan2.add({ v, w });
-  ASSERT_FALSE(plan2.validate({ v, u }, { u, w }));
+  plan2.add({v, u});
+  plan2.add({v, w});
+  ASSERT_FALSE(plan2.validate({v, u}, {u, w}));
 
   // vertex conflict
   Plan plan3;
-  plan3.add({ v, u });
-  plan3.add({ u, u });
-  plan3.add({ u, w });
-  ASSERT_FALSE(plan3.validate({ v, u }, { u, w }));
+  plan3.add({v, u});
+  plan3.add({u, u});
+  plan3.add({u, w});
+  ASSERT_FALSE(plan3.validate({v, u}, {u, w}));
 
   // swap conflict
   Plan plan4;
-  plan4.add({ v, u });
-  plan4.add({ u, v });
-  ASSERT_FALSE(plan4.validate({ v, u }, { u, w }));
+  plan4.add({v, u});
+  plan4.add({u, v});
+  ASSERT_FALSE(plan4.validate({v, u}, {u, w}));
 
   // invalid move
   Plan plan5;
-  plan5.add({ v });
-  plan5.add({ w });
-  ASSERT_FALSE(plan5.validate({ v }, { w }));
+  plan5.add({v});
+  plan5.add({w});
+  ASSERT_FALSE(plan5.validate({v}, {w}));
 }
 
 TEST(Plan, maxConstraintTime)

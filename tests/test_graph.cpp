@@ -58,12 +58,12 @@ TEST(Graph, cost)
   Node* u = G.getNode(1);
   Node* w = G.getNode(2);
 
-  Path path2 = { v, u, w };
+  Path path2 = {v, u, w};
   ASSERT_EQ(getPathCost(path2), 2);
 
-  Path path1 = { v, u, u };
+  Path path1 = {v, u, u};
   ASSERT_EQ(getPathCost(path1), 1);
 
-  Path path0 = { u, u, u };
+  Path path0 = {u, u, u};
   ASSERT_EQ(getPathCost(path0), 0);
 }

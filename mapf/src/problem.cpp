@@ -6,7 +6,7 @@
 #include "../include/util.hpp"
 
 Problem::Problem(const std::string& _instance)
-  : instance(_instance), instance_initialized(true)
+    : instance(_instance), instance_initialized(true)
 {
   // read instance file
   std::ifstream file(instance);
@@ -28,7 +28,7 @@ Problem::Problem(const std::string& _instance)
   bool well_formed = false;
   while (getline(file, line)) {
     // for CRLF coding
-    if (*(line.end()-1) == 0x0d) line.pop_back();
+    if (*(line.end() - 1) == 0x0d) line.pop_back();
     // comment
     if (std::regex_match(line, results, r_comment)) {
       continue;
@@ -133,14 +133,14 @@ Problem::Problem(Problem* P, Config _config_s, Config _config_g,
 }
 
 Problem::Problem(Problem* P, int _max_comp_time)
-  : G(P->getG()),
-    MT(P->getMT()),
-    config_s(P->getConfigStart()),
-    config_g(P->getConfigGoal()),
-    num_agents(P->getNum()),
-    max_timestep(P->getMaxTimestep()),
-    max_comp_time(_max_comp_time),
-    instance_initialized(false)
+    : G(P->getG()),
+      MT(P->getMT()),
+      config_s(P->getConfigStart()),
+      config_g(P->getConfigGoal()),
+      num_agents(P->getNum()),
+      max_timestep(P->getMaxTimestep()),
+      max_comp_time(_max_comp_time),
+      instance_initialized(false)
 {
 }
 
@@ -231,13 +231,13 @@ void Problem::setWellFormedInstance()
       // determine start
       Node* s;
       do {
-        s = G->getNode(getRandomInt(0, N-1, MT));
+        s = G->getNode(getRandomInt(0, N - 1, MT));
       } while (s == nullptr || inArray(s, prohibited));
 
       // determine goal
       Node* g;
       do {
-        g = G->getNode(getRandomInt(0, N-1, MT));
+        g = G->getNode(getRandomInt(0, N - 1, MT));
       } while (g == nullptr || g == s || inArray(g, prohibited));
 
       // ensure well formed property

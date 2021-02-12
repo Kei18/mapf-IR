@@ -3,16 +3,15 @@
 #include <fstream>
 #include <memory>
 
-#include "../include/push_and_swap.hpp"
-#include "../include/icbs.hpp"
 #include "../include/ecbs.hpp"
+#include "../include/icbs.hpp"
 #include "../include/pibt.hpp"
+#include "../include/push_and_swap.hpp"
 
 const std::string PIBT_COMPLETE::SOLVER_NAME = "PIBT_COMPLETE";
 
 PIBT_COMPLETE::PIBT_COMPLETE(Problem* _P)
-  : Solver(_P),
-    comp_solver_type(COMP_SOLVER_TYPE::PUSH_AND_SWAP)
+    : Solver(_P), comp_solver_type(COMP_SOLVER_TYPE::PUSH_AND_SWAP)
 {
   solver_name = SOLVER_NAME;
   comp_time_complement = 0;
@@ -27,9 +26,11 @@ void PIBT_COMPLETE::run()
   }
 
   // solve by PIBT
-  Problem _P = Problem(P, P->getConfigStart(), P->getConfigGoal(), max_comp_time, LB_makespan);
+  Problem _P = Problem(P, P->getConfigStart(), P->getConfigGoal(),
+                       max_comp_time, LB_makespan);
   std::unique_ptr<Solver> init_solver = std::make_unique<PIBT>(&_P);
-  init_solver->setDistanceTable((DistanceTable_p == nullptr) ? &DistanceTable : DistanceTable_p);
+  init_solver->setDistanceTable((DistanceTable_p == nullptr) ? &DistanceTable
+                                                             : DistanceTable_p);
   info(" ", "run PIBT until timestep", LB_makespan);
   init_solver->solve();
   solution = init_solver->getSolution();
@@ -46,23 +47,24 @@ void PIBT_COMPLETE::run()
                          getRemainedTime(), max_timestep - LB_makespan);
     std::shared_ptr<Solver> comp_solver;
     switch (comp_solver_type) {
-    case COMP_SOLVER_TYPE::ICBS:
-      comp_solver = std::make_shared<ICBS>(&_Q);
-      break;
-    case COMP_SOLVER_TYPE::ECBS:
-      comp_solver = std::make_shared<ECBS>(&_Q);
-      break;
-    default:
-      comp_solver = std::make_shared<PushAndSwap>(&_Q);
-      break;
+      case COMP_SOLVER_TYPE::ICBS:
+        comp_solver = std::make_shared<ICBS>(&_Q);
+        break;
+      case COMP_SOLVER_TYPE::ECBS:
+        comp_solver = std::make_shared<ECBS>(&_Q);
+        break;
+      default:
+        comp_solver = std::make_shared<PushAndSwap>(&_Q);
+        break;
     }
 
     // set solver options
     setSolverOption(comp_solver, option_comp_solver);
-    comp_solver->setDistanceTable((DistanceTable_p == nullptr) ? &DistanceTable : DistanceTable_p);
+    comp_solver->setDistanceTable(
+        (DistanceTable_p == nullptr) ? &DistanceTable : DistanceTable_p);
 
-    info(" ", "elapsed:", getSolverElapsedTime(),
-         ", use", comp_solver->getSolverName(), "to complement the remain");
+    info(" ", "elapsed:", getSolverElapsedTime(), ", use",
+         comp_solver->getSolverName(), "to complement the remain");
 
     // solve
     comp_solver->solve();
@@ -76,9 +78,9 @@ void PIBT_COMPLETE::run()
 void PIBT_COMPLETE::setParams(int argc, char* argv[])
 {
   struct option longopts[] = {
-    {"comp-solver", required_argument, 0, 'x'},
-    {"option-comp-solver", required_argument, 0, 'X'},
-    {0, 0, 0, 0},
+      {"comp-solver", required_argument, 0, 'x'},
+      {"option-comp-solver", required_argument, 0, 'X'},
+      {0, 0, 0, 0},
   };
   optind = 1;  // reset
   int opt, longindex, s_size;
@@ -117,16 +119,17 @@ void PIBT_COMPLETE::setParams(int argc, char* argv[])
 
 void PIBT_COMPLETE::printHelp()
 {
-  std::cout << PIBT_COMPLETE::SOLVER_NAME << "\n"
-            << "  -x --comp-solver [SOLVER]"
-            << "     "
-            << "init solver: { PushAndSwap, ECBS, ICBS }, default: PushAndSwap\n"
+  std::cout
+      << PIBT_COMPLETE::SOLVER_NAME << "\n"
+      << "  -x --comp-solver [SOLVER]"
+      << "     "
+      << "init solver: { PushAndSwap, ECBS, ICBS }, default: PushAndSwap\n"
 
-            << "  -X --option-comp-solver [\"OPTION\"]\n"
-            << "                                "
-            << "option for comp-solver\n"
+      << "  -X --option-comp-solver [\"OPTION\"]\n"
+      << "                                "
+      << "option for comp-solver\n"
 
-            << std::endl;
+      << std::endl;
 }
 
 void PIBT_COMPLETE::makeLog(const std::string& logfile)

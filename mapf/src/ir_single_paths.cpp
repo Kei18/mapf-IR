@@ -14,8 +14,6 @@ void IR_SINGLE_PATHS::refinePlan()
 
 void IR_SINGLE_PATHS::printHelp()
 {
-  std::cout
-    << IR_SINGLE_PATHS::SOLVER_NAME << "\n"
-    << "  (no option)"
-    << std::endl;
+  std::cout << IR_SINGLE_PATHS::SOLVER_NAME << "\n"
+            << "  (no option)" << std::endl;
 }

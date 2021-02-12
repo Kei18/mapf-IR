@@ -107,7 +107,7 @@ Path CBS::getInitialPath(int id)
   Node* g = P->getGoal(id);
   Nodes config_g = P->getConfigGoal();
 
-  Path path = { s };
+  Path path = {s};
   Node* p = s;
   while (p != g) {
     p = *std::min_element(p->neighbor.begin(), p->neighbor.end(),
@@ -200,7 +200,8 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
     return false;
   };
 
-  return getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
+  return getTimedPath(s, g, fValue, compare, checkAstarFin,
+                      checkInvalidAstarNode);
 }
 
 void CBS::printHelp()

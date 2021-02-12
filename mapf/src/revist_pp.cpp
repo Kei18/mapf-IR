@@ -2,7 +2,10 @@
 
 const std::string RevisitPP::SOLVER_NAME = "RevisitPP";
 
-RevisitPP::RevisitPP(Problem* _P) : Solver(_P) { solver_name = RevisitPP::SOLVER_NAME; }
+RevisitPP::RevisitPP(Problem* _P) : Solver(_P)
+{
+  solver_name = RevisitPP::SOLVER_NAME;
+}
 
 void RevisitPP::run()
 {
@@ -56,13 +59,13 @@ void RevisitPP::run()
 
 // get single agent path
 // failed -> return {}
-Path RevisitPP::getPrioritizedPath(int id, const Paths& paths,
-                                   const std::vector<std::tuple<Node*, int>> constraints)
+Path RevisitPP::getPrioritizedPath(
+    int id, const Paths& paths,
+    const std::vector<std::tuple<Node*, int>> constraints)
 {
-  const auto p = Solver::getPrioritizedPath
-    (id, P->getStart(id), P->getGoal(id), paths,
-     getRemainedTime(), max_timestep, constraints,
-     compareAstarNodeBasic, false);
+  const auto p = Solver::getPrioritizedPath(
+      id, P->getStart(id), P->getGoal(id), paths, getRemainedTime(),
+      max_timestep, constraints, compareAstarNodeBasic, false);
 
   // update path table
   updatePathTableWithoutClear(id, p, paths);

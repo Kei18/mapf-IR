@@ -1,12 +1,12 @@
 #pragma once
-#include "util.hpp"
-#include "plan.hpp"
-#include "paths.hpp"
 #include <functional>
 
+#include "paths.hpp"
+#include "plan.hpp"
+#include "util.hpp"
+
 // convert Plan to Paths
-[[maybe_unused]]
-static Paths planToPaths(const Plan& plan)
+[[maybe_unused]] static Paths planToPaths(const Plan& plan)
 {
   if (plan.empty()) halt("invalid operation.");
   int num_agents = plan.get(0).size();
@@ -23,8 +23,7 @@ static Paths planToPaths(const Plan& plan)
 }
 
 // convert Paths to Plan
-[[maybe_unused]]
-static Plan pathsToPlan(const Paths& paths)
+[[maybe_unused]] static Plan pathsToPlan(const Paths& paths)
 {
   Plan plan;
   if (paths.empty()) return plan;
@@ -56,7 +55,7 @@ struct AstarNode {
   std::string name;
 
   AstarNode(Node* _v, int _g, int _f, AstarNode* _p)
-    : v(_v), g(_g), f(_f), p(_p), name(getName(_v, _g))
+      : v(_v), g(_g), f(_f), p(_p), name(getName(_v, _g))
   {
   }
 
@@ -71,15 +70,10 @@ using CheckInvalidAstarNode = std::function<bool(AstarNode*)>;
 using AstarHeuristics = std::function<int(AstarNode*)>;
 using AstarNodes = std::vector<AstarNode*>;
 
-[[maybe_unused]]
-static Path getPathBySpaceTimeAstar
-(Node* const s,
- Node* const g,
- AstarHeuristics& fValue,
- CompareAstarNode& compare,
- CheckAstarFin& checkAstarFin,
- CheckInvalidAstarNode& checkInvalidAstarNode,
- const int time_limit)
+[[maybe_unused]] static Path getPathBySpaceTimeAstar(
+    Node* const s, Node* const g, AstarHeuristics& fValue,
+    CompareAstarNode& compare, CheckAstarFin& checkAstarFin,
+    CheckInvalidAstarNode& checkInvalidAstarNode, const int time_limit)
 {
   auto t_start = Time::now();
 
@@ -149,9 +143,9 @@ static Path getPathBySpaceTimeAstar
   return path;
 }
 
-[[maybe_unused]]
-static CompareAstarNode compareAstarNodeBasic = [] (AstarNode* a, AstarNode* b) {
-  if (a->f != b->f) return a->f > b->f;
-  if (a->g != b->g) return a->g < b->g;
-  return false;
- };
+[[maybe_unused]] static CompareAstarNode compareAstarNodeBasic =
+    [](AstarNode* a, AstarNode* b) {
+      if (a->f != b->f) return a->f > b->f;
+      if (a->g != b->g) return a->g < b->g;
+      return false;
+    };

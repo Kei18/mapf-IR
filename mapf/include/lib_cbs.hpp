@@ -80,7 +80,7 @@ namespace LibCBS
     std::vector<MDDNodes> body;  // t: 0...c
     bool valid;                  // false -> no path from s to g
     MDDNodes GC;                 // for memory management
-    Solver* solver;  // solver
+    Solver* solver;              // solver
 
     // cache, MDD without any constraints
     static std::unordered_map<std::string, MDD_p> PURE_MDD_TABLE;

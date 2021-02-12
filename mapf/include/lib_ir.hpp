@@ -1,16 +1,16 @@
 #pragma once
-#include "lib_solver.hpp"
-#include "lib_cbs.hpp"
 #include <set>
 #include <stack>
 
+#include "lib_cbs.hpp"
+#include "lib_solver.hpp"
 
 namespace LibIR
 {
-  [[maybe_unused]]
-  static std::vector<int> identifyInteractingSetByMDD
-  (const int i, const Plan& plan, Solver* solver,
-   bool whole_duration=false, const int time_limit=-1, std::mt19937* MT=nullptr)
+  [[maybe_unused]] static std::vector<int> identifyInteractingSetByMDD(
+      const int i, const Plan& plan, Solver* solver,
+      bool whole_duration = false, const int time_limit = -1,
+      std::mt19937* MT = nullptr)
   {
     auto t_start = Time::now();
 
@@ -42,7 +42,8 @@ namespace LibIR
       // create modif list
       for (auto j : agents) {
         if (i == j) continue;
-        if (mdd.forceUpdate(LibCBS::getConstraintsByFixedPaths(plan, { j })) || !mdd.valid) {
+        if (mdd.forceUpdate(LibCBS::getConstraintsByFixedPaths(plan, {j})) ||
+            !mdd.valid) {
           modif_set.insert(j);
         }
         if (!mdd.valid) break;
@@ -58,15 +59,14 @@ namespace LibIR
     return moidf_list;
   }
 
-  [[maybe_unused]]
-  static std::vector<int> identifyAgentsAtGoal
-  (const int i, const Plan& plan, Node* g, const int dist)
+  [[maybe_unused]] static std::vector<int> identifyAgentsAtGoal(
+      const int i, const Plan& plan, Node* g, const int dist)
   {
     const int cost = plan.getPathCost(i);
-    const int num  = plan.get(0).size();
+    const int num = plan.get(0).size();
     if (cost == dist) return {};
 
-    std::set<int> modif_set = { i };
+    std::set<int> modif_set = {i};
     for (int t = cost - 1; t >= dist; --t) {
       for (int j = 0; j < num; ++j) {
         if (j == i) continue;
@@ -77,9 +77,9 @@ namespace LibIR
     return moidf_list;
   }
 
-  [[maybe_unused]]
-  static std::tuple<int, std::vector<int>> identifyBottleneckAgentsWithScore
-  (const int i, const Plan& original_plan, Solver* solver, const int time_limit=-1)
+  [[maybe_unused]] static std::tuple<int, std::vector<int>>
+  identifyBottleneckAgentsWithScore(const int i, const Plan& original_plan,
+                                    Solver* solver, const int time_limit = -1)
   {
     int score = 0;
     std::vector<int> modif_list;
@@ -108,4 +108,4 @@ namespace LibIR
     if (!modif_list.empty()) modif_list.push_back(i);
     return std::make_tuple(score, modif_list);
   }
-};
+};  // namespace LibIR

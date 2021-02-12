@@ -31,16 +31,23 @@ private:
   Plan compress(const Plan& plan);
 
   // sub procedures
-  bool multiPush(Plan& plan, const int r, const int s, const Path& p, std::vector<int>& occupied_now);
-  bool clear(Plan& plan, Node* v, const int r, const int s, std::vector<int>& occupied_now);
-  void executeSwap(Plan& plan, const int r, const int s, std::vector<int>& occupied_now);
-  bool resolve(Plan& plan, const int r, const int s, Nodes& U, std::vector<int>& occupied_now);
+  bool multiPush(Plan& plan, const int r, const int s, const Path& p,
+                 std::vector<int>& occupied_now);
+  bool clear(Plan& plan, Node* v, const int r, const int s,
+             std::vector<int>& occupied_now);
+  void executeSwap(Plan& plan, const int r, const int s,
+                   std::vector<int>& occupied_now);
+  bool resolve(Plan& plan, const int r, const int s, Nodes& U,
+               std::vector<int>& occupied_now);
 
   // util
-  Node* getNearestEmptyNode(Node* v, std::vector<int>& occupied_now, const Nodes& obs);
+  Node* getNearestEmptyNode(Node* v, std::vector<int>& occupied_now,
+                            const Nodes& obs);
   Path getShortestPath(const int id, Node* s, std::vector<int>& occupied_now);
-  bool pushTowardEmptyNode(Node* v, Plan& plan, std::vector<int>& occupied_now, const Nodes& obs);
-  void updatePlan(const int id, Node* next_node, Plan& plan, std::vector<int>& occupied_now);
+  bool pushTowardEmptyNode(Node* v, Plan& plan, std::vector<int>& occupied_now,
+                           const Nodes& obs);
+  void updatePlan(const int id, Node* next_node, Plan& plan,
+                  std::vector<int>& occupied_now);
   void computeNodesWithManyNeighbors();
   void checkConsistency(Plan& plan, std::vector<int>& occupied_now);
 

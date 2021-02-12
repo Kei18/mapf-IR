@@ -11,10 +11,10 @@ TEST(Paths, basic)
 
   // format
   Paths paths(2);
-  paths.insert(0, { v });
+  paths.insert(0, {v});
   ASSERT_EQ(paths.get(0).size(), 1);
   ASSERT_TRUE(paths.empty(1));
-  paths.insert(1, { u, w });
+  paths.insert(1, {u, w});
   ASSERT_EQ(paths.get(0).size(), 2);
   ASSERT_EQ(paths.get(1).size(), 2);
   ASSERT_EQ(paths.getMakespan(), 1);
@@ -26,7 +26,7 @@ TEST(Paths, basic)
   ASSERT_FALSE(paths.empty(1));
 
   // shrink
-  paths.insert(1, { u });
+  paths.insert(1, {u});
   ASSERT_EQ(paths.get(0).size(), 1);
   ASSERT_EQ(paths.getMakespan(), 0);
   ASSERT_EQ(paths.getSOC(), 0);
@@ -40,10 +40,10 @@ TEST(Paths, add)
   Node* w = G.getNode(2);
   Node* x = G.getNode(3);
 
-  Path path_1_0 = { v, u };
-  Path path_1_1 = { u, w };
-  Path path_2_0 = { u, w };
-  Path path_2_1 = { w, x };
+  Path path_1_0 = {v, u};
+  Path path_1_1 = {u, w};
+  Path path_2_0 = {u, w};
+  Path path_2_1 = {w, x};
 
   Paths paths1(2);
   paths1.insert(0, path_1_0);
@@ -68,35 +68,35 @@ TEST(Paths, conflict)
 
   // no conflict
   Paths paths0(2);
-  paths0.insert(0, { v, u, w });
-  paths0.insert(1, { u, w, x });
+  paths0.insert(0, {v, u, w});
+  paths0.insert(1, {u, w, x});
   ASSERT_EQ(paths0.countConflict(), 0);
 
   // vertex conflict
   Paths paths1(2);
-  paths1.insert(0, { v, u, u });
-  paths1.insert(1, { u, u, w });
+  paths1.insert(0, {v, u, u});
+  paths1.insert(1, {u, u, w});
   ASSERT_EQ(paths1.countConflict(), 1);
 
   // swap conflict
   Paths paths2(2);
-  paths2.insert(0, { v, u });
-  paths2.insert(1, { u, v });
+  paths2.insert(0, {v, u});
+  paths2.insert(1, {u, v});
   ASSERT_EQ(paths2.countConflict(), 1);
 
   // three agents
   Paths paths3(3);
-  paths3.insert(0, { v, u, w });
-  paths3.insert(1, { u, v, v });
-  paths3.insert(2, { w, w, w });
+  paths3.insert(0, {v, u, w});
+  paths3.insert(1, {u, v, v});
+  paths3.insert(2, {w, w, w});
   ASSERT_EQ(paths3.countConflict(), 2);
 
   // insert agents
   Paths paths4(3);
-  paths4.insert(0, { v, u, w });
-  paths4.insert(1, { u, v, v });
-  paths4.insert(2, { w, w, w });
-  ASSERT_EQ(paths4.countConflict(2, { w, w, u }), 1);
+  paths4.insert(0, {v, u, w});
+  paths4.insert(1, {u, v, v});
+  paths4.insert(2, {w, w, w});
+  ASSERT_EQ(paths4.countConflict(2, {w, w, u}), 1);
 }
 
 TEST(Paths, maxConstraintTime)

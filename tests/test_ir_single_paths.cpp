@@ -9,9 +9,9 @@ TEST(IR_SINGLE_PATHS, solve)
   auto solver = IR_SINGLE_PATHS(&P);
 
   Plan plan;
-  plan.add({ G->getNode(0, 0), G->getNode(2, 0) });
-  plan.add({ G->getNode(0, 0), G->getNode(3, 0) });
-  plan.add({ G->getNode(1, 0), G->getNode(3, 0) });
+  plan.add({G->getNode(0, 0), G->getNode(2, 0)});
+  plan.add({G->getNode(0, 0), G->getNode(3, 0)});
+  plan.add({G->getNode(1, 0), G->getNode(3, 0)});
   ASSERT_TRUE(plan.validate(P.getConfigStart(), P.getConfigGoal()));
   ASSERT_EQ(plan.getSOC(), 3);
 

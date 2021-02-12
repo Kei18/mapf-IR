@@ -14,8 +14,6 @@ void IR_BOTTLENECK::refinePlan()
 
 void IR_BOTTLENECK::printHelp()
 {
-  std::cout
-    << IR_BOTTLENECK::SOLVER_NAME << "\n"
-    << "  (no option)"
-    << std::endl;
+  std::cout << IR_BOTTLENECK::SOLVER_NAME << "\n"
+            << "  (no option)" << std::endl;
 }

@@ -7,13 +7,13 @@
 #include "ecbs.hpp"
 #include "hca.hpp"
 #include "icbs_refine.hpp"
+#include "lib_ir.hpp"
 #include "pibt.hpp"
 #include "pibt_complete.hpp"
-#include "whca.hpp"
-#include "revisit_pp.hpp"
 #include "push_and_swap.hpp"
-#include "lib_ir.hpp"
+#include "revisit_pp.hpp"
 #include "solver.hpp"
+#include "whca.hpp"
 
 class IR : public Solver
 {
@@ -22,7 +22,15 @@ public:
 
 protected:
   // init-solver
-  enum struct INIT_SOLVER_TYPE { PIBT, HCA, WHCA, ECBS, PIBT_COMPLETE, RevisitPP, PushAndSwap };
+  enum struct INIT_SOLVER_TYPE {
+    PIBT,
+    HCA,
+    WHCA,
+    ECBS,
+    PIBT_COMPLETE,
+    RevisitPP,
+    PushAndSwap
+  };
   INIT_SOLVER_TYPE init_solver;
   std::vector<std::string> option_init_solver;
 
@@ -38,7 +46,8 @@ protected:
   // for log
   std::string output_file;
   bool make_log_every_itr;  // true -> create log for every iteration
-  std::vector<std::tuple<int, int, int>> HIST;  // elapsed timestep, soc, makespan
+  std::vector<std::tuple<int, int, int>>
+      HIST;  // elapsed timestep, soc, makespan
 
   // early stop
   int timeout_refinement;
@@ -86,7 +95,10 @@ public:
   IR(Problem* _P);
   ~IR();
 
-  int getRefineTimeLimit() const { return std::min(getRemainedTime(), timeout_refinement); }
+  int getRefineTimeLimit() const
+  {
+    return std::min(getRemainedTime(), timeout_refinement);
+  }
 
   void makeLog(const std::string& logfile);
   virtual void setParams(int argc, char* argv[]);

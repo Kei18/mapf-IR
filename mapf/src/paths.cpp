@@ -28,7 +28,8 @@ bool Paths::empty() const { return paths.empty(); }
 bool Paths::empty(const int i) const
 {
   const int paths_size = paths.size();
-  if (!(0 <= i && i < paths_size)) halt("invalid index, i=" + std::to_string(i));
+  if (!(0 <= i && i < paths_size))
+    halt("invalid index, i=" + std::to_string(i));
   return paths[i].empty();
 }
 
@@ -41,15 +42,12 @@ void Paths::insert(int i, const Path& path)
   paths[i] = path;
   const int path_size = path.size();
   if (path_size - 1 == getMakespan()) return;
-  format();                                 // align each path size
-  if (path_size < old_len) shrink();      // cutoff additional configs
-  makespan = getMaxLengthPaths();           // update makespan
+  format();                           // align each path size
+  if (path_size < old_len) shrink();  // cutoff additional configs
+  makespan = getMaxLengthPaths();     // update makespan
 }
 
-void Paths::clear(int i)
-{
-  paths[i].clear();
-}
+void Paths::clear(int i) { paths[i].clear(); }
 
 int Paths::size() const { return paths.size(); }
 

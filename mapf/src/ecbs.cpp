@@ -155,7 +155,7 @@ Path ECBS::getInitialPath(int id, const Paths& paths)
   Node* g = P->getGoal(id);
   Nodes config_g = P->getConfigGoal();
 
-  Path path = { s };
+  Path path = {s};
   Node* p = s;
   int t = 1;
   const int makespan = paths.getMakespan();
@@ -255,7 +255,8 @@ std::tuple<Path, int> ECBS::getFocalPath(HighLevelNode_p h_node, int id)
 
         // swap conflict
       } else if (PATH_TABLE[n->g][n->p->v->id] != Solver::NIL &&
-                 PATH_TABLE[n->g-1][n->v->id] == PATH_TABLE[n->g][n->p->v->id]) {
+                 PATH_TABLE[n->g - 1][n->v->id] ==
+                     PATH_TABLE[n->g][n->p->v->id]) {
         return n->p->f2 + 1;
       }
     }

@@ -5,9 +5,7 @@
 const std::string PushAndSwap::SOLVER_NAME = "PushAndSwap";
 
 PushAndSwap::PushAndSwap(Problem* _P)
-  : Solver(_P),
-    flg_compress(true),
-    disable_dist_init(false)
+    : Solver(_P), flg_compress(true), disable_dist_init(false)
 {
   solver_name = PushAndSwap::SOLVER_NAME;
 }
@@ -36,8 +34,8 @@ void PushAndSwap::run()
     const int i = ids[j];
     info(" ", "elapsed:", getSolverElapsedTime(),
          ", agent-" + std::to_string(i), "starts planning",
-         ", makespan:", solution.getMakespan(),
-         ", progress:", j + 1, "/", P->getNum());
+         ", makespan:", solution.getMakespan(), ", progress:", j + 1, "/",
+         P->getNum());
     while (solution.last(i) != P->getGoal(i)) {
       if (!push(solution, i, U, occupied_now)) {
         info("   ", "swap required, timestep=", solution.getMakespan());
@@ -54,13 +52,11 @@ void PushAndSwap::run()
 
   if (flg_compress) {
     info("  ---");
-    info(" ", "elapsed:", getSolverElapsedTime(),
-         ", compress solution",
+    info(" ", "elapsed:", getSolverElapsedTime(), ", compress solution",
          ", soc (before):", solution.getSOC(),
          ", makespan (before):", solution.getMakespan());
     solution = compress(solution);
-    info(" ", "elapsed:", getSolverElapsedTime(),
-         ", finish compression",
+    info(" ", "elapsed:", getSolverElapsedTime(), ", finish compression",
          ", soc (before):", solution.getSOC(),
          ", makespan (before):", solution.getMakespan());
   }
@@ -72,7 +68,8 @@ void PushAndSwap::run()
   }
 }
 
-bool PushAndSwap::push(Plan& plan, const int id, Nodes& U, std::vector<int>& occupied_now)
+bool PushAndSwap::push(Plan& plan, const int id, Nodes& U,
+                       std::vector<int>& occupied_now)
 {
   if (plan.last(id) == P->getGoal(id)) return true;
 
@@ -97,7 +94,8 @@ bool PushAndSwap::push(Plan& plan, const int id, Nodes& U, std::vector<int>& occ
   return true;
 }
 
-bool PushAndSwap::swap(Plan& plan, const int r, Nodes& U, std::vector<int>& occupied_now)
+bool PushAndSwap::swap(Plan& plan, const int r, Nodes& U,
+                       std::vector<int>& occupied_now)
 {
   auto p_star = getShortestPath(r, plan.last(r), occupied_now);
   if (p_star.size() <= 1) return true;  // for safety
@@ -112,7 +110,9 @@ bool PushAndSwap::swap(Plan& plan, const int r, Nodes& U, std::vector<int>& occu
   {
     Node* v = p_star[0];
     std::sort(swap_verticies.begin(), swap_verticies.end(),
-              [v] (Node* a, Node* b) { return v->manhattanDist(a) < v->manhattanDist(b); });
+              [v](Node* a, Node* b) {
+                return v->manhattanDist(a) < v->manhattanDist(b);
+              });
   }
 
   Plan tmp_plan;
@@ -140,7 +140,7 @@ bool PushAndSwap::swap(Plan& plan, const int r, Nodes& U, std::vector<int>& occu
   Plan reversed_tmp_plan;
   {
     const int makespan = tmp_plan.getMakespan();
-    for (int t = makespan; t >=0; --t) {
+    for (int t = makespan; t >= 0; --t) {
       auto c = tmp_plan.get(t);
       auto tmp = c[r];
       c[r] = c[s];
@@ -164,20 +164,22 @@ bool PushAndSwap::swap(Plan& plan, const int r, Nodes& U, std::vector<int>& occu
       halt("invalid swap operation");
     }
   }
-  info("   ", "agent-" + std::to_string(r) + ", " + std::to_string(s) + " swap locations "
-       + std::to_string(c_before[r]->id) + ", " + std::to_string(c_before[s]->id));
+  info("   ", "agent-" + std::to_string(r) + ", " + std::to_string(s) +
+                  " swap locations " + std::to_string(c_before[r]->id) + ", " +
+                  std::to_string(c_before[s]->id));
 
   if (inArray(P->getGoal(s), U)) return resolve(plan, r, s, U, occupied_now);
 
   return true;
 }
 
-bool PushAndSwap::resolve
-(Plan& plan, const int r, const int s, Nodes& U, std::vector<int>& occupied_now)
+bool PushAndSwap::resolve(Plan& plan, const int r, const int s, Nodes& U,
+                          std::vector<int>& occupied_now)
 {
   info("      resolve operation for", r);
   // error check
-  if (!inArray(plan.last(r), plan.last(s)->neighbor)) halt("invalid resolve operation");
+  if (!inArray(plan.last(r), plan.last(s)->neighbor))
+    halt("invalid resolve operation");
 
   Node* ideal_loc_s = plan.last(r);
 
@@ -214,8 +216,8 @@ bool PushAndSwap::resolve
   return true;
 }
 
-bool PushAndSwap::multiPush
-(Plan& plan, const int r, const int s, const Path& p, std::vector<int>& occupied_now)
+bool PushAndSwap::multiPush(Plan& plan, const int r, const int s, const Path& p,
+                            std::vector<int>& occupied_now)
 {
   const int p_size = p.size();
   if (p_size == 0) halt("path is empty");
@@ -225,11 +227,12 @@ bool PushAndSwap::multiPush
     for (int i = 1; i < p_size; ++i) {
       // r tries to reserve v
       if (occupied_now[p[i]->id] != NIL) {
-        if (!pushTowardEmptyNode(p[i], plan, occupied_now, { plan.last(s) })) return false;
+        if (!pushTowardEmptyNode(p[i], plan, occupied_now, {plan.last(s)}))
+          return false;
       }
       updatePlan(r, p[i], plan, occupied_now);
       // s moves to the last location of r;
-      updatePlan(s, p[i-1], plan, occupied_now);
+      updatePlan(s, p[i - 1], plan, occupied_now);
     }
 
     // case 2
@@ -238,15 +241,17 @@ bool PushAndSwap::multiPush
       auto v = p[i];
       // s tries to reserve v
       if (occupied_now[v->id] != NIL) {
-        if (!pushTowardEmptyNode(v, plan, occupied_now, { plan.last(r) })) return false;
+        if (!pushTowardEmptyNode(v, plan, occupied_now, {plan.last(r)}))
+          return false;
       }
       updatePlan(s, p[i], plan, occupied_now);
       // r moves to the last location of s;
-      updatePlan(r, p[i-1], plan, occupied_now);
+      updatePlan(r, p[i - 1], plan, occupied_now);
     }
     // r moves to last loc of p
-    if (!pushTowardEmptyNode(p[p_size-1], plan, occupied_now, { plan.last(r) })) return false;
-    updatePlan(r, p[p_size-1], plan, occupied_now);
+    if (!pushTowardEmptyNode(p[p_size - 1], plan, occupied_now, {plan.last(r)}))
+      return false;
+    updatePlan(r, p[p_size - 1], plan, occupied_now);
   }
 
   return true;
@@ -260,10 +265,11 @@ void PushAndSwap::checkConsistency(Plan& plan, std::vector<int>& occupied_now)
   }
 }
 
-bool PushAndSwap::clear(Plan& plan, Node* v, const int r, const int s, std::vector<int>& occupied_now)
+bool PushAndSwap::clear(Plan& plan, Node* v, const int r, const int s,
+                        std::vector<int>& occupied_now)
 {
   info("      clear operation for", r, "at v=", v->id);
-  auto getUnoccupiedNodes = [&] () {
+  auto getUnoccupiedNodes = [&]() {
     Nodes nodes;
     for (auto u : v->neighbor) {
       if (occupied_now[u->id] == NIL) nodes.push_back(u);
@@ -326,7 +332,8 @@ bool PushAndSwap::clear(Plan& plan, Node* v, const int r, const int s, std::vect
   return false;
 }
 
-void PushAndSwap::executeSwap(Plan& plan, const int r, const int s, std::vector<int>& occupied_now)
+void PushAndSwap::executeSwap(Plan& plan, const int r, const int s,
+                              std::vector<int>& occupied_now)
 {
   // identify empty loc
   Node* empty1 = nullptr;
@@ -355,7 +362,8 @@ void PushAndSwap::executeSwap(Plan& plan, const int r, const int s, std::vector<
   updatePlan(s, v, plan, occupied_now);
 }
 
-void PushAndSwap::updatePlan(const int id, Node* next_node, Plan& plan, std::vector<int>& occupied_now)
+void PushAndSwap::updatePlan(const int id, Node* next_node, Plan& plan,
+                             std::vector<int>& occupied_now)
 {
   // error check
   if (occupied_now[plan.last(id)->id] != id) halt("invalid update");
@@ -370,44 +378,47 @@ void PushAndSwap::updatePlan(const int id, Node* next_node, Plan& plan, std::vec
   plan.add(c);
 }
 
-bool PushAndSwap::pushTowardEmptyNode
-(Node* v_current, Plan& plan, std::vector<int>& occupied_now, const Nodes& obs)
+bool PushAndSwap::pushTowardEmptyNode(Node* v_current, Plan& plan,
+                                      std::vector<int>& occupied_now,
+                                      const Nodes& obs)
 {
   Node* v_empty = getNearestEmptyNode(v_current, occupied_now, obs);
   if (v_empty == nullptr) return false;
   auto p = G->getPath(v_current, v_empty, obs);
   if (p.empty()) return false;
 
-  for (int i = p.size()-1; i > 0; --i) {
-    if (occupied_now[p[i-1]->id] == NIL) halt("node must be occupied");
-    updatePlan(occupied_now[p[i-1]->id], p[i], plan, occupied_now);
+  for (int i = p.size() - 1; i > 0; --i) {
+    if (occupied_now[p[i - 1]->id] == NIL) halt("node must be occupied");
+    updatePlan(occupied_now[p[i - 1]->id], p[i], plan, occupied_now);
   }
   return true;
 }
 
-Path PushAndSwap::getShortestPath(const int id, Node* s, std::vector<int>& occupied_now)
+Path PushAndSwap::getShortestPath(const int id, Node* s,
+                                  std::vector<int>& occupied_now)
 {
-  Nodes p = { s };
+  Nodes p = {s};
   Node* g = P->getGoal(id);
-  while (*(p.end()-1) != g) {
-    Node* v = *(p.end()-1);
-    p.push_back
-      (*std::min_element(v->neighbor.begin(), v->neighbor.end(),
-                         [&](Node* a, Node* b) {
-                           // path distance
-                           int c_a = pathDist(id, a);
-                           int c_b = pathDist(id, b);
-                           if (c_a != c_b) return c_a < c_b;
-                           // occupancy
-                           int o_a = (int)(occupied_now[a->id] != NIL);
-                           int o_b = (int)(occupied_now[b->id] != NIL);
-                           if (o_a != o_b) return o_a < o_b;
-                           return false; }));
+  while (*(p.end() - 1) != g) {
+    Node* v = *(p.end() - 1);
+    p.push_back(*std::min_element(v->neighbor.begin(), v->neighbor.end(),
+                                  [&](Node* a, Node* b) {
+                                    // path distance
+                                    int c_a = pathDist(id, a);
+                                    int c_b = pathDist(id, b);
+                                    if (c_a != c_b) return c_a < c_b;
+                                    // occupancy
+                                    int o_a = (int)(occupied_now[a->id] != NIL);
+                                    int o_b = (int)(occupied_now[b->id] != NIL);
+                                    if (o_a != o_b) return o_a < o_b;
+                                    return false;
+                                  }));
   }
   return p;
 }
 
-Node* PushAndSwap::getNearestEmptyNode(Node* v, std::vector<int>& occupied_now, const Nodes& obs)
+Node* PushAndSwap::getNearestEmptyNode(Node* v, std::vector<int>& occupied_now,
+                                       const Nodes& obs)
 {
   const int id = occupied_now[v->id];
   Node* v_empty = nullptr;
@@ -430,8 +441,9 @@ Node* PushAndSwap::getNearestEmptyNode(Node* v, std::vector<int>& occupied_now, 
       if (CLOSE[w->id]) continue;
       C.push_back(w);
     }
-    std::sort(C.begin(), C.end(),
-              [&](Node* a, Node* b) { return pathDist(id, a) < pathDist(id, b); });
+    std::sort(C.begin(), C.end(), [&](Node* a, Node* b) {
+      return pathDist(id, a) < pathDist(id, b);
+    });
     for (auto w : C) OPEN.push(w->id);
   }
 
@@ -463,7 +475,7 @@ Plan PushAndSwap::compress(const Plan& plan)
   for (int t = 0; t <= makespan; ++t) {
     for (int i = 0; i < P->getNum(); ++i) {
       auto v = plan.get(t, i);
-      if (temp_orders[v->id].empty() || v != plan.get(t-1, i))
+      if (temp_orders[v->id].empty() || v != plan.get(t - 1, i))
         temp_orders[v->id].push(i);
     }
   }
@@ -482,7 +494,7 @@ Plan PushAndSwap::compress(const Plan& plan)
       }
       Node* v_current = plan.get(t, i);
       // update internal clocks
-      while (t < makespan && v_current == plan.get(t+1, i)) ++t;
+      while (t < makespan && v_current == plan.get(t + 1, i)) ++t;
       internal_clocks[i] = t;
       // already reach its goal
       if (t == makespan) {
@@ -490,12 +502,12 @@ Plan PushAndSwap::compress(const Plan& plan)
         continue;
       }
 
-      Node* v_next = plan.get(t+1, i);
+      Node* v_next = plan.get(t + 1, i);
       if (temp_orders[v_next->id].front() == i) {  // move to v_next
         config.push_back(v_next);
         temp_orders[v_current->id].pop();
-        internal_clocks[i] = t+1;  // update internal clocks
-      } else {  // stay
+        internal_clocks[i] = t + 1;  // update internal clocks
+      } else {                       // stay
         config.push_back(new_plan.last(i));
       }
     }
@@ -507,22 +519,22 @@ Plan PushAndSwap::compress(const Plan& plan)
 void PushAndSwap::setParams(int argc, char* argv[])
 {
   struct option longopts[] = {
-    {"no-compress", no_argument, 0, 'c'},
-    {"disable-dist-init", no_argument, 0, 'd'},
-    {0, 0, 0, 0},
+      {"no-compress", no_argument, 0, 'c'},
+      {"disable-dist-init", no_argument, 0, 'd'},
+      {0, 0, 0, 0},
   };
   optind = 1;  // reset
   int opt, longindex;
   while ((opt = getopt_long(argc, argv, "cd", longopts, &longindex)) != -1) {
     switch (opt) {
-    case 'c':
-      flg_compress = false;
-      break;
-    case 'd':
-      disable_dist_init = true;
-      break;
-    default:
-      break;
+      case 'c':
+        flg_compress = false;
+        break;
+      case 'd':
+        disable_dist_init = true;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -536,6 +548,5 @@ void PushAndSwap::printHelp()
             << "  -d --disable-dist-init"
             << "        "
             << "disable initialization of priorities "
-            << "using distance from starts to goals"
-            << std::endl;
+            << "using distance from starts to goals" << std::endl;
 }

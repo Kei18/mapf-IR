@@ -7,26 +7,26 @@
 #include <icbs.hpp>
 #include <iostream>
 #include <ir.hpp>
-#include <ir_single_paths.hpp>
+#include <ir_bottleneck.hpp>
 #include <ir_fix_at_goals.hpp>
 #include <ir_focus_goals.hpp>
-#include <ir_mdd.hpp>
-#include <ir_bottleneck.hpp>
 #include <ir_hybrid.hpp>
+#include <ir_mdd.hpp>
+#include <ir_single_paths.hpp>
 #include <pibt.hpp>
 #include <pibt_complete.hpp>
-#include <winpibt.hpp>
 #include <problem.hpp>
+#include <push_and_swap.hpp>
 #include <random>
+#include <revisit_pp.hpp>
 #include <util.hpp>
 #include <vector>
 #include <whca.hpp>
-#include <revisit_pp.hpp>
-#include <push_and_swap.hpp>
+#include <winpibt.hpp>
 
 void printHelp();
-std::unique_ptr<Solver> getSolver
-(const std::string solver_name, Problem* P, bool verbose, int argc, char* argv[]);
+std::unique_ptr<Solver> getSolver(const std::string solver_name, Problem* P,
+                                  bool verbose, int argc, char* argv[]);
 
 int main(int argc, char* argv[])
 {
@@ -53,7 +53,8 @@ int main(int argc, char* argv[])
   // command line args
   int opt, longindex;
   opterr = 0;  // ignore getopt error
-  while ((opt = getopt_long(argc, argv, "i:o:s:vhPT:", longopts, &longindex)) != -1) {
+  while ((opt = getopt_long(argc, argv, "i:o:s:vhPT:", longopts, &longindex)) !=
+         -1) {
     switch (opt) {
       case 'i':
         instance_file = std::string(optarg);
@@ -117,8 +118,8 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-std::unique_ptr<Solver> getSolver
-(const std::string solver_name, Problem* P, bool verbose, int argc, char* argv[])
+std::unique_ptr<Solver> getSolver(const std::string solver_name, Problem* P,
+                                  bool verbose, int argc, char* argv[])
 {
   std::unique_ptr<Solver> solver;
   if (solver_name == "PIBT") {

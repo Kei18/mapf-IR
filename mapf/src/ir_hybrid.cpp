@@ -21,8 +21,6 @@ void IR_HYBRID::refinePlan()
 
 void IR_HYBRID::printHelp()
 {
-  std::cout
-    << IR_HYBRID::SOLVER_NAME << "\n"
-    << "  (no option)"
-    << std::endl;
+  std::cout << IR_HYBRID::SOLVER_NAME << "\n"
+            << "  (no option)" << std::endl;
 }
