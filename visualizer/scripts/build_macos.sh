@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 cd `dirname $0`/../../third_party/openFrameworks/
+git branch -r
+git fetch --prune
 git checkout refs/tags/0.11.0
 cp -f ../../visualizer/scripts/download_libs.sh ./scripts/dev/download_libs.sh
 bash ./scripts/osx/download_libs.sh -v 0.11.0
