@@ -15,7 +15,7 @@ with open(filename) as f:
     for row in f:
         m_last_date = re.match(r_last_date, row)
         if m_last_date:
-            new_file += '<span id="last-updated">(last updated: {})</span>'.format(updated_date)
+            new_file += '<p id="last-updated">(last updated: {})</p>'.format(updated_date)
         else:
             new_file += row
 
