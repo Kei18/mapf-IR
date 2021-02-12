@@ -6,6 +6,7 @@ on:
       - dev
     paths:
       - 'visualizer/**'
+      - '.github/workflows/build-visualizer-macos.yml'
 
 jobs:
   build-osx:
@@ -17,8 +18,4 @@ jobs:
           submodules: true
 
       - name: build
-        run: |
-          cd ./third_party/openFrameworks/scripts/osx/
-          sh ./download_libs.sh
-          cd ../../../../visualizer
-          make build
+        run: bash ./visualizer/scripts/build_macos.sh
