@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - public
     paths:
       - 'visualizer/**'
       - '.github/workflows/build-visualizer-macos.yml'

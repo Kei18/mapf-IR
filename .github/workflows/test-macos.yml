@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - dev
+      - public
     paths:
       - 'mapf/**'
       - 'tests/**'
       - 'app.cpp'
+      - '.github/workflows/test-macos.yml'
 
 jobs:
   test-macos:
