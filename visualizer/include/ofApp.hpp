@@ -35,7 +35,7 @@ class ofApp : public ofBaseApp {
 
 public:
   ofApp(MAPFPlan* _P);
-  ~ofApp() {};
+  ~ofApp();
   void setup();
   void update();
   void draw();

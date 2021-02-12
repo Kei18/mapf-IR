@@ -13,6 +13,11 @@ ofApp::ofApp(MAPFPlan* _P): P(_P)
   line_mode = LINE_MODE::STRAIGHT;
 }
 
+ofApp::~ofApp()
+{
+  delete P;
+}
+
 void ofApp::setup()
 {
   // setup size

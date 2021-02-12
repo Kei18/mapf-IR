@@ -12,4 +12,6 @@ struct MAPFPlan {
   Config config_s;        // start configuration
   Config config_g;        // goal configuration
   Configs transitions;    // plan
+
+  ~MAPFPlan() { delete G; }
 };
