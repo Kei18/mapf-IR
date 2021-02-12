@@ -10,7 +10,7 @@ The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], 
 
 | platform | status |
 | ---: | :--- |
-| macos-latest | ![test_macos](https://github.com/Kei18/mapf-IR/workflows/test_macos/badge.svg) ![build_visualizer_macos](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_macos/badge.svg) |
+| macos-10.15 | ![test_macos](https://github.com/Kei18/mapf-IR/workflows/test_macos/badge.svg) ![build_visualizer_macos](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_macos/badge.svg) |
 | ubuntu-latest | ![test_ubuntu](https://github.com/Kei18/mapf-IR/workflows/test_ubuntu/badge.svg) ![build_visualizer_ubuntu](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_ubuntu/badge.svg) |
 
 You can see the performance of each solver from [auto\_record repo](https://github.com/Kei18/mapf-IR/tree/auto_record). The records were created by Github Actions.
