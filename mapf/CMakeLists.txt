@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.17)
 file(GLOB SRCS "./src/*.cpp")
 project(lib-mapf)
 add_library(lib-mapf STATIC ${SRCS})

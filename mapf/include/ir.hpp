@@ -11,6 +11,7 @@
 #include "pibt_complete.hpp"
 #include "whca.hpp"
 #include "revisit_pp.hpp"
+#include "push_and_swap.hpp"
 #include "lib_ir.hpp"
 #include "solver.hpp"
 
@@ -21,7 +22,7 @@ public:
 
 protected:
   // init-solver
-  enum struct INIT_SOLVER_TYPE { PIBT, HCA, WHCA, ECBS, PIBT_COMPLETE, RevisitPP };
+  enum struct INIT_SOLVER_TYPE { PIBT, HCA, WHCA, ECBS, PIBT_COMPLETE, RevisitPP, PushAndSwap };
   INIT_SOLVER_TYPE init_solver;
   std::vector<std::string> option_init_solver;
 

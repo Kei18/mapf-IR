@@ -123,6 +123,9 @@ Plan IR::getInitialPlan()
     case INIT_SOLVER_TYPE::RevisitPP:
       solver = std::make_shared<RevisitPP>(&_P);
       break;
+    case INIT_SOLVER_TYPE::PushAndSwap:
+      solver = std::make_shared<PushAndSwap>(&_P);
+      break;
     case INIT_SOLVER_TYPE::PIBT_COMPLETE:
     default:
       solver = std::make_shared<PIBT_COMPLETE>(&_P);
@@ -381,6 +384,8 @@ void IR::setParams(int argc, char* argv[])
           init_solver = INIT_SOLVER_TYPE::RevisitPP;
         } else if (s == "PIBT_COMPLETE") {
           init_solver = INIT_SOLVER_TYPE::PIBT_COMPLETE;
+        } else if (s == "PushAndSwap") {
+          init_solver = INIT_SOLVER_TYPE::PushAndSwap;
         } else {
           warn("solver does not exists, use PIBT");
         }
