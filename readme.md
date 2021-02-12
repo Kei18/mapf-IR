@@ -2,17 +2,16 @@ mapf-IR
 ===
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
-A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "Iterative Refinement for Real-Time Multi-Robot Path Planning".
+A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper "Iterative Refinement for Real-Time Multi-Robot Path Planning" (to appear soon).
 It is written in C++(17) with [CMake](https://cmake.org/) build and tested on OSX 10.15.
 The visualizer uses [openFrameworks](https://openframeworks.cc).
-There was a [previous version](https://github.com/Kei18/pibt) to assess PIBT, however, the new one is much cleaner (I hope).
 
 The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], Revisit Prioritized Planning [6], Push and Swap [7], winPIBT [8], PIBT+, and IR (Iterative Refinement).
 
 | platform | status |
 | ---: | :--- |
-| macos-10.15 | ![test_macos](https://github.com/Kei18/mapf-IR/workflows/test_macos/badge.svg) ![build_visualizer_macos](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_macos/badge.svg) |
-| ubuntu-latest | ![test_ubuntu](https://github.com/Kei18/mapf-IR/workflows/test_ubuntu/badge.svg) ![build_visualizer_ubuntu](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_ubuntu/badge.svg) |
+| macos-10.15 | ![test_macos](https://github.com/Kei18/mapf-IR/workflows/test_macos/badge.svg?branch=public) ![build_visualizer_macos](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_macos/badge.svg?branch=public) |
+| ubuntu-latest | ![test_ubuntu](https://github.com/Kei18/mapf-IR/workflows/test_ubuntu/badge.svg?branch=public) ![build_visualizer_ubuntu](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_ubuntu/badge.svg?branch=public) |
 
 You can see the performance of each solver from [auto\_record repo](https://github.com/Kei18/mapf-IR/tree/auto_record). The records were created by Github Actions.
 
