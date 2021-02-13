@@ -1,9 +1,36 @@
 #pragma once
 #include <random>
+#include <graph.hpp>
 
 #include "default_params.hpp"
-#include "graph.hpp"
+// #include "graph.hpp"
 #include "util.hpp"
+
+using Config = std::vector<Node*>;  // < loc_0[t], loc_1[t], ... >
+using Configs = std::vector<Config>;
+
+// check two configurations are same or not
+[[maybe_unused]] static bool sameConfig(const Config& config_i,
+                                        const Config& config_j)
+{
+  if (config_i.size() != config_j.size()) return false;
+  const int size_i = config_i.size();
+  for (int k = 0; k < size_i; ++k) {
+    if (config_i[k] != config_j[k]) return false;
+  }
+  return true;
+}
+
+[[maybe_unused]] static int getPathCost(const Path& path)
+{
+  int cost = path.size() - 1;
+  auto itr = path.end() - 1;
+  while (itr != path.begin() && *itr == *(itr - 1)) {
+    --cost;
+    --itr;
+  }
+  return cost;
+}
 
 class Problem
 {

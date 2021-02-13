@@ -62,7 +62,6 @@ static T randomChoose(std::vector<T>& arr, std::mt19937* MT)
 // get elapsed time
 [[maybe_unused]] static double getElapsedTime(const Time::time_point& t_start)
 {
-  Time::time_point t_end = Time::now();
-  return std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start)
-      .count();
+  auto t_end = Time::now();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
 }
