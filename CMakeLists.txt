@@ -25,7 +25,7 @@ macro(add_test name target)
   list(APPEND TEST_ALL_SRC ${target})
 endmacro(add_test)
 
-add_test(test_graph ./tests/test_graph.cpp)
+# basic
 add_test(test_plan ./tests/test_plan.cpp)
 add_test(test_paths ./tests/test_paths.cpp)
 add_test(test_lib_solver ./tests/test_lib_solver.cpp)

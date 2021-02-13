@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <queue>
 
 #include "paths.hpp"
 #include "plan.hpp"
