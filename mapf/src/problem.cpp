@@ -74,7 +74,7 @@ Problem::Problem(const std::string& _instance)
     }
     // read initial/goal nodes
     if (std::regex_match(line, results, r_sg) && read_scen &&
-        config_s.size() < num_agents) {
+        (int)config_s.size() < num_agents) {
       int x_s = std::stoi(results[1].str());
       int y_s = std::stoi(results[2].str());
       int x_g = std::stoi(results[3].str());
@@ -160,7 +160,7 @@ Node* Problem::getStart(int i) const
 
 Node* Problem::getGoal(int i) const
 {
-  if (!(0 <= i && i < config_g.size())) halt("invalid index");
+  if (!(0 <= i && i < (int)config_g.size())) halt("invalid index");
   return config_g[i];
 }
 

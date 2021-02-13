@@ -1,6 +1,7 @@
 #include "../include/solver.hpp"
 
 #include <fstream>
+#include <iomanip>
 
 #include "../include/lib_cbs.hpp"
 
@@ -123,7 +124,7 @@ void Solver::updatePathTable(const Paths& paths, const int id)
   const int num_agents = paths.size();
   const int nodes_size = G->getNodesSize();
   // extend PATH_TABLE
-  while (PATH_TABLE.size() < makespan + 1)
+  while ((int)PATH_TABLE.size() < makespan + 1)
     PATH_TABLE.push_back(std::vector<int>(nodes_size, NIL));
   // update locations
   for (int i = 0; i < num_agents; ++i) {
@@ -155,7 +156,7 @@ void Solver::updatePathTableWithoutClear(const int id, const Path& p,
 
   // extend PATH_TABLE
   if (p_makespan > makespan) {
-    while (PATH_TABLE.size() < p_makespan + 1)
+    while ((int)PATH_TABLE.size() < p_makespan + 1)
       PATH_TABLE.push_back(std::vector<int>(nodes_size, NIL));
     for (int i = 0; i < P->getNum(); ++i) {
       if (paths.empty(i)) continue;
