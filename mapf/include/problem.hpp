@@ -3,7 +3,6 @@
 #include <graph.hpp>
 
 #include "default_params.hpp"
-// #include "graph.hpp"
 #include "util.hpp"
 
 using Config = std::vector<Node*>;  // < loc_0[t], loc_1[t], ... >
@@ -51,6 +50,10 @@ private:
 
   // set well-formed instance
   void setWellFormedInstance();
+
+  // utilities
+  void halt(const std::string& msg) const;
+  void warn(const std::string& msg) const;
 
 public:
   Problem(const std::string& _instance);

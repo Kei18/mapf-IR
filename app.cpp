@@ -19,7 +19,6 @@
 #include <push_and_swap.hpp>
 #include <random>
 #include <revisit_pp.hpp>
-#include <util.hpp>
 #include <vector>
 #include <whca.hpp>
 #include <winpibt.hpp>
@@ -105,7 +104,8 @@ int main(int argc, char* argv[])
   auto solver = getSolver(solver_name, &P, verbose, argc, argv_copy);
   solver->solve();
   if (solver->succeed() && !solver->getSolution().validate(&P)) {
-    halt("invalid results");
+    std::cout << "error@app: invalid results" << std::endl;
+    return 0;
   }
   solver->printResult();
 
@@ -174,7 +174,7 @@ void printHelp()
             << "  -v --verbose                  print additional info\n"
             << "  -h --help                     help\n"
             << "  -s --solver [SOLVER_NAME]     solver, choose from the below\n"
-            << "  -T --time-limit [INT]         max computation time\n"
+            << "  -T --time-limit [INT]         max computation time (ms)\n"
             << "  -P --make-scen                make scenario file using "
                "random starts/goals"
             << "\n\nSolver Options:" << std::endl;

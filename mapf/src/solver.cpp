@@ -60,9 +60,21 @@ Path Solver::getPrioritizedPath(
     CompareAstarNode& compare, const bool manage_path_table)
 {
   const int ideal_dist = pathDist(id);
+  const int makespan = paths.getMakespan();
 
   // max timestep that another agent uses the goal
-  const int max_constraint_time = paths.getMaxConstraintTime(id, g, ideal_dist);
+  // const int max_constraint_time = paths.getMaxConstraintTime(id, g, ideal_dist);
+  int max_constraint_time = 0;
+  for (int t = makespan; t >= ideal_dist; --t) {
+    for (int i = 0; i < P->getNum(); ++i) {
+      if (i != id && !paths.empty(i) && paths.get(i, t) == g) {
+        max_constraint_time = t;
+        break;
+      }
+    }
+    if (max_constraint_time > 0) break;
+  }
+
 
   // setup functions
   AstarHeuristics fValue;
@@ -81,8 +93,6 @@ Path Solver::getPrioritizedPath(
 
   // update PATH_TABLE
   if (manage_path_table) updatePathTable(paths, id);
-
-  const int makespan = PATH_TABLE.size() - 1;
 
   // fast collision checking
   CheckInvalidAstarNode checkInvalidAstarNode = [&](AstarNode* m) {
@@ -262,6 +272,19 @@ int Solver::pathDist(const int i, Node* const s) const
 }
 
 int Solver::pathDist(const int i) const { return pathDist(i, P->getStart(i)); }
+
+void Solver::halt(const std::string& msg) const
+{
+  std::cout << "error@" << solver_name << ": " << msg << std::endl;
+  this->~Solver();
+  std::exit(1);
+}
+
+void Solver::warn(const std::string& msg) const
+{
+  std::cout << "warn@ " << solver_name << ": " << msg << std::endl;
+}
+
 
 void Solver::setSolverOption(std::shared_ptr<Solver> solver,
                              const std::vector<std::string>& option)

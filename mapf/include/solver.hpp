@@ -112,6 +112,10 @@ public:
   }
 
 protected:
+  void halt(const std::string& msg) const;
+  void warn(const std::string& msg) const;
+
+protected:
   // main
   virtual void run() {}
 

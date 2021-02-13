@@ -11,6 +11,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_TOKEN }}
 
       - name: set up Python 3.7
         uses: actions/setup-python@v1

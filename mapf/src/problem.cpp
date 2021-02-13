@@ -256,6 +256,19 @@ void Problem::setWellFormedInstance()
   }
 }
 
+// I know that using "const" is something wired...
+void Problem::halt(const std::string& msg) const
+{
+  std::cout << "error@Problem: " << msg << std::endl;
+  this->~Problem();
+  std::exit(1);
+}
+
+void Problem::warn(const std::string& msg) const
+{
+  std::cout << "warn@Problem: " << msg << std::endl;
+}
+
 void Problem::makeScenFile(const std::string& output_file)
 {
   Grid* grid = reinterpret_cast<Grid*>(G);

@@ -210,33 +210,3 @@ int Paths::countConflict(int id, const Path& path) const
   }
   return cnt;
 }
-
-int Paths::getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const
-{
-  const int makespan = getMakespan();
-  const int dist = G->pathDist(s, g);
-  const int num = paths.size();
-  for (int t = makespan; t >= dist; --t) {
-    for (int i = 0; i < num; ++i) {
-      if (i != id && !empty(i) && get(i, t) == g) return t;
-    }
-  }
-  return 0;
-}
-
-int Paths::getMaxConstraintTime(const int id, Node* g, const int dist) const
-{
-  const int makespan = getMakespan();
-  const int num = paths.size();
-  for (int t = makespan; t >= dist; --t) {
-    for (int i = 0; i < num; ++i) {
-      if (i != id && !empty(i) && get(i, t) == g) return t;
-    }
-  }
-  return 0;
-}
-
-int Paths::getMaxConstraintTime(const int id, Problem* P) const
-{
-  return getMaxConstraintTime(id, P->getStart(id), P->getGoal(id), P->getG());
-}
