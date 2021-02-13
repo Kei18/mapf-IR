@@ -9,10 +9,10 @@ The visualizer uses [openFrameworks](https://openframeworks.cc) and works only o
 
 The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], ECBS [5], Revisit Prioritized Planning [6], Push and Swap [7], winPIBT [8], PIBT+, and IR (Iterative Refinement).
 
-| platform | status |
-| ---: | :--- |
-| macos-10.15 | ![test_macos](https://github.com/Kei18/mapf-IR/workflows/test_macos/badge.svg?branch=dev) ![build_visualizer_macos](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_macos/badge.svg?branch=dev) |
-| ubuntu-latest | ![test_ubuntu](https://github.com/Kei18/mapf-IR/workflows/test_ubuntu/badge.svg?branch=dev) |
+| platform | status (public) | status (dev) |
+| ---: | :--- |:--- |
+| macos-10.15 | ![test_macos](https://github.com/Kei18/mapf-IR/workflows/test_macos/badge.svg?branch=public) ![build_visualizer_macos](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_macos/badge.svg?branch=public) | ![test_macos](https://github.com/Kei18/mapf-IR/workflows/test_macos/badge.svg?branch=dev) ![build_visualizer_macos](https://github.com/Kei18/mapf-IR/workflows/build_visualizer_macos/badge.svg?branch=dev) |
+| ubuntu-latest | ![test_ubuntu](https://github.com/Kei18/mapf-IR/workflows/test_ubuntu/badge.svg?branch=public) | ![test_ubuntu](https://github.com/Kei18/mapf-IR/workflows/test_ubuntu/badge.svg?branch=dev) |
 
 You can see the performance of each solver from [auto\_record repo](https://github.com/Kei18/mapf-IR/tree/auto_record). The records were created by Github Actions.
 
@@ -41,6 +41,11 @@ make
 PIBT
 ```sh
 ./app -i ../instances/sample.txt -s PIBT -o result.txt -v
+```
+
+IR (the result will be saved in result.txt)
+```sh
+./app -i ../instances/random-32-32-20_70agents_1.txt -s IR_HYBRID -n 300 -t 100 -v
 ```
 
 You can find details and explanations for all parameters with:
