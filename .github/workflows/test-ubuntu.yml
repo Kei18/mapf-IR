@@ -20,8 +20,16 @@ jobs:
         with:
           submodules: false
 
-      - name: clone-google-tests
-        run: git clone https://github.com/google/googletest.git third_party/googletest
+      - uses: actions/checkout@v2
+        with:
+          repository: google/googletest
+          path: third_party/googletest
+
+      - uses: actions/checkout@v2
+        with:
+          repository: Kei18/grid-pathfinding
+          token: ${{ secrets.PERSONAL_TOKEN }}
+          path: third_party/grid-pathfinding
 
       - name: build
         run: |
