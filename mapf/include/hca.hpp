@@ -29,7 +29,6 @@ private:
   bool disable_dist_init = false;  // option
 
   // get one agent path
-  Path getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths);
   Path getPrioritizedPath(int id, const Paths& paths);
 
   void run();

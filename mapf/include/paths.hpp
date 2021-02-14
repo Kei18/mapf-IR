@@ -21,6 +21,9 @@ public:
   // agent, timestep -> location
   Node* get(int i, int t) const;
 
+  // return last node
+  Node* last(int i) const;
+
   // whether paths are empty
   bool empty() const;
 

@@ -16,11 +16,15 @@ Path Paths::get(int i) const
 
 Node* Paths::get(int i, int t) const
 {
-  const int paths_size = paths.size();
-  if (!(0 <= i && i < paths_size) || !(0 <= t && t <= makespan)) {
+  if (!(0 <= i && i < (int)paths.size()) || !(0 <= t && t <= makespan)) {
     halt("invalid index, i=" + std::to_string(i) + ", t=" + std::to_string(t));
   }
   return paths[i][t];
+}
+
+Node* Paths::last(int i) const
+{
+  return get(i, makespan);
 }
 
 bool Paths::empty() const { return paths.empty(); }

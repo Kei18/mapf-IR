@@ -252,6 +252,5 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
 
 void ICBS::printHelp()
 {
-  std::cout << ICBS::SOLVER_NAME << "\n"
-            << "  (no option)" << std::endl;
+  printHelpWithoutOption(SOLVER_NAME);
 }

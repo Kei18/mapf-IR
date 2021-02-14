@@ -206,6 +206,5 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
 
 void CBS::printHelp()
 {
-  std::cout << CBS::SOLVER_NAME << "\n"
-            << "  (no option)" << std::endl;
+  printHelpWithoutOption(SOLVER_NAME);
 }

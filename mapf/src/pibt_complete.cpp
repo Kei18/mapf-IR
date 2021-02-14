@@ -29,8 +29,9 @@ void PIBT_COMPLETE::run()
   Problem _P = Problem(P, P->getConfigStart(), P->getConfigGoal(),
                        max_comp_time, LB_makespan);
   std::unique_ptr<Solver> init_solver = std::make_unique<PIBT>(&_P);
-  init_solver->setDistanceTable((DistanceTable_p == nullptr) ? &DistanceTable
-                                                             : DistanceTable_p);
+  init_solver->setDistanceTable((distance_table_p == nullptr)
+                                ? &distance_table
+                                : distance_table_p);
   info(" ", "run PIBT until timestep", LB_makespan);
   init_solver->solve();
   solution = init_solver->getSolution();
@@ -61,7 +62,7 @@ void PIBT_COMPLETE::run()
     // set solver options
     setSolverOption(comp_solver, option_comp_solver);
     comp_solver->setDistanceTable(
-        (DistanceTable_p == nullptr) ? &DistanceTable : DistanceTable_p);
+        (distance_table_p == nullptr) ? &distance_table : distance_table_p);
 
     info(" ", "elapsed:", getSolverElapsedTime(), ", use",
          comp_solver->getSolverName(), "to complement the remain");
@@ -127,7 +128,7 @@ void PIBT_COMPLETE::printHelp()
 
       << "  -X --option-comp-solver [\"OPTION\"]\n"
       << "                                "
-      << "option for comp-solver\n"
+      << "option for comp-solver"
 
       << std::endl;
 }

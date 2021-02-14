@@ -136,7 +136,7 @@ Plan IR::getInitialPlan()
   // set solver options
   setSolverOption(solver, option_init_solver);
   solver->setVerbose(verbose_underlying_solver);
-  solver->setDistanceTable(&DistanceTable);
+  solver->setDistanceTable(&distance_table);
 
   // solve
   solver->solve();
@@ -174,7 +174,7 @@ std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,
   // set solver option
   setSolverOption(solver, option_optimal_solver);
   solver->setVerbose(verbose_underlying_solver);
-  solver->setDistanceTable(&DistanceTable);
+  solver->setDistanceTable(&distance_table);
 
   // solve
   solver->solve();
@@ -233,8 +233,8 @@ void IR::updateBySinglePaths(const int i, Plan& plan, IR* solver)
 
   // get new path
   auto paths = planToPaths(plan);
-  const auto path = solver->getPrioritizedPath(
-      i, paths, solver->getRefineTimeLimit(), solver->getMaxTimestep());
+  const auto path = solver->getPrioritizedPath
+    (i, paths, solver->getRefineTimeLimit(), solver->getMaxTimestep());
   if (path.empty() || getPathCost(path) >= cost) return;
 
   // update paths
@@ -277,9 +277,9 @@ void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
       std::tuple<Node*, int> constraint = std::make_tuple(g, t);
 
       // get refined plan for j
-      const auto refined_path_j = solver->getPrioritizedPath(
-          j, tmp_paths, solver->getRefineTimeLimit() - getElapsedTime(t_s),
-          upper_bound, {constraint});
+      const auto refined_path_j = solver->getPrioritizedPath
+        (j, tmp_paths, solver->getRefineTimeLimit() - getElapsedTime(t_s),
+         upper_bound, {constraint});
       if (refined_path_j.empty()) {
         stop_flg = true;
         break;
