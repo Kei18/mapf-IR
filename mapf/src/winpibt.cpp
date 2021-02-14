@@ -233,8 +233,8 @@ Path winPIBT::getSinglePath(const int id, std::vector<Path>& paths)
     if (occupied_t[m->v->id] >= m->g + buf) return true;
     return false;
   };
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
 }
 
 void winPIBT::setParams(int argc, char* argv[])

@@ -2,8 +2,9 @@
 #include <set>
 #include <stack>
 
+#include "paths.hpp"
+#include "plan.hpp"
 #include "lib_cbs.hpp"
-#include "lib_solver.hpp"
 
 namespace LibIR
 {
@@ -78,12 +79,12 @@ namespace LibIR
   }
 
   [[maybe_unused]] static std::tuple<int, std::vector<int>>
-  identifyBottleneckAgentsWithScore(const int i, const Plan& original_plan,
+  identifyBottleneckAgentsWithScore(const int i, const Paths& original_paths,
                                     Solver* solver, const int time_limit = -1)
   {
     int score = 0;
     std::vector<int> modif_list;
-    auto paths = planToPaths(original_plan);
+    auto paths = original_paths;
     paths.clear(i);
 
     const int num = paths.size();

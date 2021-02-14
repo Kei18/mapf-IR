@@ -94,10 +94,10 @@ TEST(libIR, identifyBottleneckAgents)
   plan.add(goals);
   ASSERT_TRUE(plan.validate(starts, goals));
 
-  auto res0 = LibIR::identifyBottleneckAgentsWithScore(0, plan, &solver);
+  auto res0 = LibIR::identifyBottleneckAgentsWithScore(0, Solver::planToPaths(plan), &solver);
   ASSERT_EQ(std::get<0>(res0), 0);
   ASSERT_EQ(std::get<1>(res0).size(), 0);
-  auto res1 = LibIR::identifyBottleneckAgentsWithScore(1, plan, &solver);
+  auto res1 = LibIR::identifyBottleneckAgentsWithScore(1, Solver::planToPaths(plan), &solver);
   ASSERT_EQ(std::get<0>(res1), 3);
   ASSERT_EQ(std::get<1>(res1).size(), 2);
 }

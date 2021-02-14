@@ -6,8 +6,8 @@
 #include <memory>
 #include <queue>
 #include <unordered_map>
+#include <functional>
 
-#include "lib_solver.hpp"
 #include "paths.hpp"
 #include "plan.hpp"
 #include "problem.hpp"
@@ -90,6 +90,12 @@ private:
   void computeLowerBounds();    // compute lb_soc and lb_makespan
 
   // -------------------------------
+  // utilities for solution representation
+public:
+  static Paths planToPaths(const Plan& plan);   // plan -> paths
+  static Plan pathsToPlan(const Paths& paths);  // paths -> plan
+
+  // -------------------------------
   // utilities for debug
 protected:
   // print debug info (only when verbose=true)
@@ -144,13 +150,41 @@ public:
 public:
   // use grid-pathfinding
   Path getPath(Node* const s, Node* const g, bool cache=false) const { return G->getPath(s, g, cache); }
+
   // space-time A*
-  Path getTimedPath(Node* const s,  // start
-                    Node* const g,  // goal
-                    AstarHeuristics& fValue,       // f-value
-                    CompareAstarNode& compare,     // compare two AstarNodes
-                    CheckAstarFin& checkAstarFin,  // whether the node is goal or not
-                    CheckInvalidAstarNode& checkInvalidAstarNode);  // avoid invalid nodes
+  struct AstarNode {
+    Node* v;           // location
+    int g;             // time
+    int f;             // f-value
+    AstarNode* p;      // parent
+    std::string name;  // name
+    AstarNode(Node* _v, int _g, int _f, AstarNode* _p);
+    static std::string getName(Node* _v, int _g);
+  };
+  using CompareAstarNode = std::function<bool(AstarNode*, AstarNode*)>;
+  using CheckAstarFin = std::function<bool(AstarNode*)>;
+  using CheckInvalidAstarNode = std::function<bool(AstarNode*)>;
+  using AstarHeuristics = std::function<int(AstarNode*)>;
+  using AstarNodes = std::vector<AstarNode*>;
+  /*
+   * Template of Space-Time A*.
+   * See the following reference.
+   *
+   * Cooperative Pathﬁnding.
+   * D. Silver.
+   * AI Game Programming Wisdom 3, pages 99–111, 2006.
+   */
+  static Path getPathBySpaceTimeAstar
+  (Node* const s,                                 // start
+   Node* const g,                                 // goal
+   AstarHeuristics& fValue,                       // func: f-value
+   CompareAstarNode& compare,                     // func: compare two nodes
+   CheckAstarFin& checkAstarFin,                  // func: check goal
+   CheckInvalidAstarNode& checkInvalidAstarNode,  // func: check invalid nodes
+   const int time_limit=-1                        // time limit
+   );
+  // typical functions
+  static CompareAstarNode compareAstarNodeBasic;
   // prioritized planning
   Path getPrioritizedPath(
       const int id,                // agent id

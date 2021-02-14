@@ -311,8 +311,8 @@ void IR::updateByFocusGoals(const int i, Plan& plan, IR* solver)
 
 void IR::updateByBottleneck(const int i, Plan& plan, IR* solver)
 {
-  const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore(
-      i, plan, solver, solver->getRefineTimeLimit()));
+  const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore
+                                      (i, planToPaths(plan), solver, solver->getRefineTimeLimit()));
   if (modif_list.empty()) return;
   Problem _P = Problem(solver->getP(), solver->getRefineTimeLimit());
   plan = std::get<1>(solver->getOptimalPlan(&_P, plan, modif_list));

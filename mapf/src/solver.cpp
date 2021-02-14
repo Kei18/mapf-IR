@@ -114,6 +114,40 @@ int Solver::getLowerBoundMakespan()
 }
 
 // -------------------------------
+// utilities for solution representation
+Paths Solver::planToPaths(const Plan& plan)
+{
+  int num_agents = plan.get(0).size();
+  Paths paths(num_agents);
+  int makespan = plan.getMakespan();
+  for (int i = 0; i < num_agents; ++i) {
+    Path path;
+    for (int t = 0; t <= makespan; ++t) {
+      path.push_back(plan.get(t, i));
+    }
+    paths.insert(i, path);
+  }
+  return paths;
+}
+
+Plan Solver::pathsToPlan(const Paths& paths)
+{
+  Plan plan;
+  if (paths.empty()) return plan;
+  int makespan = paths.getMakespan();
+  int num_agents = paths.size();
+  for (int t = 0; t <= makespan; ++t) {
+    Config c;
+    for (int i = 0; i < num_agents; ++i) {
+      c.push_back(paths.get(i, t));
+    }
+    plan.add(c);
+  }
+  return plan;
+}
+
+
+// -------------------------------
 // utilities for debug
 // -------------------------------
 void Solver::info() const
@@ -259,14 +293,100 @@ void Solver::createDistanceTable()
 // -------------------------------
 // utilities for getting path
 // -------------------------------
-Path Solver::getTimedPath(Node* const s, Node* const g, AstarHeuristics& fValue,
-                          CompareAstarNode& compare,
-                          CheckAstarFin& checkAstarFin,
-                          CheckInvalidAstarNode& checkInvalidAstarNode)
+Solver::AstarNode::AstarNode(Node* _v, int _g, int _f, AstarNode* _p)
+  : v(_v), g(_g), f(_f), p(_p), name(getName(_v, _g))
 {
-  return getPathBySpaceTimeAstar(s, g, fValue, compare, checkAstarFin,
-                                 checkInvalidAstarNode, getRemainedTime());
 }
+
+std::string Solver::AstarNode::getName(Node* _v, int _g)
+{
+  return std::to_string(_v->id) + "-" + std::to_string(_g);
+}
+
+Path Solver::getPathBySpaceTimeAstar
+(Node* const s,
+ Node* const g,
+ AstarHeuristics& fValue,
+ CompareAstarNode& compare,
+ CheckAstarFin& checkAstarFin,
+ CheckInvalidAstarNode& checkInvalidAstarNode,
+ const int time_limit)
+{
+  auto t_start = Time::now();
+
+  AstarNodes GC;  // garbage collection
+  auto createNewNode = [&GC](Node* v, int g, int f, AstarNode* p) {
+    AstarNode* new_node = new AstarNode(v, g, f, p);
+    GC.push_back(new_node);
+    return new_node;
+  };
+
+  // OPEN and CLOSE list
+  std::priority_queue<AstarNode*, AstarNodes, CompareAstarNode> OPEN(compare);
+  std::unordered_map<std::string, bool> CLOSE;
+
+  // initial node
+  AstarNode* n = createNewNode(s, 0, 0, nullptr);
+  n->f = fValue(n);
+  OPEN.push(n);
+
+  // main loop
+  bool invalid = true;
+  while (!OPEN.empty()) {
+    // check time limit
+    if (time_limit > 0 && getElapsedTime(t_start) > time_limit) break;
+
+    // minimum node
+    n = OPEN.top();
+    OPEN.pop();
+
+    // check CLOSE list
+    if (CLOSE.find(n->name) != CLOSE.end()) continue;
+    CLOSE[n->name] = true;
+
+    // check goal condition
+    if (checkAstarFin(n)) {
+      invalid = false;
+      break;
+    }
+
+    // expand
+    Nodes C = n->v->neighbor;
+    C.push_back(n->v);
+    for (auto u : C) {
+      int g_cost = n->g + 1;
+      AstarNode* m = createNewNode(u, g_cost, 0, n);
+      m->f = fValue(m);
+      // already searched?
+      if (CLOSE.find(m->name) != CLOSE.end()) continue;
+      // check constraints
+      if (checkInvalidAstarNode(m)) continue;
+      OPEN.push(m);
+    }
+  }
+
+  Path path;
+  if (!invalid) {  // success
+    while (n != nullptr) {
+      path.push_back(n->v);
+      n = n->p;
+    }
+    std::reverse(path.begin(), path.end());
+  }
+
+  // free
+  for (auto p : GC) delete p;
+
+  return path;
+}
+
+
+Solver::CompareAstarNode Solver::compareAstarNodeBasic =
+  [](AstarNode* a, AstarNode* b) {
+    if (a->f != b->f) return a->f > b->f;
+    if (a->g != b->g) return a->g < b->g;
+    return false;
+  };
 
 Path Solver::getPrioritizedPath
 (const int id,

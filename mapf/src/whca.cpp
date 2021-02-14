@@ -127,8 +127,8 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g,
     return false;
   };
 
-  Path path =
-      getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
+  Path path = getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
   const int path_size = path.size();
   // format
   if (!path.empty() && path_size - 1 > window) path.resize(window + 1);

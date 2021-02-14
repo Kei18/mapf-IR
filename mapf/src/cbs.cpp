@@ -200,8 +200,8 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
     return false;
   };
 
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
 }
 
 void CBS::printHelp()
