@@ -145,8 +145,7 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
        */
       if (c > mdd.c + THRESHOLD) break;
 
-      LibCBS::MDD_p new_mdd =
-          std::make_shared<LibCBS::MDD>(c, id, P, this, h_node->constraints);
+      LibCBS::MDD_p new_mdd = std::make_shared<LibCBS::MDD>(c, id, this, h_node->constraints);
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
         return new_mdd->getPath();
@@ -189,8 +188,7 @@ CBS::HighLevelNodes ICBS::lazyEval()
     while (true) {
       ++c;
       if (overCompTime()) break;
-      LibCBS::MDD_p new_mdd =
-          std::make_shared<LibCBS::MDD>(c, id, P, this, h_node->constraints);
+      LibCBS::MDD_p new_mdd = std::make_shared<LibCBS::MDD>(c, id, this, h_node->constraints);
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
         Path path = new_mdd->getPath();

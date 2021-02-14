@@ -74,7 +74,6 @@ namespace LibCBS
   struct MDD {
     int c;                       // cost
     int i;                       // agent
-    Graph* G;                    // original graph
     Node* s;                     // start
     Node* g;                     // goal;
     std::vector<MDDNodes> body;  // t: 0...c
@@ -88,14 +87,7 @@ namespace LibCBS
     // used in finding paths
     static std::mt19937* MT;
 
-    MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid);
-    // time_limit: for situations taking long time to construct one MDD
-    MDD(int _c, int _i, Problem* P, Constraints constraints,
-        int time_limit = -1);
-    MDD(int _c, int _i, Problem* P);
-    MDD(int _c, int _i, Solver* solver);
-    MDD(int _c, int _i, Problem* P, Solver* _solver, Constraints constraints,
-        int time_limit = -1);
+    MDD(int _c, int _i, Solver* _solver, Constraints constraints = {}, int time_limit = -1);
     ~MDD();
 
     MDD(const MDD& other);  // copy
