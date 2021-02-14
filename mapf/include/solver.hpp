@@ -16,6 +16,9 @@
 
 class Solver
 {
+public:
+  static const std::string SOLVER_NAME;
+
 protected:
   std::string solver_name;
 
@@ -117,7 +120,7 @@ protected:
 
 protected:
   // main
-  virtual void run() {}
+  virtual void run() {};
 
   // for log
   void makeLogBasicInfo(std::ofstream& log);
@@ -138,6 +141,9 @@ private:
 public:
   int getLowerBoundSOC();
   int getLowerBoundMakespan();
+
+protected:
+  static void printHelpWithoutOption(const std::string& solver_name);
 
 public:
   Solver(Problem* _P);

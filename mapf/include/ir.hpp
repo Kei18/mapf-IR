@@ -107,3 +107,87 @@ public:
   // for tests
   void setInitialPlan(const Plan& plan);
 };
+
+// ---------------------------------
+// IR_SINGLE_PATHS
+// ---------------------------------
+class IR_SINGLE_PATHS : public IR
+{
+public:
+  static const std::string SOLVER_NAME;
+private:
+  void refinePlan();
+public:
+  IR_SINGLE_PATHS(Problem* _P);
+  static void printHelp();
+};
+
+// ---------------------------------
+// IR_FIX_AT_GOALS
+// ---------------------------------
+class IR_FIX_AT_GOALS : public IR
+{
+public:
+  static const std::string SOLVER_NAME;
+private:
+  void refinePlan();
+public:
+  IR_FIX_AT_GOALS(Problem* _P);
+  static void printHelp();
+};
+
+// ---------------------------------
+// IR_FOCUS_GOALS
+// ---------------------------------
+class IR_FOCUS_GOALS : public IR
+{
+public:
+  static const std::string SOLVER_NAME;
+private:
+  void refinePlan();
+public:
+  IR_FOCUS_GOALS(Problem* _P);
+  static void printHelp();
+};
+
+// ---------------------------------
+// IR_MDD
+// ---------------------------------
+class IR_MDD : public IR
+{
+public:
+  static const std::string SOLVER_NAME;
+private:
+  void refinePlan();
+public:
+  IR_MDD(Problem* _P);
+  static void printHelp();
+};
+
+// ---------------------------------
+// IR_BOTTLENECK
+// ---------------------------------
+class IR_BOTTLENECK : public IR
+{
+public:
+  static const std::string SOLVER_NAME;
+protected:
+  void refinePlan();
+public:
+  IR_BOTTLENECK(Problem* _P);
+  static void printHelp();
+};
+
+// ---------------------------------
+// IR_HYBRID
+// ---------------------------------
+class IR_HYBRID : public IR
+{
+public:
+  static const std::string SOLVER_NAME;
+private:
+  void refinePlan();
+public:
+  IR_HYBRID(Problem* _P);
+  static void printHelp();
+};

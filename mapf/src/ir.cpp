@@ -3,7 +3,16 @@
 #include <fstream>
 #include <set>
 
+// solver name
 const std::string IR::SOLVER_NAME = "IR";
+const std::string IR_SINGLE_PATHS::SOLVER_NAME = "IR_SINGLE_PATHS";
+const std::string IR_FIX_AT_GOALS::SOLVER_NAME = "IR_FIX_AT_GOALS";
+const std::string IR_FOCUS_GOALS::SOLVER_NAME = "IR_FOCUS_GOALS";
+const std::string IR_MDD::SOLVER_NAME = "IR_MDD";
+const std::string IR_BOTTLENECK::SOLVER_NAME = "IR_BOTTLENECK";
+const std::string IR_HYBRID::SOLVER_NAME = "IR_HYBRID";
+
+// parameters
 const IR::INIT_SOLVER_TYPE IR::DEFAULT_INIT_SOLVER =
     IR::INIT_SOLVER_TYPE::PIBT_COMPLETE;
 const IR::OPTIMAL_SOLVER_TYPE IR::DEFAULT_REFINE_SOLVER =
@@ -489,4 +498,122 @@ void IR::makeLog(const std::string& logfile)
 
   makeLogSolution(log);
   log.close();
+}
+
+
+// ---------------------------------
+// IR_SINGLE_PATHS
+// ---------------------------------
+
+IR_SINGLE_PATHS::IR_SINGLE_PATHS(Problem* _P) : IR(_P)
+{
+  solver_name = SOLVER_NAME;
+}
+
+void IR_SINGLE_PATHS::refinePlan()
+{
+  updatePlanFocusOneAgent(updateBySinglePaths);
+}
+
+void IR_SINGLE_PATHS::printHelp()
+{
+  printHelpWithoutOption(SOLVER_NAME);
+}
+
+// ---------------------------------
+// IR_FIX_AT_GOALS
+// ---------------------------------
+IR_FIX_AT_GOALS::IR_FIX_AT_GOALS(Problem* _P) : IR(_P)
+{
+  solver_name = SOLVER_NAME;
+}
+
+void IR_FIX_AT_GOALS::refinePlan()
+{
+  updatePlanFocusOneAgent(updateByFixAtGoals);
+}
+
+void IR_FIX_AT_GOALS::printHelp()
+{
+  printHelpWithoutOption(SOLVER_NAME);
+}
+
+
+// ---------------------------------
+// IR_FOCUS_GOALS
+// ---------------------------------
+IR_FOCUS_GOALS::IR_FOCUS_GOALS(Problem* _P) : IR(_P)
+{
+  solver_name = SOLVER_NAME;
+}
+
+void IR_FOCUS_GOALS::refinePlan()
+{
+  updatePlanFocusOneAgent(updateByFocusGoals);
+}
+
+void IR_FOCUS_GOALS::printHelp()
+{
+  printHelpWithoutOption(SOLVER_NAME);
+}
+
+// ---------------------------------
+// IR_MDD
+// ---------------------------------
+IR_MDD::IR_MDD(Problem* _P) : IR(_P)
+{
+  solver_name = SOLVER_NAME;
+}
+
+void IR_MDD::refinePlan()
+{
+  updatePlanFocusOneAgent(updateByMDD);
+}
+
+void IR_MDD::printHelp()
+{
+  printHelpWithoutOption(SOLVER_NAME);
+}
+
+// ---------------------------------
+// IR_BOTTLENECK
+// ---------------------------------
+IR_BOTTLENECK::IR_BOTTLENECK(Problem* _P) : IR(_P)
+{
+  solver_name = SOLVER_NAME;
+}
+
+void IR_BOTTLENECK::refinePlan()
+{
+  updatePlanFocusOneAgent(updateByBottleneck);
+}
+
+void IR_BOTTLENECK::printHelp()
+{
+  printHelpWithoutOption(SOLVER_NAME);
+}
+
+// ---------------------------------
+// IR_HYBRID
+// ---------------------------------
+IR_HYBRID::IR_HYBRID(Problem* _P) : IR(_P)
+{
+  solver_name = SOLVER_NAME;
+}
+
+void IR_HYBRID::refinePlan()
+{
+  info("", "update by FIX_AT_GOALS");
+  updatePlanFocusOneAgent(updateByFixAtGoals);
+  info("", "update by FOCUS_GOALS");
+  updatePlanFocusOneAgent(updateByFocusGoals);
+  info("", "update by MDD");
+  updatePlanFocusOneAgent(updateByMDD);
+  info("", "update by RANDOM");
+  updateByRandom();
+}
+
+void IR_HYBRID::printHelp()
+{
+  printHelpWithoutOption(SOLVER_NAME);
 }

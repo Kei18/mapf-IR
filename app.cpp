@@ -7,12 +7,6 @@
 #include <icbs.hpp>
 #include <iostream>
 #include <ir.hpp>
-#include <ir_bottleneck.hpp>
-#include <ir_fix_at_goals.hpp>
-#include <ir_focus_goals.hpp>
-#include <ir_hybrid.hpp>
-#include <ir_mdd.hpp>
-#include <ir_single_paths.hpp>
 #include <pibt.hpp>
 #include <pibt_complete.hpp>
 #include <problem.hpp>

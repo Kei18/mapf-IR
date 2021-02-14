@@ -299,6 +299,12 @@ void Solver::setSolverOption(std::shared_ptr<Solver> solver,
   solver->setParams(argc, argv);
 }
 
+void Solver::printHelpWithoutOption(const std::string& solver_name)
+{
+  std::cout << solver_name << "\n"
+            << "  (no option)" << std::endl;
+}
+
 void Solver::printResult()
 {
   std::cout << "solved=" << solved << ", solver=" << std::right << std::setw(8)
