@@ -80,6 +80,7 @@ if __name__ == '__main__':
         plt.xticks(rotation=45, fontsize=fontsize-2)
         plt.yticks(fontsize=fontsize-2)
         plt.yscale('log')
-        plt.ylabel("runtime (sec)")
+        plt.ylim(0.01);
+        plt.ylabel("runtime (sec)", fontsize=fontsize-2)
         plt.legend(frameon=False, fontsize=fontsize-2, bbox_to_anchor=(1.0,1.0))
         plt.savefig("./fig/transition_{}.pdf".format(s), pad_inches=0.05, transparent=False, bbox_inches='tight')
