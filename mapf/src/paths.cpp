@@ -16,11 +16,15 @@ Path Paths::get(int i) const
 
 Node* Paths::get(int i, int t) const
 {
-  const int paths_size = paths.size();
-  if (!(0 <= i && i < paths_size) || !(0 <= t && t <= makespan)) {
+  if (!(0 <= i && i < (int)paths.size()) || !(0 <= t && t <= makespan)) {
     halt("invalid index, i=" + std::to_string(i) + ", t=" + std::to_string(t));
   }
   return paths[i][t];
+}
+
+Node* Paths::last(int i) const
+{
+  return get(i, makespan);
 }
 
 bool Paths::empty() const { return paths.empty(); }
@@ -211,32 +215,14 @@ int Paths::countConflict(int id, const Path& path) const
   return cnt;
 }
 
-int Paths::getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const
+void Paths::halt(const std::string& msg) const
 {
-  const int makespan = getMakespan();
-  const int dist = G->pathDist(s, g);
-  const int num = paths.size();
-  for (int t = makespan; t >= dist; --t) {
-    for (int i = 0; i < num; ++i) {
-      if (i != id && !empty(i) && get(i, t) == g) return t;
-    }
-  }
-  return 0;
+  std::cout << "error@Paths: " << msg << std::endl;
+  this->~Paths();
+  std::exit(1);
 }
 
-int Paths::getMaxConstraintTime(const int id, Node* g, const int dist) const
+void Paths::warn(const std::string& msg) const
 {
-  const int makespan = getMakespan();
-  const int num = paths.size();
-  for (int t = makespan; t >= dist; --t) {
-    for (int i = 0; i < num; ++i) {
-      if (i != id && !empty(i) && get(i, t) == g) return t;
-    }
-  }
-  return 0;
-}
-
-int Paths::getMaxConstraintTime(const int id, Problem* P) const
-{
-  return getMaxConstraintTime(id, P->getStart(id), P->getGoal(id), P->getG());
+  std::cout << "warn@Paths: " << msg << std::endl;
 }

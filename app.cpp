@@ -7,19 +7,12 @@
 #include <icbs.hpp>
 #include <iostream>
 #include <ir.hpp>
-#include <ir_bottleneck.hpp>
-#include <ir_fix_at_goals.hpp>
-#include <ir_focus_goals.hpp>
-#include <ir_hybrid.hpp>
-#include <ir_mdd.hpp>
-#include <ir_single_paths.hpp>
 #include <pibt.hpp>
 #include <pibt_complete.hpp>
 #include <problem.hpp>
 #include <push_and_swap.hpp>
 #include <random>
 #include <revisit_pp.hpp>
-#include <util.hpp>
 #include <vector>
 #include <whca.hpp>
 #include <winpibt.hpp>
@@ -105,7 +98,8 @@ int main(int argc, char* argv[])
   auto solver = getSolver(solver_name, &P, verbose, argc, argv_copy);
   solver->solve();
   if (solver->succeed() && !solver->getSolution().validate(&P)) {
-    halt("invalid results");
+    std::cout << "error@app: invalid results" << std::endl;
+    return 0;
   }
   solver->printResult();
 
@@ -157,7 +151,9 @@ std::unique_ptr<Solver> getSolver(const std::string solver_name, Problem* P,
   } else if (solver_name == "IR_HYBRID") {
     solver = std::make_unique<IR_HYBRID>(P);
   } else {
-    warn("unknown solver name, " + solver_name + ", continue by PIBT");
+    std::cout << "warn@app: "
+              << "unknown solver name, " + solver_name + ", continue by PIBT"
+              << std::endl;
     solver = std::make_unique<PIBT>(P);
   }
   solver->setParams(argc, argv);
@@ -174,7 +170,7 @@ void printHelp()
             << "  -v --verbose                  print additional info\n"
             << "  -h --help                     help\n"
             << "  -s --solver [SOLVER_NAME]     solver, choose from the below\n"
-            << "  -T --time-limit [INT]         max computation time\n"
+            << "  -T --time-limit [INT]         max computation time (ms)\n"
             << "  -P --make-scen                make scenario file using "
                "random starts/goals"
             << "\n\nSolver Options:" << std::endl;

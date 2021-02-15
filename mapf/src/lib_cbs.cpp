@@ -2,8 +2,6 @@
 
 // cache
 std::unordered_map<std::string, LibCBS::MDD_p> LibCBS::MDD::PURE_MDD_TABLE;
-// used in find paths
-std::mt19937* LibCBS::MDD::MT;
 
 void LibCBS::Constraint::println()
 {
@@ -196,46 +194,11 @@ bool LibCBS::MDDNode::operator==(const MDDNode& other) const
   return t == other.t && v == other.v;
 }
 
-LibCBS::MDD::MDD(int _c, int _i, Graph* _G, Node* _s, Node* _g, bool _valid)
-    : c(_c), i(_i), G(_G), s(_s), g(_g), valid(_valid), solver(nullptr)
-{
-}
-
-LibCBS::MDD::MDD(int _c, int _i, Problem* P, Constraints constraints,
-                 int time_limit)
+LibCBS::MDD::MDD(int _c, int _i, Solver* _solver, Constraints constraints, int time_limit)
     : c(_c),
       i(_i),
-      G(P->getG()),
-      s(P->getStart(i)),
-      g(P->getGoal(i)),
-      solver(nullptr)
-{
-  // for timeout
-  auto t_s = Time::now();
-
-  // check possibility
-  valid = G->pathDist(s, g) <= c;
-
-  // build MDD without constraints
-  build(time_limit);
-
-  // check time limit
-  if (time_limit > 0 && (int)getElapsedTime(t_s) > time_limit) {
-    valid = false;
-    return;
-  }
-
-  // update MDD with constraints
-  update(constraints);
-}
-
-LibCBS::MDD::MDD(int _c, int _i, Problem* P, Solver* _solver,
-                 Constraints constraints, int time_limit)
-    : c(_c),
-      i(_i),
-      G(P->getG()),
-      s(P->getStart(i)),
-      g(P->getGoal(i)),
+      s(_solver->getP()->getStart(i)),
+      g(_solver->getP()->getGoal(i)),
       solver(_solver)
 {
   // for timeout
@@ -257,16 +220,6 @@ LibCBS::MDD::MDD(int _c, int _i, Problem* P, Solver* _solver,
   update(constraints);
 }
 
-LibCBS::MDD::MDD(int _c, int _i, Problem* P)
-    : LibCBS::MDD::MDD(_c, _i, P, {}, -1)  // -1: for timeout
-{
-}
-
-LibCBS::MDD::MDD(int _c, int _i, Solver* _solver)
-    : LibCBS::MDD::MDD(_c, _i, _solver->getP(), _solver, {}, -1)
-{
-}
-
 LibCBS::MDD::~MDD()
 {
   for (MDDNode* node : GC) delete node;
@@ -275,7 +228,6 @@ LibCBS::MDD::~MDD()
 LibCBS::MDD::MDD(const MDD& other)
     : c(other.c),
       i(other.i),
-      G(other.G),
       s(other.s),
       g(other.g),
       valid(other.valid),
@@ -355,9 +307,7 @@ void LibCBS::MDD::build(int time_limit)
       cands.push_back(node->v);
       for (auto v : cands) {
         // valid
-        bool flg = (solver != nullptr) ? solver->pathDist(i, v) + t + 1 <= c
-                                       : G->pathDist(v, g) + t + 1 <= c;
-        if (flg) {
+        if (solver->pathDist(i, v) + t + 1 <= c) {
           // already exists?
           MDDNode* next_node = nullptr;
           for (auto _node : nodes_at_t_next) {
@@ -560,7 +510,7 @@ std::string LibCBS::MDD::getPureMDDName()
 // make path using MDD
 // if MDD is valid, the search must success
 // invalid MDD -> return {}
-Path LibCBS::MDD::getPath() const
+Path LibCBS::MDD::getPath(std::mt19937* const MT) const
 {
   if (!valid) return {};
   if (body[0].empty() || body[c].empty()) halt("invalid MDD");
@@ -572,13 +522,17 @@ Path LibCBS::MDD::getPath() const
   while (node != goal_node) {
     path.push_back(node->v);
     if (node->next.empty()) halt("invalid MDD");
-    node = randomChoose(node->next, MT);  // randomize
+    if (MT != nullptr) {
+      node = randomChoose(node->next, MT);  // randomize
+    } else {
+      node = node->next[0];
+    }
   }
   path.push_back(goal_node->v);
   return path;
 }
 
-Path LibCBS::MDD::getPath(Constraint_p const constraint) const
+Path LibCBS::MDD::getPath(Constraint_p const constraint, std::mt19937* const MT) const
 {
   if (!valid) return {};
   if (constraint == nullptr) return getPath();
@@ -589,7 +543,7 @@ Path LibCBS::MDD::getPath(Constraint_p const constraint) const
   return mdd.getPath();
 }
 
-Path LibCBS::MDD::getPath(const Constraints& _constraints) const
+Path LibCBS::MDD::getPath(const Constraints& _constraints, std::mt19937* const MT) const
 {
   if (!valid) return {};
   // create a new MDD by copying itself
@@ -626,4 +580,11 @@ void LibCBS::MDD::println() const
       std::cout << std::endl;
     }
   }
+}
+
+void LibCBS::MDD::halt(const std::string& msg) const
+{
+  std::cout << "error@MDD: " << msg << std::endl;
+  this->~MDD();
+  std::exit(1);
 }

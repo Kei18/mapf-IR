@@ -6,69 +6,188 @@
 #include <memory>
 #include <queue>
 #include <unordered_map>
+#include <functional>
 
-#include "default_params.hpp"
-#include "graph.hpp"
-#include "lib_solver.hpp"
 #include "paths.hpp"
 #include "plan.hpp"
 #include "problem.hpp"
 #include "util.hpp"
 
-class Solver
+class MinimumSolver
 {
 protected:
-  std::string solver_name;
+  std::string solver_name;       // solver name
+  Problem* const P;              // problem instance
+  Graph* const G;                // graph
+  std::mt19937* const MT;        // seed for randomness
+  const int max_timestep;        // maximum makespan
+  const int max_comp_time;       // time limit for computation, ms
+  Plan solution;                 // solution
+  bool solved;                   // success -> true, failed -> false (default)
 
-  Problem* P;        // problem instance
-  Graph* G;          // graph
-  std::mt19937* MT;  // seed for randomness
-
-  // limitations
-  const int max_timestep;
-  const int max_comp_time;
-
+private:
+  int comp_time;             // computation time
   Time::time_point t_start;  // when to start solving
 
-  Plan solution;     // solution
-  double comp_time;  // time for deliberation
-  bool solved;       // success -> true, failed -> false (default)
-
-  bool verbose;  // true -> print additional info
-
-  int LB_soc;       // lower bound of soc
-  int LB_makespan;  // lower bound of makespan
-
-protected:
-  std::vector<std::vector<int>>
-      DistanceTable;  // distance table [agent][node_id]
-  std::vector<std::vector<int>>*
-      DistanceTable_p;  // pointer, used in nested solvers
 public:
-  // get path distance for a_i
-  int pathDist(const int i) const;
-  int pathDist(const int i, Node* const s) const;
-  void setDistanceTable(std::vector<std::vector<int>>* p)
+  void solve();  // call start -> run -> end
+private:
+  void start();
+  void end();
+protected:
+  virtual void exec() {};    // main
+
+public:
+  MinimumSolver(Problem* _P);
+  virtual ~MinimumSolver() {};
+
+  // getter
+  Plan getSolution() const { return solution; };
+  bool succeed() const { return solved; };
+  std::string getSolverName() const { return solver_name; };
+  int getMaxTimestep() const { return max_timestep; };
+  int getCompTime() const { return comp_time; }
+  int getSolverElapsedTime() const;  // get elapsed time from start
+};
+
+// -----------------------------------------------
+// base class with utilities
+// -----------------------------------------------
+class Solver : public MinimumSolver
+{
+private:
+  // useful info
+  bool verbose;      // true -> print additional info
+  int LB_soc;        // lower bound of soc
+  int LB_makespan;   // lower bound of makespan
+
+  // distance to goal
+protected:
+  using DistanceTable = std::vector<std::vector<int>>;  // [agent][node_id]
+  DistanceTable distance_table;     // distance table
+  DistanceTable* distance_table_p;  // pointer, used in nested solvers
+
+
+  // -------------------------------
+  // main
+private:
+  void exec();
+protected:
+  virtual void run() {} // main
+
+  // -------------------------------
+  // utilities for time
+public:
+  int getRemainedTime() const;       // get remained time
+  bool overCompTime() const;         // check time limit
+
+  // -------------------------------
+  // utilities for problem instance
+public:
+  int getLowerBoundSOC();       // get trivial lower bound of sum-of-costs
+  int getLowerBoundMakespan();  // get trivial lower bound of makespan
+private:
+  void computeLowerBounds();    // compute lb_soc and lb_makespan
+
+  // -------------------------------
+  // utilities for solution representation
+public:
+  static Paths planToPaths(const Plan& plan);   // plan -> paths
+  static Plan pathsToPlan(const Paths& paths);  // paths -> plan
+
+  // -------------------------------
+  // utilities for debug
+protected:
+  // print debug info (only when verbose=true)
+  void info() const;
+  template <class Head, class... Tail> void info(Head&& head, Tail&&... tail) const
   {
-    DistanceTable_p = p;
+    if (!verbose) return;
+    std::cout << head << " ";
+    info(std::forward<Tail>(tail)...);
   }
-  void createDistanceTable();  // preprocessing
-  // use search of original graph with cache
-  Path getPath(Node* const s, Node* const g) const { return G->getPath(s, g); }
+  void halt(const std::string& msg) const;  // halt program
+  void warn(const std::string& msg) const;  // just printing msg
+
+  // -------------------------------
+  // log
+public:
+  virtual void makeLog(const std::string& logfile = "./result.txt");
+protected:
+  void makeLogBasicInfo(std::ofstream& log);
+  void makeLogSolution(std::ofstream& log);
+
+  // -------------------------------
+  // utilities for solver options
+public:
+  virtual void setParams(int argc, char* argv[]){};
+  void setVerbose(bool _verbose) { verbose = _verbose; }
+protected:
+  // used for set underlying solver options
+  static void setSolverOption(std::shared_ptr<Solver> solver,
+                              const std::vector<std::string>& option);
+
+  // -------------------------------
+  // print
+public:
+  void printResult();
+protected:
+  static void printHelpWithoutOption(const std::string& solver_name);
+
+  // -------------------------------
+  // utilities for distance
+public:
+  int pathDist(const int i, Node* const s) const;  // get path distance between s -> g_i
+  int pathDist(const int i) const;                 // get path distance between s_i -> g_i
+  void createDistanceTable();                      // compute distance table
+  void setDistanceTable(DistanceTable* p) { distance_table_p = p; }  // used in nested solvers
+  // use grid-pathfinding
   int pathDist(Node* const s, Node* const g) const { return G->pathDist(s, g); }
 
+
+  // -------------------------------
+  // utilities for getting path
 public:
+  // use grid-pathfinding
+  Path getPath(Node* const s, Node* const g, bool cache=false) const { return G->getPath(s, g, cache); }
+
   // space-time A*
-  Path getTimedPath(Node* const s,  // start
-                    Node* const g,  // goal
-                    AstarHeuristics& fValue, CompareAstarNode& compare,
-                    CheckAstarFin& checkAstarFin,
-                    CheckInvalidAstarNode& checkInvalidAstarNode);
+  struct AstarNode {
+    Node* v;           // location
+    int g;             // time
+    int f;             // f-value
+    AstarNode* p;      // parent
+    std::string name;  // name
+    AstarNode(Node* _v, int _g, int _f, AstarNode* _p);
+    static std::string getName(Node* _v, int _g);
+  };
+  using CompareAstarNode = std::function<bool(AstarNode*, AstarNode*)>;
+  using CheckAstarFin = std::function<bool(AstarNode*)>;
+  using CheckInvalidAstarNode = std::function<bool(AstarNode*)>;
+  using AstarHeuristics = std::function<int(AstarNode*)>;
+  using AstarNodes = std::vector<AstarNode*>;
+  /*
+   * Template of Space-Time A*.
+   * See the following reference.
+   *
+   * Cooperative Pathﬁnding.
+   * D. Silver.
+   * AI Game Programming Wisdom 3, pages 99–111, 2006.
+   */
+  static Path getPathBySpaceTimeAstar
+  (Node* const s,                                 // start
+   Node* const g,                                 // goal
+   AstarHeuristics& fValue,                       // func: f-value
+   CompareAstarNode& compare,                     // func: compare two nodes
+   CheckAstarFin& checkAstarFin,                  // func: check goal
+   CheckInvalidAstarNode& checkInvalidAstarNode,  // func: check invalid nodes
+   const int time_limit=-1                        // time limit
+   );
+  // typical functions
+  static CompareAstarNode compareAstarNodeBasic;
   // prioritized planning
   Path getPrioritizedPath(
       const int id,                // agent id
-      Node* const s,               // initial location
-      Node* const g,               // goal location
       const Paths& paths,          // already reserved paths
       const int time_limit = -1,   // time limit
       const int upper_bound = -1,  // upper bound of timesteps
@@ -78,85 +197,18 @@ public:
       const bool manage_path_table =
           true  // manage path table automatically, conflict check
   );
-
-  Path getPrioritizedPath(
-      const int id, const Paths& paths, const int time_limit = -1,
-      const int upper_bound = -1,
-      const std::vector<std::tuple<Node*, int>>& constraints = {},
-      CompareAstarNode& compare = compareAstarNodeBasic);
-
-  // for prioritized planning
 protected:
+  // used for checking conflicts
   void updatePathTable(const Paths& paths, const int id);
   void clearPathTable(const Paths& paths);
-  void updatePathTableWithoutClear(const int id, const Path& p,
-                                   const Paths& paths);
+  void updatePathTableWithoutClear(const int id, const Path& p, const Paths& paths);
   static constexpr int NIL = -1;
   std::vector<std::vector<int>> PATH_TABLE;
-
-public:
-  int getSolverElapsedTime() const;  // get elapsed time from start
-  int getRemainedTime() const;       // get remained time
-  bool overCompTime() const;         // check time limit
-
-  // print debug info (only when verbose=true)
-  void info() const
-  {
-    if (verbose) std::cout << std::endl;
-  }
-  template <class Head, class... Tail>
-  void info(Head&& head, Tail&&... tail) const
-  {
-    if (!verbose) return;
-    std::cout << head << " ";
-    info(std::forward<Tail>(tail)...);
-  }
-
-protected:
-  // main
-  virtual void run() {}
-
-  // for log
-  void makeLogBasicInfo(std::ofstream& log);
-  void makeLogSolution(std::ofstream& log);
-
-  // used for set underlying solver options
-  static void setSolverOption(std::shared_ptr<Solver> solver,
-                              const std::vector<std::string>& option);
-
-private:
-  void start();
-  void end();
-
-  // get trivial lower bounds of sum-of-costs and makespan
-private:
-  void computeLowerBounds();
-
-public:
-  int getLowerBoundSOC();
-  int getLowerBoundMakespan();
 
 public:
   Solver(Problem* _P);
   virtual ~Solver();
 
-  // call start -> run -> end
-  void solve();
-
-  // getter
-  Plan getSolution() const { return solution; };
-  bool succeed() const { return solved; };
-  std::string getSolverName() { return solver_name; };
-  int getMaxTimestep() const { return max_timestep; };
+  // other getter
   Problem* getP() { return P; }
-
-  // for parameters
-  virtual void setParams(int argc, char* argv[]){};
-  void setVerbose(bool _verbose) { verbose = _verbose; }
-
-  // show result
-  void printResult();
-
-  // for log
-  virtual void makeLog(const std::string& logfile = "./result.txt");
 };

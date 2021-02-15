@@ -98,17 +98,3 @@ TEST(Paths, conflict)
   paths4.insert(2, {w, w, w});
   ASSERT_EQ(paths4.countConflict(2, {w, w, u}), 1);
 }
-
-TEST(Paths, maxConstraintTime)
-{
-  Grid G("8x8.map");
-  Node* v = G.getNode(0);
-  Node* u = G.getNode(1);
-  Node* w = G.getNode(2);
-
-  Paths paths(2);
-  paths.insert(0, {v, v, u});
-  paths.insert(1, {u, u, w});
-  ASSERT_EQ(paths.getMaxConstraintTime(0, v, u, &G), 1);
-  ASSERT_EQ(paths.getMaxConstraintTime(1, u, w, &G), 0);
-}

@@ -59,17 +59,13 @@ void HCA::run()
   }
 }
 
+// get single agent path
+// failed -> return {}
 Path HCA::getPrioritizedPath(int id, const Paths& paths)
 {
   Node* s = P->getStart(id);
   Node* g = P->getGoal(id);
-  return getPrioritizedPath(id, s, g, paths);
-}
 
-// get single agent path
-// failed -> return {}
-Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
-{
   Nodes config_s = P->getConfigStart();
   Nodes config_g = P->getConfigGoal();
 
@@ -85,7 +81,7 @@ Path HCA::getPrioritizedPath(int id, Node* s, Node* g, const Paths& paths)
     return false;
   };
 
-  const auto p = Solver::getPrioritizedPath(id, s, g, paths, getRemainedTime(),
+  const auto p = Solver::getPrioritizedPath(id, paths, getRemainedTime(),
                                             max_timestep, {}, compare, false);
 
   // update path table

@@ -64,7 +64,7 @@ Path RevisitPP::getPrioritizedPath(
     const std::vector<std::tuple<Node*, int>> constraints)
 {
   const auto p = Solver::getPrioritizedPath(
-      id, P->getStart(id), P->getGoal(id), paths, getRemainedTime(),
+      id, paths, getRemainedTime(),
       max_timestep, constraints, compareAstarNodeBasic, false);
 
   // update path table

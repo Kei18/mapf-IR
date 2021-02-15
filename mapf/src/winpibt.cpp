@@ -55,7 +55,7 @@ void winPIBT::run()
 
       // reserve paths sequentially
       int t = buf + 1;
-      while (t - buf < path.size()) {
+      while (t - buf < (int)path.size()) {
         Node* v_now = path[t - buf - 1];
         Node* v_next = path[t - buf];
         // occupied by someone -> priority inheritance
@@ -86,7 +86,7 @@ void winPIBT::run()
               path.resize(t - buf);
               for (auto v : p) path.push_back(v);
               // check condition
-              if (overCompTime() || path.size() - 1 + buf > max_timestep)
+              if (overCompTime() || (int)path.size() - 1 + buf > max_timestep)
                 return;
               continue;
             }
@@ -115,7 +115,7 @@ void winPIBT::run()
   for (int t = 0; t < max_len; ++t) {
     Config c;
     for (int i = 0; i < P->getNum(); ++i) {
-      c.push_back((t < paths[i].size()) ? paths[i][t] : *(paths[i].end() - 1));
+      c.push_back((t < (int)paths[i].size()) ? paths[i][t] : *(paths[i].end() - 1));
     }
     solution.add(c);
   }
@@ -233,8 +233,8 @@ Path winPIBT::getSinglePath(const int id, std::vector<Path>& paths)
     if (occupied_t[m->v->id] >= m->g + buf) return true;
     return false;
   };
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
 }
 
 void winPIBT::setParams(int argc, char* argv[])

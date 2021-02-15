@@ -2,15 +2,26 @@
 
 #include <fstream>
 #include <set>
+#include "../include/cbs_refine.hpp"
+#include "../include/ecbs.hpp"
+#include "../include/hca.hpp"
+#include "../include/winpibt.hpp"
+#include "../include/icbs_refine.hpp"
+#include "../include/pibt.hpp"
+#include "../include/pibt_complete.hpp"
+#include "../include/push_and_swap.hpp"
+#include "../include/revisit_pp.hpp"
+#include "../include/whca.hpp"
 
+
+// solver name
 const std::string IR::SOLVER_NAME = "IR";
-const IR::INIT_SOLVER_TYPE IR::DEFAULT_INIT_SOLVER =
-    IR::INIT_SOLVER_TYPE::PIBT_COMPLETE;
-const IR::OPTIMAL_SOLVER_TYPE IR::DEFAULT_REFINE_SOLVER =
-    IR::OPTIMAL_SOLVER_TYPE::ICBS;
-const int IR::DEFAULT_MAX_ITERATION = 100;
-const int IR::DEFAULT_TIMEOUT_REFINEMENT = 3000;
-const int IR::DEFAULT_SAMPLING_NUM = 10;
+const std::string IR_SINGLE_PATHS::SOLVER_NAME = "IR_SINGLE_PATHS";
+const std::string IR_FIX_AT_GOALS::SOLVER_NAME = "IR_FIX_AT_GOALS";
+const std::string IR_FOCUS_GOALS::SOLVER_NAME = "IR_FOCUS_GOALS";
+const std::string IR_MDD::SOLVER_NAME = "IR_MDD";
+const std::string IR_BOTTLENECK::SOLVER_NAME = "IR_BOTTLENECK";
+const std::string IR_HYBRID::SOLVER_NAME = "IR_HYBRID";
 
 IR::IR(Problem* _P)
     : Solver(_P),
@@ -106,6 +117,9 @@ Plan IR::getInitialPlan()
     case INIT_SOLVER_TYPE::WHCA:
       solver = std::make_shared<WHCA>(&_P);
       break;
+    case INIT_SOLVER_TYPE::winPIBT:
+      solver = std::make_shared<winPIBT>(&_P);
+      break;
     case INIT_SOLVER_TYPE::ECBS:
       solver = std::make_shared<ECBS>(&_P);
       break;
@@ -127,7 +141,7 @@ Plan IR::getInitialPlan()
   // set solver options
   setSolverOption(solver, option_init_solver);
   solver->setVerbose(verbose_underlying_solver);
-  solver->setDistanceTable(&DistanceTable);
+  solver->setDistanceTable(&distance_table);
 
   // solve
   solver->solve();
@@ -165,7 +179,7 @@ std::tuple<bool, Plan> IR::getOptimalPlan(Problem* _P, const Plan& current_plan,
   // set solver option
   setSolverOption(solver, option_optimal_solver);
   solver->setVerbose(verbose_underlying_solver);
-  solver->setDistanceTable(&DistanceTable);
+  solver->setDistanceTable(&distance_table);
 
   // solve
   solver->solve();
@@ -189,6 +203,7 @@ void IR::updateByRandom()
   std::vector<int> A(P->getNum());
   std::iota(A.begin(), A.end(), 0);
   while (!overCompTime() && current_iteration < max_iteration) {
+    // pickup several agents randomly
     std::shuffle(A.begin(), A.end(), *MT);
     std::vector<int> modif_list(sampling_num);
     std::copy(A.begin(), A.begin() + sampling_num, modif_list.begin());
@@ -203,20 +218,22 @@ void IR::updatePlanFocusOneAgent(std::function<void(const int, Plan&, IR*)> fn)
   Plan plan = solution;
   int last_itr_soc = plan.getSOC();
 
-  // fix at goal
   do {
     last_itr_soc = plan.getSOC();
     for (int i = 0; i < P->getNum(); ++i) {
       if (overCompTime() || current_iteration >= max_iteration) break;
       if (plan.getPathCost(i) - pathDist(i) == 0) continue;
+      // pickup one agent and apply fn
       fn(i, plan, this);
     }
   } while (last_itr_soc != plan.getSOC() && !overCompTime() &&
            current_iteration < max_iteration);
 }
 
-// refinement rules
-void IR::updateBySinglePaths(const int i, Plan& plan, IR* solver)
+// ----------------------------
+// define refinement rules
+// ----------------------------
+void IR::updateBySinglePaths(const int i, Plan& plan, IR* const solver)
 {
   // filtering
   const int cost = plan.getPathCost(i);
@@ -224,8 +241,8 @@ void IR::updateBySinglePaths(const int i, Plan& plan, IR* solver)
 
   // get new path
   auto paths = planToPaths(plan);
-  const auto path = solver->getPrioritizedPath(
-      i, paths, solver->getRefineTimeLimit(), solver->getMaxTimestep());
+  const auto path = solver->getPrioritizedPath
+    (i, paths, solver->getRefineTimeLimit(), solver->getMaxTimestep());
   if (path.empty() || getPathCost(path) >= cost) return;
 
   // update paths
@@ -234,7 +251,7 @@ void IR::updateBySinglePaths(const int i, Plan& plan, IR* solver)
   solver->updateSolution(plan);
 }
 
-void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
+void IR::updateByFixAtGoals(const int i, Plan& plan, IR* const solver)
 {
   auto t_s = Time::now();
   const auto P = solver->getP();
@@ -251,6 +268,7 @@ void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
     if (path[t] == g) continue;
     if (path[t - 1] != g || path[t + 1] != g) break;
 
+    // check other agents
     for (int j = 0; j < P->getNum(); ++j) {
       if (i == j) continue;
       if (paths.get(j, t) != g) continue;
@@ -268,9 +286,9 @@ void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
       std::tuple<Node*, int> constraint = std::make_tuple(g, t);
 
       // get refined plan for j
-      const auto refined_path_j = solver->getPrioritizedPath(
-          j, tmp_paths, solver->getRefineTimeLimit() - getElapsedTime(t_s),
-          upper_bound, {constraint});
+      const auto refined_path_j = solver->getPrioritizedPath
+        (j, tmp_paths, solver->getRefineTimeLimit() - getElapsedTime(t_s),
+         upper_bound, {constraint});
       if (refined_path_j.empty()) {
         stop_flg = true;
         break;
@@ -289,38 +307,141 @@ void IR::updateByFixAtGoals(const int i, Plan& plan, IR* solver)
   solver->updateSolution(plan);
 }
 
-void IR::updateByFocusGoals(const int i, Plan& plan, IR* solver)
+void IR::updateByFocusGoals(const int i, Plan& plan, IR* const solver)
 {
   const auto P = solver->getP();
-  const auto modif_list =
-      LibIR::identifyAgentsAtGoal(i, plan, P->getGoal(i), solver->pathDist(i));
+  const auto modif_list = identifyAgentsAtGoal(i, plan, P->getGoal(i), solver->pathDist(i));
   if (modif_list.empty()) return;
   Problem _P = Problem(P, solver->getRefineTimeLimit());
   plan = std::get<1>(solver->getOptimalPlan(&_P, plan, modif_list));
   solver->updateSolution(plan);
 }
 
-void IR::updateByBottleneck(const int i, Plan& plan, IR* solver)
+void IR::updateByBottleneck(const int i, Plan& plan, IR* const solver)
 {
-  const auto modif_list = std::get<1>(LibIR::identifyBottleneckAgentsWithScore(
-      i, plan, solver, solver->getRefineTimeLimit()));
+  const auto modif_list = std::get<1>(IR::identifyBottleneckAgentsWithScore
+                                      (i, planToPaths(plan), solver, solver->getRefineTimeLimit()));
   if (modif_list.empty()) return;
   Problem _P = Problem(solver->getP(), solver->getRefineTimeLimit());
   plan = std::get<1>(solver->getOptimalPlan(&_P, plan, modif_list));
   solver->updateSolution(plan);
 }
 
-void IR::updateByMDD(const int i, Plan& plan, IR* solver)
+void IR::updateByMDD(const int i, Plan& plan, IR* const solver)
 {
   const auto P = solver->getP();
-  const auto modif_list = LibIR::identifyInteractingSetByMDD(
+  const auto modif_list = IR::identifyInteractingSetByMDD(
       i, plan, solver, true, solver->getRefineTimeLimit(), P->getMT());
   if (modif_list.empty()) return;
   Problem _P = Problem(P, solver->getRefineTimeLimit());
   plan = std::get<1>(solver->getOptimalPlan(&_P, plan, modif_list));
   solver->updateSolution(plan);
 }
-// ============================
+
+// ----------------------------
+// utilities for refinement rules
+// ----------------------------
+std::vector<int> IR::identifyInteractingSetByMDD
+(const int i, const Plan& plan, Solver* const solver,
+ bool whole_duration, const int time_limit, std::mt19937* MT)
+{
+  auto t_start = Time::now();
+
+  // basic info
+  const int cost = plan.getPathCost(i);
+  const int dist = solver->pathDist(i);
+
+  // filtering
+  if (cost == dist) return {};
+
+  std::vector<int> agents(plan.get(0).size());
+  std::iota(agents.begin(), agents.end(), 0);
+  if (MT != nullptr) std::shuffle(agents.begin(), agents.end(), *MT);
+
+  // modification set
+  std::set<int> modif_set;
+
+  for (int t = dist; t < cost; ++t) {
+    // make mdd with small cost
+    auto mdd = LibCBS::MDD(t, i, solver);
+    if (time_limit == -1) {
+      mdd.build();
+    } else {
+      int _t_limit = time_limit - getElapsedTime(t_start);
+      if (_t_limit < 0) return {};
+      mdd.build(_t_limit);
+    }
+
+    // create modif list
+    for (auto j : agents) {
+      if (i == j) continue;
+      if (mdd.forceUpdate(LibCBS::getConstraintsByFixedPaths(plan, {j})) ||
+          !mdd.valid) {
+        modif_set.insert(j);
+      }
+      if (!mdd.valid) break;
+    }
+
+    if (!whole_duration) break;
+  }
+
+  if (modif_set.empty()) return {};
+
+  modif_set.insert(i);
+  std::vector<int> moidf_list(modif_set.begin(), modif_set.end());
+  return moidf_list;
+}
+
+std::vector<int> IR::identifyAgentsAtGoal(const int i, const Plan& plan, const Node* g, const int dist)
+{
+  const int cost = plan.getPathCost(i);
+  const int num = plan.get(0).size();
+  if (cost == dist) return {};
+
+  std::set<int> modif_set = {i};
+  for (int t = cost - 1; t >= dist; --t) {
+    for (int j = 0; j < num; ++j) {
+      if (j == i) continue;
+      if (plan.get(t, j) == g) modif_set.insert(j);
+    }
+  }
+  std::vector<int> moidf_list(modif_set.begin(), modif_set.end());
+  return moidf_list;
+}
+
+std::tuple<int, std::vector<int>> IR::identifyBottleneckAgentsWithScore
+(const int i, const Paths& original_paths, Solver* const solver, const int time_limit)
+{
+  int score = 0;
+  std::vector<int> modif_list;
+  auto paths = original_paths;
+  paths.clear(i);
+
+  const int num = paths.size();
+
+  for (int j = 0; j < num; ++j) {
+    if (i == j) continue;
+    const int dist = solver->pathDist(j);
+    const int original_cost = paths.costOfPath(j);
+    if (original_cost == dist) continue;
+    // find better paths
+    const auto path = solver->getPrioritizedPath(j, paths, time_limit);
+    if (path.empty()) {
+      modif_list.clear();
+      return std::make_tuple(0, modif_list);
+    }
+    const int cost = getPathCost(path);
+    if (cost < original_cost) {
+      score += original_cost - cost;
+      modif_list.push_back(j);
+    }
+  }
+
+  if (!modif_list.empty()) modif_list.push_back(i);
+  return std::make_tuple(score, modif_list);
+}
+
+
 
 void IR::setParams(int argc, char* argv[])
 {
@@ -360,6 +481,8 @@ void IR::setParams(int argc, char* argv[])
         s = std::string(optarg);
         if (s == "PIBT") {
           init_solver = INIT_SOLVER_TYPE::PIBT;
+        } else if (s == "winPIBT") {
+          init_solver = INIT_SOLVER_TYPE::winPIBT;
         } else if (s == "HCA") {
           init_solver = INIT_SOLVER_TYPE::HCA;
         } else if (s == "WHCA") {
@@ -445,7 +568,7 @@ void IR::printHelp()
 
       << "  -x --init-solver [SOLVER]"
       << "     "
-      << "init solver: { PIBT, HCA, WHCA, PIBT_COMPLETE }, default: "
+      << "init solver: { PIBT, HCA, WHCA, PIBT_COMPLETE, ECBS, winPIBT, RevisitPP }, default: "
          "PIBT_COMPLETE\n"
 
       << "  -X --option-init-solver [\"OPTION\"]\n"
@@ -489,4 +612,19 @@ void IR::makeLog(const std::string& logfile)
 
   makeLogSolution(log);
   log.close();
+}
+
+// ---------------------------------
+// IR_HYBRID
+// ---------------------------------
+void IR_HYBRID::refinePlan()
+{
+  info("", "update by FIX_AT_GOALS");
+  updatePlanFocusOneAgent(updateByFixAtGoals);
+  info("", "update by FOCUS_GOALS");
+  updatePlanFocusOneAgent(updateByFocusGoals);
+  info("", "update by MDD");
+  updatePlanFocusOneAgent(updateByMDD);
+  info("", "update by RANDOM");
+  updateByRandom();
 }

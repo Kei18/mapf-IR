@@ -74,7 +74,7 @@ Problem::Problem(const std::string& _instance)
     }
     // read initial/goal nodes
     if (std::regex_match(line, results, r_sg) && read_scen &&
-        config_s.size() < num_agents) {
+        (int)config_s.size() < num_agents) {
       int x_s = std::stoi(results[1].str());
       int y_s = std::stoi(results[2].str());
       int x_g = std::stoi(results[3].str());
@@ -147,8 +147,8 @@ Problem::Problem(Problem* P, int _max_comp_time)
 Problem::~Problem()
 {
   if (instance_initialized) {
-    delete G;
-    delete MT;
+    if (G != nullptr) delete G;
+    if (MT != nullptr) delete MT;
   }
 }
 
@@ -160,7 +160,7 @@ Node* Problem::getStart(int i) const
 
 Node* Problem::getGoal(int i) const
 {
-  if (!(0 <= i && i < config_g.size())) halt("invalid index");
+  if (!(0 <= i && i < (int)config_g.size())) halt("invalid index");
   return config_g[i];
 }
 
@@ -254,6 +254,19 @@ void Problem::setWellFormedInstance()
       }
     }
   }
+}
+
+// I know that using "const" is something wired...
+void Problem::halt(const std::string& msg) const
+{
+  std::cout << "error@Problem: " << msg << std::endl;
+  this->~Problem();
+  std::exit(1);
+}
+
+void Problem::warn(const std::string& msg) const
+{
+  std::cout << "warn@Problem: " << msg << std::endl;
 }
 
 void Problem::makeScenFile(const std::string& output_file)

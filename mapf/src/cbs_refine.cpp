@@ -103,8 +103,8 @@ Path CBS_REFINE::getInitialPath(int id)
     return false;
   };
 
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
 }
 
 CBS::CompareHighLevelNodes CBS_REFINE::getObjective()
@@ -189,8 +189,8 @@ Path CBS_REFINE::getConstrainedPath(HighLevelNode_p h_node, int id)
     return false;
   };
 
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
 }
 
 void CBS_REFINE::setParams(int argc, char* argv[])

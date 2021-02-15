@@ -44,7 +44,7 @@ void ICBS_REFINE::setInitialHighLevelNode(HighLevelNode_p n)
       }
       // create mdd
       mdd = std::make_shared<LibCBS::MDD>(
-          LibCBS::MDD(path.size() - 1, i, P, this, constraints, time_limit));
+          LibCBS::MDD(path.size() - 1, i, this, constraints, time_limit));
       if (!mdd->valid) {
         n->valid = false;
         return;

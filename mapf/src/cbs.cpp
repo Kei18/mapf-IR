@@ -7,7 +7,11 @@ CBS::CBS(Problem* _P) : Solver(_P) { solver_name = CBS::SOLVER_NAME; }
 void CBS::run()
 {
   // set objective function
-  CompareHighLevelNodes compare = getObjective();
+  auto compare = [] (HighLevelNode_p a, HighLevelNode_p b) {
+    if (a->soc != b->soc) return a->soc > b->soc;
+    if (a->f != b->f) return a->f > b->f;  // tie-breaker
+    return false;
+  };
 
   // OPEN
   std::priority_queue<HighLevelNode_p, HighLevelNodes, decltype(compare)>
@@ -65,16 +69,6 @@ void CBS::run()
   }
 
   if (solved) solution = pathsToPlan(n->paths);
-}
-
-CBS::CompareHighLevelNodes CBS::getObjective()
-{
-  CompareHighLevelNodes compare = [](HighLevelNode_p a, HighLevelNode_p b) {
-    if (a->soc != b->soc) return a->soc > b->soc;
-    if (a->f != b->f) return a->f > b->f;  // tie-breaker
-    return false;
-  };
-  return compare;
 }
 
 void CBS::setInitialHighLevelNode(HighLevelNode_p n)
@@ -200,12 +194,11 @@ Path CBS::getConstrainedPath(HighLevelNode_p h_node, int id)
     return false;
   };
 
-  return getTimedPath(s, g, fValue, compare, checkAstarFin,
-                      checkInvalidAstarNode);
+  return getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
 }
 
 void CBS::printHelp()
 {
-  std::cout << CBS::SOLVER_NAME << "\n"
-            << "  (no option)" << std::endl;
+  printHelpWithoutOption(SOLVER_NAME);
 }

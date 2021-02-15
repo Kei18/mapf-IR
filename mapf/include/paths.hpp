@@ -1,5 +1,4 @@
 #pragma once
-#include "graph.hpp"
 #include "problem.hpp"
 
 /*
@@ -21,6 +20,9 @@ public:
 
   // agent, timestep -> location
   Node* get(int i, int t) const;
+
+  // return last node
+  Node* last(int i) const;
 
   // whether paths are empty
   bool empty() const;
@@ -70,10 +72,7 @@ public:
   // count conflict with one path
   int countConflict(int id, const Path& path) const;
 
-  // =========================
-  // when updating a single path,
-  // the path should be longer than this value to avoid conflicts
-  int getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const;
-  int getMaxConstraintTime(const int id, Problem* P) const;
-  int getMaxConstraintTime(const int id, Node* g, const int dist) const;
+  // error
+  void halt(const std::string& msg) const;
+  void warn(const std::string& msg) const;
 };

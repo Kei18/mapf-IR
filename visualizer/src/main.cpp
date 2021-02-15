@@ -3,8 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
-#include "../include/graph.hpp"
-#include "../include/util.hpp"
 #include "../include/mapfplan.hpp"
 
 void readSetResult(const std::string& result_file, MAPFPlan* plan);
@@ -26,7 +24,10 @@ int main(int argc, char *argv[]) {
 
 void readSetNode(const std::string& s, Config& config, Grid* G)
 {
-  if (G == nullptr) halt("graph is not read.");
+  if (G == nullptr) {
+    std::cout << "error@main, no graph" << std::endl;
+    std::exit(1);
+  }
   std::regex r_pos = std::regex(R"(\((\d+),(\d+)\),)");
   std::smatch m;
   auto iter = s.cbegin();
@@ -34,7 +35,11 @@ void readSetNode(const std::string& s, Config& config, Grid* G)
     iter = m[0].second;
     int x = std::stoi(m[1].str());
     int y = std::stoi(m[2].str());
-    if (!G->existNode(x, y)) halt("node does not exist");
+    if (!G->existNode(x, y)) {
+      std::cout << "error@main, node does not exist" << std::endl;
+      delete G;
+      std::exit(1);
+    }
     config.push_back(G->getNode(x, y));
   }
 }
@@ -42,7 +47,10 @@ void readSetNode(const std::string& s, Config& config, Grid* G)
 void readSetResult(const std::string& result_file, MAPFPlan* plan)
 {
   std::ifstream file(result_file);
-  if (!file) halt("file " + result_file + " is not found.");
+  if (!file) {
+    std::cout << "error@main," << "file " << result_file << " is not found." << std::endl;
+    std::exit(1);
+  };
 
   std::regex r_map       = std::regex(R"(map_file=(.+))");
   std::regex r_agents    = std::regex(R"(agents=(.+))");

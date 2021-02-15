@@ -21,10 +21,6 @@ void WHCA::run()
   // initial prioritization, far agent is prioritized
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
-  if (!disable_dist_init) {
-    std::sort(ids.begin(), ids.end(),
-              [&](int a, int b) { return pathDist(a) > pathDist(b); });
-  }
 
   // start planning
   int iteration = 0;
@@ -32,6 +28,12 @@ void WHCA::run()
     info(" ", "elapsed:", getSolverElapsedTime(),
          ", timestep:", iteration * window);
     ++iteration;
+
+    if (!disable_dist_init) {
+      std::sort(ids.begin(), ids.end(),
+                [&](int a, int b)
+                { return pathDist(a, paths.last(a)) > pathDist(b, paths.last(b)); });
+    }
 
     bool check_goal_cond = true;
     Paths partial_paths(P->getNum());
@@ -87,6 +89,7 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g,
     }
   }
 
+  // in this case, the greedy f-value fails a lot, different from HCA*
   AstarHeuristics fValue = [&](AstarNode* n) {
     return n->g + pathDist(id, n->v);
   };
@@ -124,8 +127,8 @@ Path WHCA::getPrioritizedPartialPath(int id, Node* s, Node* g,
     return false;
   };
 
-  Path path =
-      getTimedPath(s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode);
+  Path path = getPathBySpaceTimeAstar
+    (s, g, fValue, compare, checkAstarFin, checkInvalidAstarNode, getRemainedTime());
   const int path_size = path.size();
   // format
   if (!path.empty() && path_size - 1 > window) path.resize(window + 1);
