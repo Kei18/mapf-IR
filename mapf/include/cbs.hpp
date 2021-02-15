@@ -57,9 +57,6 @@ protected:
   // get single-agent path subject to constraints
   virtual Path getConstrainedPath(HighLevelNode_p h_node, int id);
 
-  // objective function: sum of cost
-  virtual CompareHighLevelNodes getObjective();
-
   // main
   virtual void run();
 

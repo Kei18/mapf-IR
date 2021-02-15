@@ -151,7 +151,9 @@ std::unique_ptr<Solver> getSolver(const std::string solver_name, Problem* P,
   } else if (solver_name == "IR_HYBRID") {
     solver = std::make_unique<IR_HYBRID>(P);
   } else {
-    warn("unknown solver name, " + solver_name + ", continue by PIBT");
+    std::cout << "warn@app: "
+              << "unknown solver name, " + solver_name + ", continue by PIBT"
+              << std::endl;
     solver = std::make_unique<PIBT>(P);
   }
   solver->setParams(argc, argv);

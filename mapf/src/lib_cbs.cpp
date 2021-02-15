@@ -2,8 +2,6 @@
 
 // cache
 std::unordered_map<std::string, LibCBS::MDD_p> LibCBS::MDD::PURE_MDD_TABLE;
-// used in find paths
-std::mt19937* LibCBS::MDD::MT;
 
 void LibCBS::Constraint::println()
 {
@@ -512,7 +510,7 @@ std::string LibCBS::MDD::getPureMDDName()
 // make path using MDD
 // if MDD is valid, the search must success
 // invalid MDD -> return {}
-Path LibCBS::MDD::getPath() const
+Path LibCBS::MDD::getPath(std::mt19937* const MT) const
 {
   if (!valid) return {};
   if (body[0].empty() || body[c].empty()) halt("invalid MDD");
@@ -524,13 +522,17 @@ Path LibCBS::MDD::getPath() const
   while (node != goal_node) {
     path.push_back(node->v);
     if (node->next.empty()) halt("invalid MDD");
-    node = randomChoose(node->next, MT);  // randomize
+    if (MT != nullptr) {
+      node = randomChoose(node->next, MT);  // randomize
+    } else {
+      node = node->next[0];
+    }
   }
   path.push_back(goal_node->v);
   return path;
 }
 
-Path LibCBS::MDD::getPath(Constraint_p const constraint) const
+Path LibCBS::MDD::getPath(Constraint_p const constraint, std::mt19937* const MT) const
 {
   if (!valid) return {};
   if (constraint == nullptr) return getPath();
@@ -541,7 +543,7 @@ Path LibCBS::MDD::getPath(Constraint_p const constraint) const
   return mdd.getPath();
 }
 
-Path LibCBS::MDD::getPath(const Constraints& _constraints) const
+Path LibCBS::MDD::getPath(const Constraints& _constraints, std::mt19937* const MT) const
 {
   if (!valid) return {};
   // create a new MDD by copying itself
@@ -578,4 +580,11 @@ void LibCBS::MDD::println() const
       std::cout << std::endl;
     }
   }
+}
+
+void LibCBS::MDD::halt(const std::string& msg) const
+{
+  std::cout << "error@MDD: " << msg << std::endl;
+  this->~MDD();
+  std::exit(1);
 }

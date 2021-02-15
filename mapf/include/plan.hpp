@@ -60,6 +60,10 @@ public:
   // the path should be longer than this value to avoid conflicts
   int getMaxConstraintTime(const int id, Node* s, Node* g, Graph* G) const;
   int getMaxConstraintTime(const int id, Problem* P) const;
+
+  // error
+  void halt(const std::string& msg) const;
+  void warn(const std::string& msg) const;
 };
 
 using Plans = std::vector<Plan>;

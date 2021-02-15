@@ -49,8 +49,6 @@ Solver::Solver(Problem* _P)
                    std::vector<int>(G->getNodesSize(), max_timestep)),
     distance_table_p(nullptr)
 {
-  // for solvers using MDD
-  LibCBS::MDD::MT = MT;
 }
 
 Solver::~Solver()

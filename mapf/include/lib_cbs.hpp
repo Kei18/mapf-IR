@@ -84,9 +84,6 @@ namespace LibCBS
     // cache, MDD without any constraints
     static std::unordered_map<std::string, MDD_p> PURE_MDD_TABLE;
 
-    // used in finding paths
-    static std::mt19937* MT;
-
     MDD(int _c, int _i, Solver* _solver, Constraints constraints = {}, int time_limit = -1);
     ~MDD();
 
@@ -101,6 +98,8 @@ namespace LibCBS
 
     // update MDD with new constraints
     void update(const Constraints& _constraints);
+
+    // return whether MDD is updated or not
     bool forceUpdate(const Constraints& _constraints);
 
     // sub-procedures used in update
@@ -108,9 +107,9 @@ namespace LibCBS
     void deleteBackword(MDDNode* node);
 
     // get one path from MDD
-    Path getPath() const;
-    Path getPath(Constraint_p const constraint) const;
-    Path getPath(const Constraints& _constraints) const;
+    Path getPath(std::mt19937* const MT = nullptr) const;
+    Path getPath(Constraint_p const constraint, std::mt19937* const MT = nullptr) const;
+    Path getPath(const Constraints& _constraints, std::mt19937* const MT = nullptr) const;
 
     // get MDD width at the timestep
     int getWidth(int t) const;
@@ -120,5 +119,8 @@ namespace LibCBS
 
     // used for cache
     std::string getPureMDDName();
+
+    // emergency
+    void halt(const std::string& msg) const;
   };
 };  // namespace LibCBS

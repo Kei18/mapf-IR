@@ -147,8 +147,8 @@ Problem::Problem(Problem* P, int _max_comp_time)
 Problem::~Problem()
 {
   if (instance_initialized) {
-    delete G;
-    delete MT;
+    if (G != nullptr) delete G;
+    if (MT != nullptr) delete MT;
   }
 }
 

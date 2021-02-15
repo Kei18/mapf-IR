@@ -214,3 +214,15 @@ int Paths::countConflict(int id, const Path& path) const
   }
   return cnt;
 }
+
+void Paths::halt(const std::string& msg) const
+{
+  std::cout << "error@Paths: " << msg << std::endl;
+  this->~Paths();
+  std::exit(1);
+}
+
+void Paths::warn(const std::string& msg) const
+{
+  std::cout << "warn@Paths: " << msg << std::endl;
+}

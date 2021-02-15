@@ -30,6 +30,7 @@ add_test(test_plan ./tests/test_plan.cpp)
 add_test(test_paths ./tests/test_paths.cpp)
 add_test(test_solver ./tests/test_solver.cpp)
 add_test(test_problem ./tests/test_problem.cpp)
+add_test(test_lib_cbs ./tests/test_lib_cbs.cpp)
 # solvers
 add_test(test_hca ./tests/test_hca.cpp)
 add_test(test_whca ./tests/test_whca.cpp)

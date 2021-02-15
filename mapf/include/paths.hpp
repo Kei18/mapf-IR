@@ -71,4 +71,8 @@ public:
 
   // count conflict with one path
   int countConflict(int id, const Path& path) const;
+
+  // error
+  void halt(const std::string& msg) const;
+  void warn(const std::string& msg) const;
 };

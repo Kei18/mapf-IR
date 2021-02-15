@@ -3,16 +3,8 @@
  */
 
 #pragma once
-#include "cbs_refine.hpp"
-#include "ecbs.hpp"
-#include "hca.hpp"
-#include "icbs_refine.hpp"
-#include "pibt.hpp"
-#include "pibt_complete.hpp"
-#include "push_and_swap.hpp"
-#include "revisit_pp.hpp"
+
 #include "solver.hpp"
-#include "whca.hpp"
 
 class IR : public Solver
 {
@@ -23,6 +15,7 @@ protected:
   // init-solver
   enum struct INIT_SOLVER_TYPE {
     PIBT,
+    winPIBT,
     HCA,
     WHCA,
     ECBS,
@@ -67,19 +60,25 @@ protected:
   static constexpr int DEFAULT_TIMEOUT_REFINEMENT = 3000;
   static constexpr int DEFAULT_SAMPLING_NUM = 10;
 
+  // main
   void run();
+  // update solution
   void updateSolution(const Plan& plan);
+  // use sub-optimal solver to obtain initial solutions
   Plan getInitialPlan();
-  // success?, solution
+  // use optimal solvers to obtain refined solutions, return: success?, solution
   std::tuple<bool, Plan> getOptimalPlan(Problem* _P, const Plan& current_plan,
                                         const std::vector<int>& sample);
+  // refinement
   virtual void refinePlan();
+  // utilities, print current status
   void printProcessInfo();
 
   // ----------------------------
   // define refinement rules
   void updateByRandom();
-  void updatePlanFocusOneAgent(std::function<void(const int, Plan&, IR*)> fn);  // work as macro
+  // work as macro, pickup one agent and apply a rule
+  void updatePlanFocusOneAgent(std::function<void(const int, Plan&, IR*)> fn);
   static void updateBySinglePaths(const int i, Plan& plan, IR* const solver);
   static void updateByFixAtGoals(const int i, Plan& plan,  IR* const solver);
   static void updateByFocusGoals(const int i, Plan& plan,  IR* const solver);
@@ -89,11 +88,14 @@ protected:
   // ----------------------------
   // utilities for refinement rules
 public:
+  // used in MDD
   static std::vector<int> identifyInteractingSetByMDD
   (const int i, const Plan& plan, Solver* const solver,
    bool whole_duration = false, const int time_limit = -1, std::mt19937* MT = nullptr);
+  // used in FOCUS_GOALS
   static std::vector<int> identifyAgentsAtGoal
   (const int i, const Plan& plan, const Node* g, const int dist);
+  // used in BOTTLENECK
   static std::tuple<int, std::vector<int>> identifyBottleneckAgentsWithScore
   (const int i, const Paths& original_paths, Solver* const solver, const int time_limit = -1);
 
@@ -101,11 +103,10 @@ public:
   IR(Problem* _P);
   ~IR();
 
-  int getRefineTimeLimit() const
-  {
-    return std::min(getRemainedTime(), timeout_refinement);
-  }
+  // time limit for each refinement
+  int getRefineTimeLimit() const { return std::min(getRemainedTime(), timeout_refinement); }
 
+  // others
   void makeLog(const std::string& logfile);
   virtual void setParams(int argc, char* argv[]);
   static void printHelp();

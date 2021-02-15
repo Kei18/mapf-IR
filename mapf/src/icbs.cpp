@@ -11,7 +11,11 @@ ICBS::ICBS(Problem* _P) : CBS(_P)
 void ICBS::run()
 {
   // set objective function
-  CompareHighLevelNodes compare = getObjective();
+  auto compare = [] (HighLevelNode_p a, HighLevelNode_p b) {
+    if (a->soc != b->soc) return a->soc > b->soc;
+    if (a->f != b->f) return a->f > b->f;  // tie-breaker
+    return false;
+  };
 
   // OPEN
   std::priority_queue<HighLevelNode_p, HighLevelNodes, decltype(compare)>
@@ -115,7 +119,7 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
   if (mdd.valid) {  // use mdd as much as possible
     // update table
     MDDTable[h_node->id][id] = std::make_shared<LibCBS::MDD>(mdd);
-    return mdd.getPath();
+    return mdd.getPath(MT);
   } else {
     // lazy evaluation
     if (last_constraint->t > mdd.c) {
@@ -148,7 +152,7 @@ Path ICBS::getConstrainedPath(HighLevelNode_p h_node, int id)
       LibCBS::MDD_p new_mdd = std::make_shared<LibCBS::MDD>(c, id, this, h_node->constraints);
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
-        return new_mdd->getPath();
+        return new_mdd->getPath(MT);
       }
     }
   }
@@ -191,7 +195,7 @@ CBS::HighLevelNodes ICBS::lazyEval()
       LibCBS::MDD_p new_mdd = std::make_shared<LibCBS::MDD>(c, id, this, h_node->constraints);
       if (new_mdd->valid) {
         MDDTable[h_node->id][id] = new_mdd;
-        Path path = new_mdd->getPath();
+        Path path = new_mdd->getPath(MT);
         Paths paths = h_node->paths;
         paths.insert(id, path);
         h_node->f = h_node->f -
@@ -227,7 +231,7 @@ bool ICBS::findBypass(HighLevelNode_p h_node,
   auto itr = MDDTable.find(h_node->id);
   if (itr == MDDTable.end()) halt("MDD is not found");
   for (auto c : constraints) {
-    Path path = itr->second[c->id]->getPath(c);
+    Path path = itr->second[c->id]->getPath(c, MT);
     if (path.empty()) continue;
     // format
     int path_size = path.size();

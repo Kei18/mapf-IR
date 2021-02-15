@@ -2,6 +2,17 @@
 
 #include <fstream>
 #include <set>
+#include "../include/cbs_refine.hpp"
+#include "../include/ecbs.hpp"
+#include "../include/hca.hpp"
+#include "../include/winpibt.hpp"
+#include "../include/icbs_refine.hpp"
+#include "../include/pibt.hpp"
+#include "../include/pibt_complete.hpp"
+#include "../include/push_and_swap.hpp"
+#include "../include/revisit_pp.hpp"
+#include "../include/whca.hpp"
+
 
 // solver name
 const std::string IR::SOLVER_NAME = "IR";
@@ -106,6 +117,9 @@ Plan IR::getInitialPlan()
     case INIT_SOLVER_TYPE::WHCA:
       solver = std::make_shared<WHCA>(&_P);
       break;
+    case INIT_SOLVER_TYPE::winPIBT:
+      solver = std::make_shared<winPIBT>(&_P);
+      break;
     case INIT_SOLVER_TYPE::ECBS:
       solver = std::make_shared<ECBS>(&_P);
       break;
@@ -189,6 +203,7 @@ void IR::updateByRandom()
   std::vector<int> A(P->getNum());
   std::iota(A.begin(), A.end(), 0);
   while (!overCompTime() && current_iteration < max_iteration) {
+    // pickup several agents randomly
     std::shuffle(A.begin(), A.end(), *MT);
     std::vector<int> modif_list(sampling_num);
     std::copy(A.begin(), A.begin() + sampling_num, modif_list.begin());
@@ -203,12 +218,12 @@ void IR::updatePlanFocusOneAgent(std::function<void(const int, Plan&, IR*)> fn)
   Plan plan = solution;
   int last_itr_soc = plan.getSOC();
 
-  // fix at goal
   do {
     last_itr_soc = plan.getSOC();
     for (int i = 0; i < P->getNum(); ++i) {
       if (overCompTime() || current_iteration >= max_iteration) break;
       if (plan.getPathCost(i) - pathDist(i) == 0) continue;
+      // pickup one agent and apply fn
       fn(i, plan, this);
     }
   } while (last_itr_soc != plan.getSOC() && !overCompTime() &&
@@ -253,6 +268,7 @@ void IR::updateByFixAtGoals(const int i, Plan& plan, IR* const solver)
     if (path[t] == g) continue;
     if (path[t - 1] != g || path[t + 1] != g) break;
 
+    // check other agents
     for (int j = 0; j < P->getNum(); ++j) {
       if (i == j) continue;
       if (paths.get(j, t) != g) continue;
@@ -408,6 +424,7 @@ std::tuple<int, std::vector<int>> IR::identifyBottleneckAgentsWithScore
     const int dist = solver->pathDist(j);
     const int original_cost = paths.costOfPath(j);
     if (original_cost == dist) continue;
+    // find better paths
     const auto path = solver->getPrioritizedPath(j, paths, time_limit);
     if (path.empty()) {
       modif_list.clear();
@@ -464,6 +481,8 @@ void IR::setParams(int argc, char* argv[])
         s = std::string(optarg);
         if (s == "PIBT") {
           init_solver = INIT_SOLVER_TYPE::PIBT;
+        } else if (s == "winPIBT") {
+          init_solver = INIT_SOLVER_TYPE::winPIBT;
         } else if (s == "HCA") {
           init_solver = INIT_SOLVER_TYPE::HCA;
         } else if (s == "WHCA") {
@@ -549,7 +568,7 @@ void IR::printHelp()
 
       << "  -x --init-solver [SOLVER]"
       << "     "
-      << "init solver: { PIBT, HCA, WHCA, PIBT_COMPLETE }, default: "
+      << "init solver: { PIBT, HCA, WHCA, PIBT_COMPLETE, ECBS, winPIBT, RevisitPP }, default: "
          "PIBT_COMPLETE\n"
 
       << "  -X --option-init-solver [\"OPTION\"]\n"

@@ -19,17 +19,20 @@ void PushAndSwap::run()
   for (int i = 0; i < P->getNum(); ++i) occupied_now[solution.last(i)->id] = i;
 
   // pre-processing
-  computeNodesWithManyNeighbors();
+  findNodesWithManyNeighbors();
 
+  // nodes with agents at goals
   Nodes U;
 
   std::vector<int> ids(P->getNum());
   std::iota(ids.begin(), ids.end(), 0);
+  // prioritization
   if (!disable_dist_init) {
     std::sort(ids.begin(), ids.end(),
               [&](int a, int b) { return pathDist(a) > pathDist(b); });
   }
 
+  // main loop
   for (int j = 0; j < P->getNum(); ++j) {
     const int i = ids[j];
     info(" ", "elapsed:", getSolverElapsedTime(),
@@ -50,6 +53,7 @@ void PushAndSwap::run()
     if (overCompTime()) return;
   }
 
+  // compress solution
   if (flg_compress) {
     info("  ---");
     info(" ", "elapsed:", getSolverElapsedTime(), ", compress solution",
@@ -57,10 +61,11 @@ void PushAndSwap::run()
          ", makespan (before):", solution.getMakespan());
     solution = compress(solution);
     info(" ", "elapsed:", getSolverElapsedTime(), ", finish compression",
-         ", soc (before):", solution.getSOC(),
+         ", soc (after):", solution.getSOC(),
          ", makespan (before):", solution.getMakespan());
   }
 
+  // check makespan
   if (solution.getMakespan() <= max_timestep) {
     solved = true;
   } else {
@@ -450,8 +455,7 @@ Node* PushAndSwap::getNearestEmptyNode(Node* v, std::vector<int>& occupied_now,
   return v_empty;
 }
 
-// get all vertices of degree >= 3 on G
-void PushAndSwap::computeNodesWithManyNeighbors()
+void PushAndSwap::findNodesWithManyNeighbors()
 {
   nodes_with_many_neighbors.clear();
   auto V = G->getV();
@@ -462,10 +466,7 @@ void PushAndSwap::computeNodesWithManyNeighbors()
 /*
  * compress solution while preserving temporal dependencies of the original plan
  *
- * c.f. MCPs
- * 1. Ma, H., Kumar, T. K., & Koenig, S. (2017).
- * Multi-agent path finding with delay probabilities.
- * Proc. AAAI Conf. on Artificial Intelligence
+ * c.f. MAPF-POST or MCPs
  */
 Plan PushAndSwap::compress(const Plan& plan)
 {

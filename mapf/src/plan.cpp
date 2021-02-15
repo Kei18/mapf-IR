@@ -172,3 +172,15 @@ int Plan::getMaxConstraintTime(const int id, Problem* P) const
 {
   return getMaxConstraintTime(id, P->getStart(id), P->getGoal(id), P->getG());
 }
+
+void Plan::halt(const std::string& msg) const
+{
+  std::cout << "error@Plan: " << msg << std::endl;
+  this->~Plan();
+  std::exit(1);
+}
+
+void Plan::warn(const std::string& msg) const
+{
+  std::cout << "warn@Plan: " << msg << std::endl;
+}
