@@ -2,7 +2,7 @@ mapf-IR
 ===
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
-A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper ["Iterative Refinement for Real-Time Multi-Robot Path Planning"](https://arxiv.org/abs/2102.12331).
+A simulator and visualizer of Multi-Agent Path Finding (MAPF), used in a paper ["Iterative Refinement for Real-Time Multi-Robot Path Planning"](https://arxiv.org/abs/2102.12331) (to appear at IROS-21).
 It is written in C++(17) with [CMake](https://cmake.org/) (≥v3.16) build.
 The repository uses [Google Test](https://github.com/google/googletest) and [the original library for 2D pathfinding](https://github.com/Kei18/grid-pathfinding) as git submodules.
 The visualizer uses [openFrameworks](https://openframeworks.cc) and works only on macOS.
@@ -15,6 +15,16 @@ The implementations include: HCA\* and WHCA\* [1], PIBT [2], CBS [3], ICBS [4], 
 | ubuntu-latest | ![test_ubuntu](https://github.com/Kei18/mapf-IR/workflows/test_ubuntu/badge.svg?branch=public) | ![test_ubuntu](https://github.com/Kei18/mapf-IR/workflows/test_ubuntu/badge.svg?branch=dev) |
 
 You can see the performance of each solver from [auto\_record repo](https://github.com/Kei18/mapf-IR/tree/auto_record). The records were created by Github Actions.
+
+Please cite the following paper if you use the code in your published research:
+```
+@article{okumura2021iterative,
+  title={Iterative Refinement for Real-Time Multi-Robot Path Planning},
+  author={Okumura, Keisuke and Tamura, Yasumasa and D{\'e}fago, Xavier},
+  journal={arXiv preprint arXiv:2102.12331},
+  year={2021}
+}
+```
 
 ## Demo
 ![100 agents in arena](/material/arena_100agents.gif)
