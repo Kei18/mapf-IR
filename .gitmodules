@@ -1,6 +1,7 @@
 [submodule "openFrameworks"]
 	path = third_party/openFrameworks
 	url = https://github.com/openframeworks/openFrameworks.git
+	ignore = dirty
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
