@@ -15,16 +15,6 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_TOKEN }}
 
-      - name: set up Python 3.7
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.7
-
-      - name: add zip file
-        run: |
-          python docs/generator.py
-          zip -r docs/code.zip ./ -x *.git*
-
       - name: deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
