@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400&family=Roboto:wght@100&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/custom.css">
   </head>
   <body class="d-flex flex-column h-100">
@@ -11,7 +14,7 @@
     <main role="main flex-shrink-0">
       <div class="container">
 
-        <p class="h2 text-center">Iterative Refinement for Real-Time Multi-Robot Path Planning</p>
+        <p class="h1 text-center">Iterative Refinement<br/>for Real-Time Multi-Robot Path Planning</p>
         <p class="text-center">
           <a href="https://kei18.github.io/">Keisuke Okumura</a>,
           <a href="https://y7amura.github.io/">Yasumasa Tamura</a>
@@ -22,24 +25,40 @@
           <a href="https://github.com/Kei18/mapf-IR">[code (GitHub)]</a>
         </p>
 
-        <div class="mx-auto">
+        <div class="row">
+          <div class="col-md-8 offset-md-2">
+            <img alt="" src="images/example.gif" class="img-fluid" style="width:100%;" />
+          </div>
+        </div>
+
+        <div class="mx-auto mt-5">
+          <p class="h5">Overview</p>
+          <div class="text-secondary">
+            <p>We study the iterative refinement of path planning for multiple robots, known as multi-agent pathfinding (MAPF). Given a graph, agents, their initial locations, and destinations, a solution of MAPF is a set of paths without collisions. Iterative refinement for MAPF is desirable for three reasons: 1) optimization is intractable, 2) sub-optimal solutions can be obtained instantly, and 3) it is anytime planning, desired in online scenarios where time for deliberation is limited. Despite the high demand, this is under-explored in MAPF because finding good neighborhoods has been unclear so far. Our proposal uses a sub-optimal MAPF solver to obtain an initial solution quickly, then iterates the two procedures: 1) select a subset of agents, 2) use an optimal MAPF solver to refine paths of selected agents while keeping other paths unchanged. Since the optimal solvers are used on small instances of the problem, this scheme yields efficient-enough solutions rapidly while providing high scalability. We also present reasonable candidates on how to select a subset of agents. Evaluations in various scenarios show that the proposal is promising; the convergence is fast, scalable, and with reasonable quality.
+            </p>
+          </div>
+        </div>
+
+
+        <div class="mx-auto mt-5">
           <p class="h5">News</p>
           <ul>
             <li>Upload the slide. (Oct. 2021)</li>
             <li>This paper has been accepted to IROS-21! (Jul. 2021)</li>
-            <li>The repo includes <a href="https://kei18.github.io/pibt/">PIBT</a> simple implementation</li>
           </ul>
         </div>
 
-        <div class="text-center mt-5 video-wrapper mb-5">
+        <p class="h5 mt-5">Video</p>
+        <div class="text-center video-wrapper mb-5">
           <iframe src="https://player.vimeo.com/video/516530451" width="854" height="480" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
         </div>
 
-        <div class="mt-5 mb-3" style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 56.1972%;"><iframe src="https://speakerdeck.com/player/5ae414003fd64f0aab1e691ab5c48980" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen scrolling="no" allow="encrypted-media;"></iframe></div>
+        <p class="h5 mt-5">Slides</p>
+        <div class="mb-3" style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 56.1972%;"><iframe src="https://speakerdeck.com/player/5ae414003fd64f0aab1e691ab5c48980" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen scrolling="no" allow="encrypted-media;"></iframe></div>
 
-        <div class="mx-auto">
+
+        <div class="mx-auto mt-5">
           <p class="h5">Citation</p>
-          <p>Please cite the following paper if you use the code in your published research:</p>
           <div class="citation mb-3">
             <pre><code>@article{okumura2021iterative,
   title={Iterative Refinement for Real-Time Multi-Robot Path Planning},
@@ -49,12 +68,17 @@
 }</code></pre></div>
         </div>
 
+        <div class="mx-auto mt-5">
+          <p class="h5">Contact</p>
+          <p>okumura.k [at] coord.c.titech.ac.jp</p>
+        </div>
+
       </div>
     </main>
 
     <footer class="footer mt-auto">
       <div class="container pt-3">
-        <p class="text-center">contact: okumura.k [at] coord.c.titech.ac.jp, &copy;2021 Keisuke Okumura</p>
+        <p class="text-center">&copy;2021 Keisuke Okumura</p>
       </div>
     </footer>
   </body>
