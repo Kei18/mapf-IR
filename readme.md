@@ -18,11 +18,13 @@ You can see the performance of each solver from [auto\_record repo](https://gith
 
 Please cite the following paper if you use the code in your published research:
 ```
-@article{okumura2021iterative,
+@inproceedings{okumura2021iterative,
+  author={Okumura, Keisuke and Tamura, Yasumasa and Défago, Xavier},
+  booktitle={2021 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
   title={Iterative Refinement for Real-Time Multi-Robot Path Planning},
-  author={Okumura, Keisuke and Tamura, Yasumasa and D{\'e}fago, Xavier},
-  journal={arXiv preprint arXiv:2102.12331},
-  year={2021}
+  year={2021},
+  pages={9690-9697},
+  doi={10.1109/IROS51168.2021.9636071}
 }
 ```
 
