@@ -28,7 +28,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: Kei18/grid-pathfinding
-          token: ${{ secrets.PERSONAL_TOKEN }}
           path: third_party/grid-pathfinding
 
       - name: build

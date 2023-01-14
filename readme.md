@@ -49,6 +49,12 @@ cmake ..
 make
 ```
 
+### for M1 CPU
+
+```sh
+cmake -DCPU=M1 ..
+```
+
 ## Usage
 PIBT
 ```sh
@@ -91,6 +97,11 @@ solution=
 ```
 
 ## Visualizer
+
+### News
+
+A new visualizer [Kei18@mapf-visualizer](https://github.com/kei18/mapf-visualizer) is available.
+I recommend using the new one instead of this repo.
 
 ### Building
 It takes around 10 minutes.
